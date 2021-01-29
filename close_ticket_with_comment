@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# Usage: close_ticket_with_comment <ticket number>   # e.g. 023
+
+  # Ensure script is initial-path agnostic
+    TICKETS_PATH="$( dirname $BASH_SOURCE )"
+    TICKETS_PATH="$TICKETS_PATH/tickets"
+    TICKETS_PATH="$( realpath $TICKETS_PATH )"
+
+    cd $TICKETS_PATH
+
+  # This is the ticket file we're about to modify
+    TICKET="${1%.ticket}.ticket"
+    if test -f "$TICKET"
+    then :
+    else echo "Error: Invalid ticket specified; file ${TICKET} does not exist!" && exit
+    fi
+
+  # Get today's date
+    TODAY=$(date +"%Y-%m-%d")
+
+  # Check that ticket is actually open
+    grep "Status: Open" $TICKET > /dev/null
+    if     test $? -eq 0
+    then   :
+    else   echo "Ticket No. $TICKET is not marked as Open! Please edit manually if necessary." && exit
+    fi
+
+  # Change status to Closed
+    sed -i "s/Status: .*/Status: Closed/" "${TICKET}"
+
+  # Select an appropriate resolution
+    echo "Closing ticket ${1} ($(grep -o "Summary: .*" "${TICKET}"))"
+    echo
+    echo "Select a resolution for this ticket:"
+    select RESOLUTION in Completed Delegated Postponed Cancelled Invalid
+    do
+        sed -i "s/Resolution: /Resolution: $RESOLUTION/" "${TICKET}"
+        break
+    done
+
+  # Check if owner is set. If not, make me the owner.
+    CURRENT_OWNER=$(grep -oP "(?<=Owner: ).*" "${TICKET}")
+    WHOAMI=$(whoami)
+    WHOAMI=${WHOAMI^}   # parameter expansion: make first character uppercase
+    if test -z ${CURRENT_OWNER}   # If it's an empty string
+    then
+        sed -i "s/Owner: /Owner: $WHOAMI/" "${TICKET}"
+        CURRENT_OWNER="$WHOAMI"
+    fi
+
+  # Start a new comment:
+    echo             >> "${TICKET}"
+    echo             >> "${TICKET}"
+    echo "== $TODAY" >> "${TICKET}"
+
+  # Leave empty line where the comment will go, and capture that line number
+    echo >> "${TICKET}"
+    LINENUM=$(cat "${TICKET}" | wc -l)
+
+  # Finalise ticket closing.
+    echo "Closing ticket." >> "${TICKET}"
+
+  # If owner is different than closer, mention the closer's name in the closing comment explicitly
+    if test "$CURRENT_OWNER" != "$WHOAMI"
+    then
+        echo "($WHOAMI)" >> "${TICKET}"
+    fi
+
+  # Open default editor and put cursor in the right place for editing
+    if   test $EDITOR == "vim"
+    then vim  +"$LINENUM" "${TICKET}"
+    else nano +"$LINENUM" "${TICKET}"
+    fi

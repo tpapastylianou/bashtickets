@@ -1,0 +1,34 @@
+#!/bin/bash
+
+TICKETS_PATH="$( dirname $BASH_SOURCE )"
+TICKETS_PATH="$TICKETS_PATH/tickets"
+TICKETS_PATH="$( realpath $TICKETS_PATH )"
+    ANSI_RED="\033[91m"
+  ANSI_GREEN="\033[92m"
+ ANSI_PURPLE="\033[95m"
+  ANSI_RESET="\033[39m"
+
+cd $TICKETS_PATH
+ALL_TICKETS=( *.ticket )
+COUNT=0
+
+
+
+for i in ${ALL_TICKETS[@]:1}
+do
+  COUNT=$((COUNT + 1))
+  if   grep "Status: Open" "$i" > /dev/null; test 0 -eq $?
+  then
+    echo -e -n "$i: ${ANSI_RED}[ Open ]${ANSI_RESET} "
+  elif grep "Status: Closed" "$i" > /dev/null; test 0 -eq $?
+  then
+    echo -en "$i: ${ANSI_GREEN}[Closed]${ANSI_RESET} "
+  else
+    echo -en "$i: ${ANSI_PURPLE}[ ???? ]${ANSI_RESET} "
+  fi
+    grep Summary "$i"
+done
+
+echo
+echo "There are $COUNT open tickets in total."
+#!/bin/bash

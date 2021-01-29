@@ -1,0 +1,67 @@
+#!/bin/bash
+
+  # Ensure script is initial-path agnostic
+    TICKETS_PATH="$( dirname $BASH_SOURCE )"
+    TICKETS_PATH="$TICKETS_PATH/tickets"
+    TICKETS_PATH="$( realpath $TICKETS_PATH )"
+
+    cd $TICKETS_PATH
+
+  # Find the last ticket number, and increment by one
+    LAST_TICKET=$(ls *.ticket | tail -n 1)
+    LAST_TICKET=${LAST_TICKET%.ticket}   # parameter expansion: remove '.ticket' suffix
+    NEW_TICKET=$(echo $LAST_TICKET + 1 | bc)
+
+  # Zero-pad if we have a 1 or 2 digit number
+    if test ${#NEW_TICKET} -eq 1; then NEW_TICKET="00${NEW_TICKET}"; fi
+    if test ${#NEW_TICKET} -eq 2; then NEW_TICKET="0${NEW_TICKET}"; fi
+
+  # Create a new ticket from template, discarding anythine below line 13
+    head 000.ticket -n13 > "${NEW_TICKET}.ticket"
+
+  # Update ticket number
+    sed -i "s/Ticket No.: 000/Ticket No.: ${NEW_TICKET}/" "${NEW_TICKET}.ticket"
+
+  # Clean up templated text, comments etc
+    sed -i "s/Description: .*/Description: /" "${NEW_TICKET}.ticket"
+    sed -i "s/#.*//g"  "${NEW_TICKET}.ticket"   # remove all comments
+
+  # Try to set owner and reporter automatically:
+    WHOAMI=$(whoami)
+    WHOAMI=${WHOAMI^}   # parameter expansion: make first character uppercase
+    sed -i "s/Reporter: /Reporter: $WHOAMI/" "${NEW_TICKET}.ticket"
+    sed -i "s/Owner:/Owner: $WHOAMI/" "${NEW_TICKET}.ticket"
+
+  # Select a valid type:
+    echo "Select a valid ticket type:"
+    select TICKETTYPE in Investigation Bugfix Feature Task
+    do
+        sed -i "s/Type: /Type: $TICKETTYPE/" "${NEW_TICKET}.ticket"
+        break
+    done
+
+  # Select a valid priority:
+    echo "Select a valid ticket priority"
+    select TICKETPRIORITY in                                                                 \
+        "Lowest     (desirable, but not strictly necessary; minimal disruption if not done)" \
+        "Normal     (as soon as possible; required, but not urgent or critical)"             \
+        "Important  (but can wait)"                                                          \
+        "Urgent     (but not of critical importance)"                                        \
+        "Highest    (both important and urgent)"
+    do
+        sed -i "s/Priority: /Priority: ${TICKETPRIORITY%% *}/" "${NEW_TICKET}.ticket"
+        break
+    done
+
+  # Set today's date
+    TODAY=$(date +"%Y-%m-%d")
+    sed -i "s/Date: /Date: $TODAY/" "${NEW_TICKET}.ticket"
+
+  # Declare status as Open
+    sed -i "s/Status: /Status: Open/" "${NEW_TICKET}.ticket"
+
+  # Open resulting file in vim or nano for further editing, place cursor at Summary
+    if   test $EDITOR = "vim"
+    then vim '+cal cursor(2,14)' "${NEW_TICKET}.ticket"
+    else nano +2,14 "${NEW_TICKET}.ticket"
+    fi
