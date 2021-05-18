@@ -11,12 +11,16 @@ The root directory contains the following structure:
     │   │         tickets respectively, as this ensures the correct templates
     │   │         are used.
     │   │
-    │   └── 000.ticket : This serves as the ticket template for creating new
-    │                    tickets. Do not edit.
+    │   ├── 000.ticket : This serves as the ticket template for creating new
+    │   │                tickets. DO NOT edit/remove.
+    │   │
+    │   ├── 001.ticket : Example open ticket.   Feel free to edit/remove.
+    │   └── 002.ticket : Example closed ticket. Feel free to edit/remove.
     │
     │
-    ├── close_ticket_with_comment : Script to close tickets.  Expects a ticket
-    │                               number as an argument, e.g. 002
+    ├── close_ticket_with_comment : Script to close tickets interactively.
+    │                               Expects a ticket as an argument,
+    │                               e.g. '002.ticket' or simply '002'
     │
     ├── new_ticket : Script to create new ticket interactively. Takes no
     │                arguments.
