@@ -10,13 +10,10 @@ TICKETS_PATH="$( realpath $TICKETS_PATH )"
 
 cd $TICKETS_PATH
 ALL_TICKETS=( *.ticket )
-COUNT=0
-
 
 
 for i in ${ALL_TICKETS[@]:1}
 do
-  COUNT=$((COUNT + 1))
   if   grep "Status: Open" "$i" > /dev/null; test 0 -eq $?
   then
     echo -e -n "$i: ${ANSI_RED}[ Open ]${ANSI_RESET} "
@@ -28,7 +25,3 @@ do
   fi
     grep Summary "$i"
 done
-
-echo
-echo "There are $COUNT open tickets in total."
-#!/bin/bash
