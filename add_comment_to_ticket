@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Usage: add_comment_to_ticket <ticket number>   # e.g. 023
+
+  # Ensure script is initial-path agnostic
+    TICKETS_PATH="$( dirname $BASH_SOURCE )"
+    TICKETS_PATH="$TICKETS_PATH/tickets"
+    TICKETS_PATH="$( realpath $TICKETS_PATH )"
+
+    cd $TICKETS_PATH
+
+  # This is the ticket file we're about to modify
+    TICKET="${1%.ticket}.ticket"
+    if test -f "$TICKET"
+    then :
+    else echo "Error: Invalid ticket specified; file ${TICKET} does not exist!" && exit
+    fi
+
+  # Get today's date
+    TODAY=$(date +"%Y-%m-%d")
+
+  # Start a new comment:
+    echo             >> "${TICKET}"
+    echo             >> "${TICKET}"
+    echo "== $TODAY" >> "${TICKET}"
+
+  # Leave empty line where the comment will go, and capture that line number
+    echo >> "${TICKET}"
+    LINENUM=$(cat "${TICKET}" | wc -l)
+
+  # If owner is different than closer, mention the closer's name in the closing comment explicitly
+    if test "$CURRENT_OWNER" != "$WHOAMI"
+    then
+        echo "($WHOAMI)" >> "${TICKET}"
+    fi
+
+  # Open default editor and put cursor in the right place for editing
+    if   test $EDITOR == "vim"
+    then vim  +"$LINENUM" "${TICKET}"
+    else nano +"$LINENUM" "${TICKET}"
+    fi
