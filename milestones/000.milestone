@@ -1,0 +1,16 @@
+MileStn No.: 000
+      Title: # Always leave a single space after ':' for consistency with 'grep' queries
+    Created: # use YYYY-MM-DD format (or preferably, use automated script)
+   Deadline: # use YYYY-MM-DD format (or preferably, use automated script)
+Description:
+
+    Write anything you want here, take as many lines as you want.
+    But do not alter the lines below
+
+
+=== Open Tickets ===
+
+000.ticket
+
+=== Closed Tickets ===
+

@@ -1,0 +1,42 @@
+#!/bin/bash
+
+  # Ensure script is initial-path agnostic
+    MILESTONES_PATH="$( dirname $BASH_SOURCE )"
+    MILESTONES_PATH="$MILESTONES_PATH/milestones"
+    MILESTONES_PATH="$( realpath $MILESTONES_PATH )"
+
+    cd $MILESTONES_PATH
+
+  # Find the last milestone number, and increment by one
+    LAST_MILESTONE=$(ls *.milestone | tail -n 1)
+    LAST_MILESTONE=${LAST_MILESTONE%.milestone}   # parameter expansion: remove '.milestone' suffix
+    NEW_MILESTONE=$(echo $LAST_MILESTONE + 1 | bc)
+
+  # Zero-pad if we have a 1 or 2 digit number
+    if test ${#NEW_MILESTONE} -eq 1; then NEW_MILESTONE="00${NEW_MILESTONE}"; fi
+    if test ${#NEW_MILESTONE} -eq 2; then NEW_MILESTONE="0${NEW_MILESTONE}"; fi
+
+  # Create a new milestone from template, discarding placeholder texts
+    cat 000.milestone | head -n +6                 >  "${NEW_MILESTONE}.milestone"
+    cat 000.milestone | head -n +12 | tail -n +9   >> "${NEW_MILESTONE}.milestone"
+    cat 000.milestone | head -n +17 | tail -n +14  >> "${NEW_MILESTONE}.milestone"
+
+  # Update milestone number
+    sed -i "s/MileStn No.: 000/MileStn No.: ${NEW_MILESTONE}/" "${NEW_MILESTONE}.milestone"
+
+  # Clean up comments
+    sed -i "s/#.*//g"  "${NEW_MILESTONE}.milestone"   # remove all comments
+
+  # Set today's date
+    TODAY=$(date +"%Y-%m-%d")
+    sed -i "s/Created: /Created: $TODAY/" "${NEW_MILESTONE}.milestone"
+
+  # Set a default deadline of 1 month from creation
+    DEFAULT_DEADLINE=$(date --date="$TODAY +1 month" +"%Y-%m-%d")
+    sed -i "s/Deadline: /Deadline: $DEFAULT_DEADLINE/" "${NEW_MILESTONE}.milestone"
+
+  # Open resulting file in vim or nano for further editing, place cursor at Title field
+    if   test $EDITOR = "vim"
+    then vim '+cal cursor(2,14)' "${NEW_MILESTONE}.milestone"
+    else nano +2,14 "${NEW_MILESTONE}.milestone"
+    fi
