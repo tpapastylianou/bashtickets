@@ -36,7 +36,7 @@ do
 
   # Print entry to terminal (unsorted)
     printf "%-15s -- " "Milestone ${i%.milestone}"
-    printf "%-15s -- " "Days left: ${DAYS_LEFT}"
     printf "%-27s -- " "Completion: ${NUM_CLOSED_TICKETS} / $(( NUM_OPEN_TICKETS + NUM_CLOSED_TICKETS )) ($((100 * NUM_CLOSED_TICKETS / (NUM_OPEN_TICKETS + NUM_CLOSED_TICKETS)))%)"
-    grep --color=never "      Title:" "$i" | cut -d$':' -f2
+    printf "%-15s -- " "Days left: ${DAYS_LEFT}"
+    printf "Title: " && grep --color=never "      Title:" "$i" | cut -d$':' -f2
 done

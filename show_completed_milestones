@@ -28,8 +28,15 @@ do
 
     NUM_CLOSED_TICKETS=$( cat "$i" | tail -n "+$(( CLOSE_LINE + 1 ))" | wc -w )
 
+  # Determine date of last closed ticket
+    COMPLETION_DATE=$( for t in $(cat "$i" | tail -n "+$(( CLOSE_LINE + 1 ))" | grep --color=never -E "^.+$" )
+                       do
+                           grep --color=never -E "== [[:digit:]][[:digit:]][[:digit:]][[:digit:]]-[[:digit:]][[:digit:]]-[[:digit:]][[:digit:]]" "../tickets/$t" | cut -b 4-
+                       done | sort | head -n +1 )
+
   # Print entry to terminal (unsorted)
     printf "%-15s -- " "Milestone ${i%.milestone}"
     printf "%-27s -- " "Completion: ${NUM_CLOSED_TICKETS} / $(( NUM_OPEN_TICKETS + NUM_CLOSED_TICKETS )) ($((100 * NUM_CLOSED_TICKETS / (NUM_OPEN_TICKETS + NUM_CLOSED_TICKETS)))%)"
-    grep --color=never "      Title:" "$i" | cut -d$':' -f2
+    printf "%s -- " "Last ticket completed on: $COMPLETION_DATE"
+    printf "Title: " && grep --color=never "      Title:" "$i" | cut -d$':' -f2
 done
