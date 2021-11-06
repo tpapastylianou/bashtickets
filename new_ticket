@@ -41,6 +41,7 @@
     done
 
   # Select a valid priority:
+    echo
     echo "Select a valid ticket priority"
     select TICKETPRIORITY in                                                                 \
         "Lowest     (desirable, but not strictly necessary; minimal disruption if not done)" \
@@ -65,3 +66,8 @@
     then vim '+cal cursor(2,14)' "${NEW_TICKET}.ticket"
     else nano +2,14 "${NEW_TICKET}.ticket"
     fi
+
+  # Report successful creation of new ticket, mentioning number.
+    echo
+    echo "Ticket No. ${NEW_TICKET} created successfully"
+    echo
