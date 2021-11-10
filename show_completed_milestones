@@ -34,9 +34,20 @@ do
                            grep --color=never -E "== [[:digit:]][[:digit:]][[:digit:]][[:digit:]]-[[:digit:]][[:digit:]]-[[:digit:]][[:digit:]]" "../tickets/$t" | cut -b 4-
                        done | sort | head -n +1 )
 
+  # Calculate difference from deadline (assumes correct date format!)
+    DEADLINE=$(grep --color=never "   Deadline: " "$i" | cut -d$':' -f2 )
+    DEADLINE=$(date --date "$DEADLINE" "+%s")
+    COMPLETION_DATE_SECONDS=$( date --date "$COMPLETION_DATE" "+%s" )
+    DATEDIFF=$(( (DEADLINE - COMPLETION_DATE_SECONDS) / 86400 ))
+
+    if   test $((DATEDIFF)) -eq 0; then DATESTR="on time"
+    elif test $((DATEDIFF)) -gt 0; then DATESTR="$DATEDIFF days ahead of deadline"
+    else                                DATESTR="$((-DATEDIFF)) days late"
+    fi
+
   # Print entry to terminal (unsorted)
     printf "%-15s -- " "Milestone ${i%.milestone}"
     printf "%-27s -- " "Completion: ${NUM_CLOSED_TICKETS} / $(( NUM_OPEN_TICKETS + NUM_CLOSED_TICKETS )) ($((100 * NUM_CLOSED_TICKETS / (NUM_OPEN_TICKETS + NUM_CLOSED_TICKETS)))%)"
-    printf "%s -- " "Last ticket completed on: $COMPLETION_DATE"
+    printf "%s -- " "Last ticket completed on: $COMPLETION_DATE ($DATESTR)"
     printf "Title: " && grep --color=never "      Title:" "$i" | cut -d$':' -f2
 done
