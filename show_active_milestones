@@ -20,13 +20,13 @@ do
     CLOSE_LINE=$(grep --color=never -n "=== Closed Tickets ===" "$i" | grep --color=never -o -E "^.*:")
     CLOSE_LINE="${CLOSE_LINE%:}"   # remove ":" character from grep result
 
-    NUM_OPEN_TICKETS=$( cat "$i" | head -n "+$(( CLOSE_LINE - 1 ))" | tail -n "+$(( OPEN_LINE + 1 ))" | wc -w )
+    NUM_OPEN_TICKETS=$( cat "$i" | head -n "+$(( CLOSE_LINE - 1 ))" | tail -n "+$(( OPEN_LINE + 1 ))" |  egrep "^\s*\$" -v | wc -l )
 
     if   test "$NUM_OPEN_TICKETS" -eq 0
     then continue
     fi
 
-    NUM_CLOSED_TICKETS=$( cat "$i" | tail -n "+$(( CLOSE_LINE + 1 ))" | wc -w )
+    NUM_CLOSED_TICKETS=$( cat "$i" | tail -n "+$(( CLOSE_LINE + 1 ))" |  egrep "^\s*\$" -v | wc -l )
 
   # Calculate days left from deadline (assumes correct date format!)
     DEADLINE=$(grep --color=never "   Deadline: " "$i" | cut -d$':' -f2 )

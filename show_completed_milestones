@@ -20,16 +20,16 @@ do
     CLOSE_LINE=$(grep --color=never -n "=== Closed Tickets ===" "$i" | grep --color=never -o -E "^.*:")
     CLOSE_LINE="${CLOSE_LINE%:}"   # remove ":" character from grep result
 
-    NUM_OPEN_TICKETS=$( cat "$i" | head -n "+$(( CLOSE_LINE - 1 ))" | tail -n "+$(( OPEN_LINE + 1 ))" | wc -w )
+    NUM_OPEN_TICKETS=$( cat "$i" | head -n "+$(( CLOSE_LINE - 1 ))" | tail -n "+$(( OPEN_LINE + 1 ))" |  egrep "^\s*\$" -v | wc -l )
 
     if   test "$NUM_OPEN_TICKETS" -gt 0
     then continue
     fi
 
-    NUM_CLOSED_TICKETS=$( cat "$i" | tail -n "+$(( CLOSE_LINE + 1 ))" | wc -w )
+    NUM_CLOSED_TICKETS=$( cat "$i" | tail -n "+$(( CLOSE_LINE + 1 ))" |  egrep "^\s*\$" -v | wc -l )
 
   # Determine date of last closed ticket
-    COMPLETION_DATE=$( for t in $(cat "$i" | tail -n "+$(( CLOSE_LINE + 1 ))" | grep --color=never -E "^.+$" )
+    COMPLETION_DATE=$( for t in $(cat "$i" | tail -n "+$(( CLOSE_LINE + 1 ))" | egrep --color=never -o "^.+\.ticket\b" )
                        do
                            grep --color=never -E "== [[:digit:]][[:digit:]][[:digit:]][[:digit:]]-[[:digit:]][[:digit:]]-[[:digit:]][[:digit:]]" "../tickets/$t" | cut -b 4-
                        done | sort | head -n +1 )
