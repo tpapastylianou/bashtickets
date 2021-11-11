@@ -4,8 +4,8 @@ MileStn No.: 000
    Deadline: # use YYYY-MM-DD format (or preferably, use automated script)
 Description: # Always leave a single space after ':' in these fields, for consistency in 'grep' queries
 
-    Write anything you want here, take as many lines as you want.
-    But do not alter the lines below, except to add/move/remove tickets under the appropriate header. 
+    Write anything you want here, take as many lines as you want.  But do not alter the lines below, except to
+    add/move tickets under the appropriate header (or preferably use the 'assign_tickets_to_milestone' command )
 
 
 === Open Tickets ===
