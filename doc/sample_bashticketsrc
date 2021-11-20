@@ -1,0 +1,27 @@
+# This config should contain a list of projects, one per line, in the following
+# format: <identifier> <one or more spaces> <path>
+#
+# e.g.
+#
+# name1 /path/to/project1
+# name2 /path/to/project2
+#
+# ... etc
+#
+# Valid names should consist only of alphanumeric characters and underscores.
+#
+# Empty lines, or lines starting with a '#' are ignored
+#
+# Project paths should be valid paths, that have been initialised via bt init,
+# and thus contain a 'tickets' directory and a 'milestones' directory.
+#
+# Note: you can specify the same path under different identifiers if you like.
+# This may be useful if you want to call one of your projects 'default' for
+# instance. Note that the 'default' identifier is not treated specially, it is
+# just another identifier.
+
+project1 ~/Desktop/project1/issue_tracker/
+project2 ~/Desktop/project2/ticketing
+project3 ~/Desktop/project3/bashtickets
+
+default  ~/Desktop/project1/issue_tracker

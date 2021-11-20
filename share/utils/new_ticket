@@ -1,5 +1,8 @@
 #!/bin/bash
 
+echo "UNDER CONSTRUCTION!"
+exit 1
+
   # Ensure script is initial-path agnostic
     TICKETS_PATH="$( dirname $BASH_SOURCE )"
     TICKETS_PATH="$TICKETS_PATH/tickets"

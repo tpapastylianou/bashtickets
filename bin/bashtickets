@@ -1,0 +1,89 @@
+#!/bin/bash
+
+# ------------------
+# Perliminary checks
+# ------------------
+
+# Define a useful 'error' utility function
+# (libstderred.so compatible -- see https://unix.stackexchange.com/a/164223)
+error () { awk "BEGIN { print \"$*\" > \"/dev/stderr\" }"; }
+
+# Assert everything is installed in the expected locations (relative to this script)
+export BT_BIN_DIR="$(dirname "$BASH_SOURCE" | xargs realpath)"
+export BT_ROOT_DIR="${BT_BIN_DIR%"/bin"}"
+export BT_BIN_DIR="${BT_ROOT_DIR/bin}"
+export BT_DOC_DIR="$BT_ROOT_DIR/doc"
+export BT_SHARE_DIR="$BT_ROOT_DIR/share"
+export BT_TEMPLATES_DIR="$BT_SHARE_DIR/templates"
+export BT_UTILS_DIR="$BT_SHARE_DIR/utils"
+
+if     test -d "$BT_ROOT_DIR"      &&
+       test -d "$BT_BIN_DIR"       &&
+       test -d "$BT_DOC_DIR"       &&
+       test -d "$BT_SHARE_DIR"     &&
+       test -d "$BT_TEMPLATES_DIR" &&
+       test -d "$BT_UTILS_DIR"
+
+then   :   # i.e. do nothing
+
+else   error "Error: did not detect a valid installation of bashtickets."
+       error "Please re-install and try again."
+       exit 1
+fi
+
+
+
+# ---------------------
+# Parse input arguments
+# ---------------------
+
+check_repo () { if     "$BT_UTILS_DIR/is_valid_bashtickets_repo"
+                then   :
+                else   exit 1
+                fi
+              }
+
+case "$1" in
+
+    ("init")    if     "$BT_UTILS_DIR/initialise_bashtickets_repository"
+                then   :
+                else   exit 1
+                fi ;;
+
+
+    ("update")    check_repo
+                  echo "Updating Milestones" ;;
+
+
+    ("show")    check_repo
+                echo "Showing tickets" ;;
+
+    ("comment")    check_repo
+                   echo "Adding comment to ticket" ;;
+
+    ("assign")    check_repo
+                  echo "Assigning tickets to milestone" ;;
+
+    ("close")    check_repo
+                 echo "Closing ticket" ;;
+
+    ("new")    check_repo
+               if     "$BT_UTILS_DIR/new_ticket_or_milestone $2"
+               then   :
+               else   exit 1
+               fi ;;
+
+    ("help")    echo "Display help / usage" ;;
+
+
+    ("status")    check_repo
+                  echo "Displaying milestone status (all/open/closed)" ;;
+
+    ("rm")    check_repo
+              echo "Removing last ticket / milestone or by number" ;;
+
+    ("edit")    check_repo
+                echo "Edit ticket / milestone" ;;
+
+    (*)    echo "Displaying Usage" ;;
+esac

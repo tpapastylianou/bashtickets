@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# In order for a directory to be a valid 'bashtickets repository', it needs to
+# contain a file called '.bashtickets.repo'.
+# Furthermore, it should contain a directory called 'tickets', and a directory
+# called 'milestones'.
+
+error() { awk "BEGIN { print \"$*\" > \"/dev/stderr\" }"; }  # Adapted from https://unix.stackexchange.com/a/164223
+
+if   test -f ./.bashtickets.repo
+then :
+else error "Error: Not a valid bashtickets repository ('.bashtickets.repo' file missing)"
+     exit 1
+fi
+
+if   test -d ./tickets
+then :
+else error "Error: Not a valid bashtickets repository ('tickets' directory missing)"
+     exit 1
+fi
+
+if   test -d ./milestones
+then :
+else error "Error: Not a valid bashtickets repository ('milestones' directory missing)"
+     exit 1
+fi
+
+exit 0

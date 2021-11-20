@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# Define a useful 'error' utility function
+# (libstderred.so compatible -- see https://unix.stackexchange.com/a/164223)
+error () { awk "BEGIN { print \"$*\" > \"/dev/stderr\" }"; }
+
+
+if     test $( ls -A | wc -l ) -eq 0   # empty directory detected
+
+then   if     touch .bashtickets.repo
+
+       then   :
+
+       else   error "Error: Could not create '.bashtickets.repo' file in current directory."
+              error "       Please ensure you have the necessary permissions."
+              exit 1
+       fi
+
+
+       if     mkdir tickets
+
+       then   :
+
+       else   error "Error: Could not create 'tickets' directory."
+              exit 1
+       fi
+
+
+       if     mkdir milestones
+
+       then   :
+
+       else   error "Error: Could not create 'milestones' directory."
+              exit 1
+       fi
+
+       echo   "Bashtickets repository initialised successfully."
+
+elif   test -d tickets && test -d milestones && test -f .bashtickets.repo
+
+then   error "Error: Current directory is already a valid bashtickets repository"
+       error "       Aborting..."
+       exit 1
+
+else   error "Error: Non-empty directory detected."
+       error "       To initialise as a bashtickets repository, please delete all files"
+       error "       (including hidden files) and try again."
+       exit 1
+fi
