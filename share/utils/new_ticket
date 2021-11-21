@@ -3,17 +3,20 @@
 echo "UNDER CONSTRUCTION!"
 exit 1
 
-  # Ensure script is initial-path agnostic
-    TICKETS_PATH="$( dirname $BASH_SOURCE )"
-    TICKETS_PATH="$TICKETS_PATH/tickets"
-    TICKETS_PATH="$( realpath $TICKETS_PATH )"
+  # Note: no 'valid repo' sanity checks here, since they will have been already
+  # performed by the main 'bashtickets' executable
+    TICKETS_PATH="$( realpath ./tickets )"
 
     cd $TICKETS_PATH
 
-  # Find the last ticket number, and increment by one
-    LAST_TICKET=$(ls *.ticket | tail -n 1)
-    LAST_TICKET=${LAST_TICKET%.ticket}   # parameter expansion: remove '.ticket' suffix
-    NEW_TICKET=$(echo $LAST_TICKET + 1 | bc)
+  # If this is the first ticket, start numbering from 1; otherwise, find the
+  # last ticket number, and increment by one.
+    if     test "!" "-f" *.ticket
+    then   NEW_TICKET=1
+    else   LAST_TICKET=$(ls *.ticket | tail -n 1)
+           LAST_TICKET=${LAST_TICKET%.ticket}   # parameter expansion: remove '.ticket' suffix
+           NEW_TICKET=$(echo $LAST_TICKET + 1 | bc)
+    fi
 
   # Zero-pad if we have a 1 or 2 digit number
     if test ${#NEW_TICKET} -eq 1; then NEW_TICKET="00${NEW_TICKET}"; fi
