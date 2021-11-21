@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# ------------------
-# Perliminary checks
-# ------------------
+# -------------
+# Sanity checks
+# -------------
 
 # Define a useful 'error' utility function
 # (libstderred.so compatible -- see https://unix.stackexchange.com/a/164223)
@@ -45,45 +45,71 @@ check_repo () { if     "$BT_UTILS_DIR/is_valid_bashtickets_repo"
 
 case "$1" in
 
-    ("init")    if     "$BT_UTILS_DIR/initialise_bashtickets_repository"
-                then   :
-                else   exit 1
-                fi ;;
+    ("init")
+        if     "$BT_UTILS_DIR/initialise_bashtickets_repository"
+        then   :
+        else   exit 1
+        fi ;;
 
 
-    ("update")    check_repo
-                  echo "Updating Milestones" ;;
+    ("update" | "up")
+        check_repo
+        echo "Updating Milestones" ;;
 
 
-    ("show")    check_repo
-                echo "Showing tickets" ;;
+    ("show" | "sh")
+        check_repo
+        echo "Showing tickets" ;;
 
-    ("comment")    check_repo
-                   echo "Adding comment to ticket" ;;
+    ("comment" | "m")
+        check_repo
+        echo "Adding comment to ticket" ;;
 
-    ("assign")    check_repo
-                  echo "Assigning tickets to milestone" ;;
+    ("assign")
+        check_repo
+        echo "Assigning tickets to milestone" ;;
 
-    ("close")    check_repo
-                 echo "Closing ticket" ;;
+    ("close" | "cl")
+        check_repo
+        echo "Closing ticket" ;;
 
-    ("new")    check_repo
-               if     "$BT_UTILS_DIR/new_ticket_or_milestone $2"
-               then   :
-               else   exit 1
-               fi ;;
+    ("new")
+        check_repo
+        if     "$BT_UTILS_DIR/new_ticket_or_milestone $2"
+        then   :
+        else   exit 1
+        fi ;;
 
-    ("help")    echo "Display help / usage" ;;
+    ("nt")
+        check_repo
+        if     "$BT_UTILS_DIR/new_ticket $2"
+        then   :
+        else   exit 1
+        fi ;;
+
+    ("nm")
+        check_repo
+        if     "$BT_UTILS_DIR/new_milestone $2"
+        then   :
+        else   exit 1
+        fi ;;
+
+    ("help" | "h")
+        echo "Display help / usage" ;;
 
 
-    ("status")    check_repo
-                  echo "Displaying milestone status (all/open/closed)" ;;
+    ("status" | "st")
+        check_repo
+        echo "Displaying milestone status (all/open/closed)" ;;
 
-    ("rm")    check_repo
-              echo "Removing last ticket / milestone or by number" ;;
+    ("rm")
+        check_repo
+        echo "Removing last ticket / milestone or by number" ;;
 
-    ("edit")    check_repo
-                echo "Edit ticket / milestone" ;;
+    ("edit" | "ed")
+        check_repo
+        echo "Edit ticket / milestone" ;;
 
-    (*)    echo "Displaying Usage" ;;
+    (*)
+        echo "Displaying Usage" ;;
 esac
