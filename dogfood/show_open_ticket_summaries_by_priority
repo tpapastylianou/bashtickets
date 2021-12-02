@@ -1,0 +1,39 @@
+#!/bin/bash
+
+TICKETS_PATH="$( dirname $BASH_SOURCE )"
+TICKETS_PATH="$TICKETS_PATH/tickets"
+TICKETS_PATH="$( realpath $TICKETS_PATH )"
+
+ANSI_COLOR_LIGHTBLUE="\033[94m"
+ANSI_BOLD_ON="\033[1m"
+ANSI_BOLD_OFF="\033[22m"
+ANSI_COLOR_OFF="\033[39m"
+
+cd $TICKETS_PATH
+
+for PRIORITY in Lowest Normal Important Urgent Highest
+do
+
+  PRIORITY_TICKETS=$(grep -l "Priority: $PRIORITY" *.ticket)
+  COUNT=0
+  PRINTOUT=
+
+  for i in $PRIORITY_TICKETS;
+  do
+
+    grep "Status: Open" "$i" > /dev/null
+
+    if test 0 -eq $?
+    then
+      COUNT=$((COUNT + 1))
+      PRINTOUT="$PRINTOUT$i:"
+      PRINTOUT="$PRINTOUT $(grep Summary "$i")"
+      PRINTOUT=${PRINTOUT}$'\n'
+    fi
+
+  done
+
+  echo -e "${ANSI_COLOR_LIGHTBLUE}== Priority: ${ANSI_BOLD_ON}${PRIORITY}${ANSI_BOLD_OFF} (${COUNT} open tickets)${ANSI_COLOR_OFF}"
+  echo "$PRINTOUT"
+
+done

@@ -1,0 +1,21 @@
+MileStn No.: 001
+      Title: Bashtickets v2: command based interface
+    Created: 2021-12-02
+   Deadline: 2022-01-02
+Description: v1 relies on single commands, which are getting rather numerous,
+             and a "commands within relevant directory" which may be cumbersome.
+
+             v2 is a rehaul of the bashtickets interface, keeping the philosophy
+             and ticket/milestone structure the same, but converting the
+             commands to a "command subcommand" interface (e.g. like git).
+
+
+
+=== Open Tickets ===
+
+001.ticket     Summary: Selectable options specified in bt.repo config file.
+002.ticket     Summary: selectable milestone?
+003.ticket     Summary: Implement man pages
+
+=== Closed Tickets ===
+

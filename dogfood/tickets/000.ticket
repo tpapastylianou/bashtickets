@@ -1,0 +1,26 @@
+ Ticket No.: 000
+    Summary: # Always leave a single space after ':' for consistency with 'grep' queries
+   Reporter: # Will be automatically detected from user when creating new ticket.
+       Type: # Choose from: Investigation, Bugfix, Feature, Task
+   Priority: # Choose from: Lowest, Normal, Important, Urgent, Highest
+  Milestone: # Optional: link to an existing milestone by its number (e.g. 000)
+   Keywords: 
+         Cc: 
+      Owner:
+       Date: # use YYYY-MM-DD format
+     Status: # Choose from: Open, Closed
+ Resolution: # Choose from: Completed, Delegated, Postponed, Cancelled, Invalid (or leave empty if still unresolved)
+Description: This is a template for writing tickets. The following are the priority levels in detail.
+             - Lowest     (desirable, but not strictly necessary; minimal disruption if not done)    
+             - Normal     (as soon as possible; required, but not urgent or critical)    
+             - Important  (but can wait)    
+             - Urgent     (but not of critical importance)     
+             - Highest    (both important and urgent)     
+
+
+== 2020-01-02
+Did stuff. Changed priority from normal to urgent
+
+
+== 2020-01-03
+Fixed bug. (commit:000). Closing ticket.
