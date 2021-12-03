@@ -1,0 +1,21 @@
+ Ticket No.: 016
+    Summary: Ensure appropriate function of 'edit' subcommand
+   Reporter: Tasos
+       Type: Task
+   Priority: Normal
+  Milestone: 001
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2021-12-03
+     Status: Open
+ Resolution: 
+Description: Presumably this will be as simple as launching the default editor
+             on the appropriate ticket/milestone
+
+             Possible features / interface:
+
+             edit last ticket   (ed lt)
+             edit last milestone  (ed lm)
+             edit ticket 015   (ed #015)
+             edit milestone 003  (ed @003)

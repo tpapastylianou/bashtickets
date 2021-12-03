@@ -85,7 +85,7 @@ case "$1" in
     ("nm")            check_repo && trycatch "new_milestone" "$2" $EXIT_STATUS__FAILED_TO_CREATE_MILESTONE ;;
     ("help" | "h")    display_help ;;
     ("status" | "st") check_repo && echo "Displaying milestone status (all/open/closed)" ;;
-    ("rm")            check_repo && echo "Removing last ticket / milestone or by number" ;;
+    ("remove" | "rm") check_repo && echo "Removing last ticket / milestone or by number" ;;
     ("edit" | "ed")   check_repo && echo "Edit ticket / milestone" ;;
     (*)               display_usage
 esac
