@@ -33,83 +33,59 @@ fi
 
 
 
+# -------------------------------------
+# Define helper constants and functions
+# -------------------------------------
+
+# Exit statuses for various errors
+declare -i EXIT_STATUS__INVALID_BASHTICKETS_INSTALLATION=1
+declare -i EXIT_STATUS__NOT_A_VALID_BASHTICKETS_REPOSITORY=2
+declare -i EXIT_STATUS__FAILED_TO_INITIALIZE_REPOSITORY=3
+declare -i EXIT_STATUS__FAILED_TO_CREATE_TICKET_OR_MILESTONE=4
+declare -i EXIT_STATUS__FAILED_TO_CREATE_TICKET=5
+declare -i EXIT_STATUS__FAILED_TO_CREATE_MILESTONE=6
+
+declare -i EXIT_STATUS__CALLED_WITHOUT_SUCOMMAND=100
+
+function trycatch () {
+
+    declare    COMMAND=( "${@: 1: ${#@} - 1}" )   # Collect all input arguments 
+                                                  # except last, as an array
+
+    declare -i EXITSTATUS="${@: -1}"              # Get last input argument only
+
+    if   "$BT_UTILS_DIR/${COMMAND[@]}"   # Run the respective BT utility command
+                                         # given as the first argument, with
+                                         # remaining arguments passed
+                                         # appropriately
+    then :
+    else exit $EXITSTATUS   # If the above command exited with non-zero status,
+                            # abort this script with the exit status provided as
+                            # the last input argument to this function
+    fi
+}
+
+function check_repo    () { trycatch "is_valid_bashtickets_repository" $EXIT_STATUS__NOT_A_VALID_BASHTICKETS_REPOSITORY; }
+function display_help  () { echo "Showing help... TODO"; exit 0; }
+function display_usage () { echo "Displaying usage ... TODO"; exit $EXIT_STATUS__CALLED_WITHOUT_SUCOMMAND; }
+
 # ---------------------
 # Parse input arguments
 # ---------------------
 
-check_repo () { if     "$BT_UTILS_DIR/is_valid_bashtickets_repo"
-                then   :
-                else   exit 1
-                fi
-              }
-
 case "$1" in
-
-    ("init")
-        if     "$BT_UTILS_DIR/initialise_bashtickets_repository"
-        then   :
-        else   exit 1
-        fi ;;
-
-
-    ("update" | "up")
-        check_repo
-        echo "Updating Milestones" ;;
-
-
-    ("show" | "sh")
-        check_repo
-        echo "Showing tickets" ;;
-
-    ("comment" | "m")
-        check_repo
-        echo "Adding comment to ticket" ;;
-
-    ("assign")
-        check_repo
-        echo "Assigning tickets to milestone" ;;
-
-    ("close" | "cl")
-        check_repo
-        echo "Closing ticket" ;;
-
-    ("new")
-        check_repo
-        if     "$BT_UTILS_DIR/new_ticket_or_milestone $2"
-        then   :
-        else   exit 1
-        fi ;;
-
-    ("nt")
-        check_repo
-        if     "$BT_UTILS_DIR/new_ticket $2"
-        then   :
-        else   exit 1
-        fi ;;
-
-    ("nm")
-        check_repo
-        if     "$BT_UTILS_DIR/new_milestone $2"
-        then   :
-        else   exit 1
-        fi ;;
-
-    ("help" | "h")
-        echo "Display help / usage" ;;
-
-
-    ("status" | "st")
-        check_repo
-        echo "Displaying milestone status (all/open/closed)" ;;
-
-    ("rm")
-        check_repo
-        echo "Removing last ticket / milestone or by number" ;;
-
-    ("edit" | "ed")
-        check_repo
-        echo "Edit ticket / milestone" ;;
-
-    (*)
-        echo "Displaying Usage" ;;
+    ("init")          trycatch "initialise_bashtickets_repository" $EXIT_STATUS__FAILED_TO_INITIALIZE_REPOSITORY ;;
+    ("update" | "up") check_repo && echo "Updating Milestones" ;;
+    ("show" | "sh")   check_repo && echo "Showing tickets" ;;
+    ("comment" | "m") check_repo && echo "Adding comment to ticket" ;;
+    ("assign")        check_repo && echo "Assigning tickets to milestone" ;;
+    ("close" | "cl")  check_repo && echo "Closing ticket" ;;
+    ("new")           check_repo && trycatch "new_ticket_or_milestone" "$2" $EXIT_STATUS__FAILED_TO_CREATE_TICKET_OR_MILESTONE ;;
+    ("nt")            check_repo && trycatch "new_ticket" "$2" $EXIT_STATUS__FAILED_TO_CREATE_TICKET ;;
+    ("nm")            check_repo && trycatch "new_milestone" "$2" $EXIT_STATUS__FAILED_TO_CREATE_MILESTONE ;;
+    ("help" | "h")    display_help ;;
+    ("status" | "st") check_repo && echo "Displaying milestone status (all/open/closed)" ;;
+    ("rm")            check_repo && echo "Removing last ticket / milestone or by number" ;;
+    ("edit" | "ed")   check_repo && echo "Edit ticket / milestone" ;;
+    (*)               display_usage
 esac
