@@ -67,7 +67,7 @@ function trycatch () {
     fi
 }
 
-function check_repo    () { trycatch "is_valid_bashtickets_repository" $EXIT_STATUS__NOT_A_VALID_BASHTICKETS_REPOSITORY && source .bashtickets.repo/config; }
+function check_repo    () { trycatch "is_valid_bashtickets_repository" $EXIT_STATUS__NOT_A_VALID_BASHTICKETS_REPOSITORY && source .bashtickets/config; }
 function display_help  () { echo "Showing help... TODO"; exit 0; }
 function display_usage () { echo "Displaying usage ... TODO"; exit $EXIT_STATUS__CALLED_WITHOUT_SUCOMMAND; }
 
