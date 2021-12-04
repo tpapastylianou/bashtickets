@@ -12,17 +12,13 @@
     LAST_MILESTONE=${LAST_MILESTONE%.milestone}   # parameter expansion: remove '.milestone' suffix
     NEW_MILESTONE=$(echo $LAST_MILESTONE + 1 | bc)
 
-  # Zero-pad if we have a 1 or 2 digit number
-    if test ${#NEW_MILESTONE} -eq 1; then NEW_MILESTONE="00${NEW_MILESTONE}"; fi
-    if test ${#NEW_MILESTONE} -eq 2; then NEW_MILESTONE="0${NEW_MILESTONE}"; fi
-
   # Create a new milestone from template, discarding placeholder texts
-    cat 000.milestone | head -n +6                 >  "${NEW_MILESTONE}.milestone"
-    cat 000.milestone | head -n +12 | tail -n +9   >> "${NEW_MILESTONE}.milestone"
-    cat 000.milestone | head -n +17 | tail -n +14  >> "${NEW_MILESTONE}.milestone"
+    cat 0.milestone | head -n +6                 >  "${NEW_MILESTONE}.milestone"
+    cat 0.milestone | head -n +12 | tail -n +9   >> "${NEW_MILESTONE}.milestone"
+    cat 0.milestone | head -n +17 | tail -n +14  >> "${NEW_MILESTONE}.milestone"
 
   # Update milestone number
-    sed -i "s/MileStn No.: 000/MileStn No.: ${NEW_MILESTONE}/" "${NEW_MILESTONE}.milestone"
+    sed -i "s/MileStn No.: 0/MileStn No.: ${NEW_MILESTONE}/" "${NEW_MILESTONE}.milestone"
 
   # Clean up comments
     sed -i "s/#.*//g"  "${NEW_MILESTONE}.milestone"   # remove all comments

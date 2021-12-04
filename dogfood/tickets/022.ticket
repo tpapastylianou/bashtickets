@@ -1,0 +1,37 @@
+ Ticket No.: 022
+    Summary: Ensure appropriate / consistent use of reference links throughout codebase
+   Reporter: Tasos
+       Type: Feature
+   Priority: Normal
+  Milestone: 1
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2021-12-04
+     Status: Open
+ Resolution: 
+Description: I would like to have support for referencing within/between
+             tickets, in the same manner as trac.
+
+             In practice, this means support / consistent use of
+
+                ticket:N
+                milestone:N
+                commit:N  (or commit:hash for git systems)
+
+             or their equivalent short forms, which should be functionally
+             equivalent to ticket:N for any functions that make use of such
+             references. For now I have settled for:
+
+                #N
+                @N
+                [N]   (or [hash] for git systems)
+
+
+             Note that #N and [N] is the same syntax used by trac.
+
+             PS. One argument against #N is that it might clash with commented
+             code in a ticket. However I think in practice I don't care about
+             this, since this could be easily circumvented by having good style
+             which dictates a space after the # character when writing
+             comments anyway.

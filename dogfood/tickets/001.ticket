@@ -20,3 +20,12 @@ Description: In bashtickets v1 and v2, the various interactive 'menus' were
 
              (or even if the .bashtickets.repo file should be a folder instead,
              to accommodate future changes)
+
+
+== 2021-12-04
+I have decided to rename .bashtickets.repo into simply .bashtickets, and make it
+a folder. This will contain a file called `config`, which should be a sourcable
+bash script.
+
+The validation scripts will need to be adapted to check if there is a valid
+config file etc.

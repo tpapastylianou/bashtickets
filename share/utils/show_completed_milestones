@@ -9,7 +9,7 @@ cd $MILESTONES_PATH
 for i in *.milestone
 do
   # Skip template
-    if test "$i" = "000.milestone"
+    if test "$i" = "0.milestone"
     then continue
     fi
 

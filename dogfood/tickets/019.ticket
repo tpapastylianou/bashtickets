@@ -1,0 +1,25 @@
+ Ticket No.: 019
+    Summary: Remove zero-padding, adjust with ls | sort -n where appropriate
+   Reporter: Tasos
+       Type: Task
+   Priority: Normal
+  Milestone: 001
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2021-12-04
+     Status: Open
+ Resolution: 
+Description: For bashtickets v1-2, the level of zero-padding is hardwired.
+
+             This is short-sighted and introduces problems when tickets go
+             beyong 999. One solution would be to automatically update the
+             padding level, however this means that ticket numbers change, which
+             can cause problems with user-scripts and github version tracking.
+
+             Alternatively we can dump the padding altogether, but then you have
+             problems with ls sorting lexicographically rather than numerically.
+
+             In the end I think I will go for the latter solution, and simply
+             try to adjust any internal ls functions with sort -n (i.e. sort by
+             natural numbers).

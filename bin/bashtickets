@@ -4,9 +4,11 @@
 # Sanity checks
 # -------------
 
-# Define a useful 'error' utility function
+# Define a useful 'error' utility function, and make it available to subcommands
 # (libstderred.so compatible -- see https://unix.stackexchange.com/a/164223)
 error () { awk "BEGIN { print \"$*\" > \"/dev/stderr\" }"; }
+export -f error
+
 
 # Assert everything is installed in the expected locations (relative to this script)
 export BT_BIN_DIR="$(dirname "$BASH_SOURCE" | xargs realpath)"
@@ -65,7 +67,7 @@ function trycatch () {
     fi
 }
 
-function check_repo    () { trycatch "is_valid_bashtickets_repository" $EXIT_STATUS__NOT_A_VALID_BASHTICKETS_REPOSITORY; }
+function check_repo    () { trycatch "is_valid_bashtickets_repository" $EXIT_STATUS__NOT_A_VALID_BASHTICKETS_REPOSITORY && source .bashtickets.repo/config; }
 function display_help  () { echo "Showing help... TODO"; exit 0; }
 function display_usage () { echo "Displaying usage ... TODO"; exit $EXIT_STATUS__CALLED_WITHOUT_SUCOMMAND; }
 

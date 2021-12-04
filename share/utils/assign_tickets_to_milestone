@@ -11,7 +11,7 @@ then echo "Usage:"
      echo "or simply:"
      echo "    $(basename $0) 001 002 001"
      echo
-     echo "Note: Using '000' as the milestone removes any existing milestones from the specified tickets instead"
+     echo "Note: Using '0' as the milestone removes any existing milestones from the specified tickets instead"
      exit
 fi
 
@@ -49,7 +49,7 @@ fi
 
 # Process all tickets
 MILESTONE_NO="${MILESTONE_ARG%.milestone}"   # Remove .milestone suffix
-MILESTONE_NO="${MILESTONE_NO%000}"           # If milestone was '000', use empty string instead.
+MILESTONE_NO="${MILESTONE_NO%0}"           # If milestone was '0', use empty string instead.
 MILESTONE_FILE="$MILESTONES_PATH/${MILESTONE_ARG%.milestone}.milestone"
 
 for  TICKET_ARG in "${TICKET_ARGS[@]}"

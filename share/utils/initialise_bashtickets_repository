@@ -1,9 +1,7 @@
 #!/bin/bash
 
-# Define a useful 'error' utility function
-# (libstderred.so compatible -- see https://unix.stackexchange.com/a/164223)
-error () { awk "BEGIN { print \"$*\" > \"/dev/stderr\" }"; }
-
+# Note: the 'error' function used here is defined in the main bashtickets script
+# and exported here
 
 if     test $( ls -A | wc -l ) -eq 0   # empty directory detected
 

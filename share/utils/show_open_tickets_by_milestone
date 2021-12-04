@@ -11,7 +11,7 @@ then echo "Usage:"
      echo "or simply:"
      echo "    $(basename $0) 001"
      echo
-     echo "Note: Using '000' as the milestone displays tickets that are not assigned to any milestones"
+     echo "Note: Using '0' as the milestone displays tickets that are not assigned to any milestones"
      exit
 fi
 
@@ -24,7 +24,7 @@ MILESTONES_PATH="$BASHTICKETS_PATH/milestones"
 MILESTONE="$1"
 ERRORS=0
 
-if   test "${MILESTONE%.milestone}" = "000"
+if   test "${MILESTONE%.milestone}" = "0"
 then MILESTONE=""
 elif test -f "$MILESTONES_PATH/${MILESTONE%.milestone}.milestone"
 then :

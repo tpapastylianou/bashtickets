@@ -40,8 +40,8 @@ else
     ERRORS=0
 
     for  ARG in "${ARGS[@]}"
-    do   if   test "${ARG%.milestone}" = "000"
-         then echo "Invalid input (000) as milestone in this context."
+    do   if   test "${ARG%.milestone}" = "0"
+         then echo "Invalid input (0) as milestone in this context."
               exit 1
          elif test -f "$MILESTONES_PATH/${ARG%.milestone}.milestone"
          then :
