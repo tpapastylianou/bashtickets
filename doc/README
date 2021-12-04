@@ -1,0 +1,10 @@
+# The 'init' subcommand will automatically generate a ".bashtickets" directory
+# containing a "config" file such as this one (in fact, it will be a copy of
+# this particular sample_config file, unless you specify a different one via the
+# "--config" option at the time of initialization).
+#
+# The config file's format is simple: it is a normal file containing bash
+# variable assignments, and the file will be sourced directly to use these
+# variables in other commands as needed. Some variables are simple bash
+# variables, whereas others (the ones used to define choices in interactive
+# menus) are effectively standard bash arrays containing string elements.
