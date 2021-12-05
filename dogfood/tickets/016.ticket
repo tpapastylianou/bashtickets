@@ -19,3 +19,9 @@ Description: Presumably this will be as simple as launching the default editor
              edit last milestone  (ed lm)
              edit ticket 015   (ed #015)
              edit milestone 003  (ed @003)
+
+
+== 2021-12-05
+A mechanism will have to be provided, for the user to be able to edit a file in
+their editor of choice, and ALSO be able to specify which line to open their
+file at.

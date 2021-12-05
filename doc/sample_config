@@ -1,3 +1,10 @@
+# A bash array of strings of the form
+#     "PriorityLevel   (optional description)"
+#
+# The full string is shown in the interactive menu. 'PriorityLevel' is what is
+# assigned as a priority label to the ticket itself. This should be a single
+# word, as everything after the first space is discarded when assigning this to
+# the ticket itself.
 TICKET_PRIORITY_LEVELS=(
   "Lowest     (desirable, but not strictly necessary; minimal disruption if not done)"
   "Normal     (as soon as possible; required, but not urgent or critical)"

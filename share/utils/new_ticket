@@ -6,6 +6,9 @@
 # Note: no 'valid repo' sanity checks here, since they will have been already
 # performed by the main 'bashtickets' executable
 
+# 'Import' arrays defined in config
+  eval "$CONFIG"   # exported from the main bashtickets script
+
 # Capture ticket path and template onto the relevant variables
   TICKETS_PATH="$( realpath ./tickets )"
   TICKET_TEMPLATE="$BT_TEMPLATES_DIR/0.ticket"
@@ -15,64 +18,61 @@
 # If this is the first ticket, start numbering from 1; otherwise, find the
 # last ticket number, and increment by one.
   if     test "!" "-f" *.ticket
-  then   NEW_TICKET=1
-  else   LAST_TICKET=$(ls *.ticket | tail -n 1)
-         LAST_TICKET=${LAST_TICKET%.ticket}   # parameter expansion: remove '.ticket' suffix
-         NEW_TICKET=$(( $LAST_TICKET + 1 ))
+  then   NEW_TICKET_NUM=1
+  else   LAST_TICKET_NUM=$(ls *.ticket | tail -n 1)
+         LAST_TICKET_NUM=${LAST_TICKET_NUM%.ticket}   # parameter expansion: remove '.ticket' suffix
+         NEW_TICKET_NUM=$(( $LAST_TICKET_NUM + 1 ))
   fi
 
-# Create a new ticket from template, discarding anythine below line 13
-  head "$TICKET_TEMPLATE" -n +13 > "${NEW_TICKET}.ticket"
+  NEW_TICKET_FILE="${NEW_TICKET_NUM}.ticket"
+
+# Create a new ticket from template
+  cp "$TICKET_TEMPLATE" "${NEW_TICKET_FILE}"
 
 # Update ticket number
-  sed -i "s/Ticket No.: 0/Ticket No.: ${NEW_TICKET}/" "${NEW_TICKET}.ticket"
-
-# Clean up templated text, comments etc
-  sed -i "s/Description: .*/Description: /" "${NEW_TICKET}.ticket"
-  sed -i "s/#.*//g"  "${NEW_TICKET}.ticket"   # remove all comments
+  sed -i "s/Ticket No.: /Ticket No.: ${NEW_TICKET_NUM}/" "${NEW_TICKET_FILE}"
 
 # Try to set owner and reporter automatically:
   WHOAMI=$(whoami)
   WHOAMI=${WHOAMI^}   # parameter expansion: make first character uppercase
-  sed -i "s/Reporter: /Reporter: $WHOAMI/" "${NEW_TICKET}.ticket"
-  sed -i "s/Owner:/Owner: $WHOAMI/" "${NEW_TICKET}.ticket"
+  sed -i "s/Reporter: /Reporter: $WHOAMI/" "${NEW_TICKET_FILE}"
+  sed -i "s/Owner:/Owner: $WHOAMI/" "${NEW_TICKET_FILE}"
 
 # Select a valid type:
   echo "Select a valid ticket type:"
-  select TICKETTYPE in Investigation Bugfix Feature Task
+  select TICKET_TYPE in "${TICKET_TYPES[@]}"
   do
-      sed -i "s/Type: /Type: $TICKETTYPE/" "${NEW_TICKET}.ticket"
+      sed -i "s/Type: /Type: $TICKET_TYPE/" "${NEW_TICKET_FILE}"
       break
   done
 
 # Select a valid priority:
   echo
   echo "Select a valid ticket priority"
-  select TICKETPRIORITY in                                                                 \
-      "Lowest     (desirable, but not strictly necessary; minimal disruption if not done)" \
-      "Normal     (as soon as possible; required, but not urgent or critical)"             \
-      "Important  (but can wait)"                                                          \
-      "Urgent     (but not of critical importance)"                                        \
-      "Highest    (both important and urgent)"
+  select TICKET_PRIORITY in "${TICKET_PRIORITY_LEVELS[@]}"
   do
-      sed -i "s/Priority: /Priority: ${TICKETPRIORITY%% *}/" "${NEW_TICKET}.ticket"
+      sed -i "s/Priority: /Priority: ${TICKET_PRIORITY%% *}/" "${NEW_TICKET_FILE}"   # Remove everything in the priority string after the first space (i.e. the explanation of the priority level)
       break
   done
 
 # Set today's date
   TODAY=$(date +"%Y-%m-%d")
-  sed -i "s/Date: /Date: $TODAY/" "${NEW_TICKET}.ticket"
+  sed -i "s/Date: /Date: $TODAY/" "${NEW_TICKET_FILE}"
 
 # Declare status as Open
-  sed -i "s/Status: /Status: Open/" "${NEW_TICKET}.ticket"
+  sed -i "s/Status: /Status: Open/" "${NEW_TICKET_FILE}"
 
-# Open resulting file in vim or nano for further editing, place cursor at Summary
+# Open resulting file in the user's editor of choice, as detected by the
+# EDITOR environmental variable. This can be overriden per bashtickets
+# repository, by assigning to this variable in the repository's config file
+# instead. If the EDITOR variable is not defined at all, nano is used as the
+# default editor.
   if   test $EDITOR = "vim"
-  then vim '+cal cursor(2,14)' "${NEW_TICKET}.ticket"
-  else nano +2,14 "${NEW_TICKET}.ticket"
+  then vim '+cal cursor(2,14)' "${NEW_TICKET_FILE}"
+  else nano +2,14 "${NEW_TICKET_FILE}"
   fi
 
 # Report successful creation of new ticket, mentioning number.
   echo
-  echo "Ticket No. ${NEW_TICKET} created successfully"
+  echo "Ticket No. ${NEW_TICKET_NUM} created successfully"
   echo
