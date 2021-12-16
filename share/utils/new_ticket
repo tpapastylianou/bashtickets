@@ -19,7 +19,7 @@
 # last ticket number, and increment by one.
   if     test "!" "-f" *.ticket
   then   NEW_TICKET_NUM=1
-  else   LAST_TICKET_NUM=$(ls *.ticket | tail -n 1)
+  else   LAST_TICKET_NUM=$(ls *.ticket | sort -n | tail -n -1)   # list files, sort in numerical (not alphabetical) order, and keep last filename
          LAST_TICKET_NUM=${LAST_TICKET_NUM%.ticket}   # parameter expansion: remove '.ticket' suffix
          NEW_TICKET_NUM=$(( $LAST_TICKET_NUM + 1 ))
   fi
@@ -40,7 +40,7 @@
 
 # Select a valid type:
   echo "Select a valid ticket type:"
-  select TICKET_TYPE in "${TICKET_TYPES[@]}"
+  select TICKET_TYPE in "${TICKET_TYPES[@]}"   # TICKET_TYPES obtained from config
   do
       sed -i "s/Type: /Type: $TICKET_TYPE/" "${NEW_TICKET_FILE}"
       break
@@ -49,7 +49,7 @@
 # Select a valid priority:
   echo
   echo "Select a valid ticket priority"
-  select TICKET_PRIORITY in "${TICKET_PRIORITY_LEVELS[@]}"
+  select TICKET_PRIORITY in "${TICKET_PRIORITY_LEVELS[@]}"   # TICKET_PRIORITY_LEVELS obtained from config
   do
       sed -i "s/Priority: /Priority: ${TICKET_PRIORITY%% *}/" "${NEW_TICKET_FILE}"   # Remove everything in the priority string after the first space (i.e. the explanation of the priority level)
       break
