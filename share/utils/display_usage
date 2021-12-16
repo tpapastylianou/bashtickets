@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo "Displaying Usage"
+exit 0

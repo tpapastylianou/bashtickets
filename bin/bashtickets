@@ -83,9 +83,9 @@ case "$1" in
     ("comment" | "m") check_repo && echo "Adding comment to ticket" ;;
     ("assign")        check_repo && echo "Assigning tickets to milestone" ;;
     ("close" | "cl")  check_repo && echo "Closing ticket" ;;
-    ("new")           check_repo && trycatch "new_ticket_or_milestone" "$2" $EXIT_STATUS__FAILED_TO_CREATE_TICKET_OR_MILESTONE ;;
-    ("nt")            check_repo && trycatch "new_ticket" $EXIT_STATUS__FAILED_TO_CREATE_TICKET ;;
-    ("nm")            check_repo && trycatch "new_milestone" $EXIT_STATUS__FAILED_TO_CREATE_MILESTONE ;;
+    ("new")           check_repo && shift && trycatch "new_ticket_or_milestone" "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET_OR_MILESTONE ;;
+    ("nt")            check_repo && shift && trycatch "new_ticket" "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET ;;
+    ("nm")            check_repo && shift && trycatch "new_milestone" "$@" $EXIT_STATUS__FAILED_TO_CREATE_MILESTONE ;;
     ("help" | "h")    display_help ;;
     ("status" | "st") check_repo && echo "Displaying milestone status (all/open/closed)" ;;
     ("remove" | "rm") check_repo && echo "Removing last ticket / milestone or by number" ;;

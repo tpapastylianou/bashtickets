@@ -3,6 +3,12 @@
 # Note: the 'error' function used here is defined in the main bashtickets script
 # and exported here
 
+if   test ${#@} -gt 0
+then "$BT_UTILS_DIR/display_usage"
+     exit 1
+fi
+
+
 if     test $( ls -A | wc -l ) -eq 0   # empty directory detected
 
 then   if     mkdir .bashtickets
