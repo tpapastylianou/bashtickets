@@ -20,3 +20,11 @@ TICKET_TYPES=(
   "Task"
 )
 
+function get_default_milestone_startdate () {
+  date +"%Y-%m-%d"   # i.e. today's date
+}
+
+function get_default_milestone_deadline () {
+  local STARTDATE="$1"
+  date --date="$STARTDATE +1 month" +"%Y-%m-%d"
+}

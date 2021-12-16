@@ -68,10 +68,9 @@ function trycatch () {
 }
 
 # helper functions
-function check_repo    () { trycatch "is_valid_bashtickets_repository" $EXIT_STATUS__NOT_A_VALID_BASHTICKETS_REPOSITORY; }
+function check_repo    () { trycatch "is_valid_bashtickets_repository" $EXIT_STATUS__NOT_A_VALID_BASHTICKETS_REPOSITORY && export CONFIG_FILE="$( realpath ./.bashtickets/config )" }
 function display_help  () { echo "Showing help... TODO"; exit 0; }
 function display_usage () { echo "Displaying usage ... TODO"; exit $EXIT_STATUS__CALLED_WITHOUT_SUBCOMMAND; }
-function export_config () { source ./.bashtickets/config && export CONFIG="$(declare -p TICKET_PRIORITY_LEVELS TICKET_TYPES)"; }
 
 # ---------------------
 # Parse input arguments
@@ -85,7 +84,7 @@ case "$1" in
     ("assign")        check_repo && echo "Assigning tickets to milestone" ;;
     ("close" | "cl")  check_repo && echo "Closing ticket" ;;
     ("new")           check_repo && trycatch "new_ticket_or_milestone" "$2" $EXIT_STATUS__FAILED_TO_CREATE_TICKET_OR_MILESTONE ;;
-    ("nt")            check_repo && export_config && trycatch "new_ticket" $EXIT_STATUS__FAILED_TO_CREATE_TICKET ;;
+    ("nt")            check_repo && trycatch "new_ticket" $EXIT_STATUS__FAILED_TO_CREATE_TICKET ;;
     ("nm")            check_repo && trycatch "new_milestone" $EXIT_STATUS__FAILED_TO_CREATE_MILESTONE ;;
     ("help" | "h")    display_help ;;
     ("status" | "st") check_repo && echo "Displaying milestone status (all/open/closed)" ;;
