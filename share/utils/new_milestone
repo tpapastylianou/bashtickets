@@ -7,7 +7,7 @@
   # performed by the main 'bashtickets' executable
 
 # 'Import' arrays defined in config
-   eval "$CONFIG"   # exported from the main bashtickets script
+  source "$CONFIG_FILE"
 
 # Capture milestones path and template onto the relevant variables
   MILESTONES_PATH="$( realpath ./milestones )"
