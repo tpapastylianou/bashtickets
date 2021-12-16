@@ -1,38 +1,52 @@
 #!/bin/bash
 
-  # Ensure script is initial-path agnostic
-    MILESTONES_PATH="$( dirname $BASH_SOURCE )"
-    MILESTONES_PATH="$MILESTONES_PATH/milestones"
-    MILESTONES_PATH="$( realpath $MILESTONES_PATH )"
+## Note: the 'error' function used here is defined in the main bashtickets
+  # script and exported here
 
-    cd $MILESTONES_PATH
+## Note: no 'valid repo' sanity checks here, since they will have been already
+  # performed by the main 'bashtickets' executable
 
-  # Find the last milestone number, and increment by one
-    LAST_MILESTONE=$(ls *.milestone | tail -n 1)
-    LAST_MILESTONE=${LAST_MILESTONE%.milestone}   # parameter expansion: remove '.milestone' suffix
-    NEW_MILESTONE=$(echo $LAST_MILESTONE + 1 | bc)
+# 'Import' arrays defined in config
+   eval "$CONFIG"   # exported from the main bashtickets script
 
-  # Create a new milestone from template, discarding placeholder texts
-    cat 0.milestone | head -n +6                 >  "${NEW_MILESTONE}.milestone"
-    cat 0.milestone | head -n +12 | tail -n +9   >> "${NEW_MILESTONE}.milestone"
-    cat 0.milestone | head -n +17 | tail -n +14  >> "${NEW_MILESTONE}.milestone"
+# Capture milestones path and template onto the relevant variables
+  MILESTONES_PATH="$( realpath ./milestones )"
+  MILESTONE_TEMPLATE="$BT_TEMPLATES_DIR/0.milestone"
 
-  # Update milestone number
-    sed -i "s/MileStn No.: 0/MileStn No.: ${NEW_MILESTONE}/" "${NEW_MILESTONE}.milestone"
+  cd $MILESTONES_PATH
 
-  # Clean up comments
-    sed -i "s/#.*//g"  "${NEW_MILESTONE}.milestone"   # remove all comments
+## If this is the first milestone, start numbering from 1; otherwise, find the
+  # last milestone number, and increment by one.
+  if     test "!" "-f" *.milestone
+  then   NEW_MILESTONE_NUM=1
+  else   LAST_MILESTONE_NUM=$(ls *.milestone | sort -n | tail -n -1)   # list files, sort in numerical (not alphabetical) order, and keep last filename
+         LAST_MILESTONE_NUM=${LAST_MILESTONE_NUM%.milestone}   # parameter expansion: remove '.milestone' suffix
+         NEW_MILESTONE_NUM=$(( $LAST_MILESTONE_NUM + 1 ))
+  fi
 
-  # Set today's date
-    TODAY=$(date +"%Y-%m-%d")
-    sed -i "s/Created: /Created: $TODAY/" "${NEW_MILESTONE}.milestone"
+  NEW_MILESTONE_FILE="${NEW_MILESTONE_NUM}.milestone"
 
-  # Set a default deadline of 1 month from creation
-    DEFAULT_DEADLINE=$(date --date="$TODAY +1 month" +"%Y-%m-%d")
-    sed -i "s/Deadline: /Deadline: $DEFAULT_DEADLINE/" "${NEW_MILESTONE}.milestone"
+# Create a new milestone from template
+  cp "$MILESTONE_TEMPLATE" "${NEW_MILESTONE_FILE}"
 
-  # Open resulting file in vim or nano for further editing, place cursor at Title field
-    if   test $EDITOR = "vim"
-    then vim '+cal cursor(2,14)' "${NEW_MILESTONE}.milestone"
-    else nano +2,14 "${NEW_MILESTONE}.milestone"
-    fi
+# Update milestone number
+  sed -i "s/Milestone No.: /Milestone No.: ${NEW_MILESTONE_NUM}/" "${NEW_MILESTONE_FILE}"
+
+# Set start date from default
+  DEFAULT_STARTDATE="$(get_default_milestone_startdate)"
+  sed -i "s/Startdate: /Startdate: $DEFAULT_STARTDATE/" "${NEW_MILESTONE_FILE}"
+
+# Set deadline from default
+  DEFAULT_DEADLINE="$( get_default_milestone_deadline $DEFAULT_STARTDATE )"
+  sed -i "s/Deadline: /Deadline: $DEFAULT_DEADLINE/" "${NEW_MILESTONE_FILE}"
+
+# Open resulting file in vim or nano for further editing, place cursor at Title field
+  if   test $EDITOR = "vim"
+  then vim '+cal cursor(2,14)' "${NEW_MILESTONE_FILE}"
+  else nano +2,14 "${NEW_MILESTONE_FILE}"
+  fi
+
+# Report successful creation of new ticket, mentioning number.
+  echo
+  echo "Milestone No. ${NEW_MILESTONE_NUM} created successfully"
+  echo
