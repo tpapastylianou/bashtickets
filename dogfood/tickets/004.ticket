@@ -1,5 +1,5 @@
  Ticket No.: 004
-    Summary: Ensure all subcommand errors have appropriate exit statuses
+    Summary: Ensure all subcommand errors have appropriate messages and exit statuses
    Reporter: Tasos
        Type: Task
    Priority: Normal

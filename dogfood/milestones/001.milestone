@@ -16,7 +16,7 @@ Description: v1 relies on single commands, which are getting rather numerous,
 001.ticket     Summary: Selectable options specified in bt.repo config file.
 002.ticket     Summary: selectable milestone?
 003.ticket     Summary: Implement man pages
-004.ticket     Summary: Ensure all subcommand errors have appropriate exit statuses
+004.ticket     Summary: Ensure all subcommand errors have appropriate messages and exit statuses
 005.ticket     Summary: Create appropriate help message
 006.ticket     Summary: Create appropriate 'usage' when called with no arguments
 007.ticket     Summary: Ensure bt init works correctly
@@ -31,6 +31,10 @@ Description: v1 relies on single commands, which are getting rather numerous,
 016.ticket     Summary: Ensure appropriate function of 'edit' subcommand
 017.ticket     Summary: Colour support
 018.ticket     Summary: Should user be able to choose auto vs manual milestone updating
+019.ticket     Summary: Remove zero-padding, adjust with ls | sort -n where appropriate
+020.ticket     Summary: Implement autocompletion for subcommands
+021.ticket     Summary: Convert 'show' to 'list' commands (or add an alias)
+023.ticket     Summary: Helper utils to detect if tickets/milestones have valid syntax
 
 === Closed Tickets ===
 
