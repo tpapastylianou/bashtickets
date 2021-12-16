@@ -42,8 +42,8 @@
 
 # Open resulting file in vim or nano for further editing, place cursor at Title field
   if   test $EDITOR = "vim"
-  then vim '+cal cursor(2,14)' "${NEW_MILESTONE_FILE}"
-  else nano +2,14 "${NEW_MILESTONE_FILE}"
+  then vim '+cal cursor(2,16)' "${NEW_MILESTONE_FILE}"
+  else nano +2,16 "${NEW_MILESTONE_FILE}"
   fi
 
 # Report successful creation of new ticket, mentioning number.
