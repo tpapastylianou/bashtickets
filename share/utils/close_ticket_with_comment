@@ -2,6 +2,13 @@
 
 # Usage: close_ticket_with_comment <ticket number>   # e.g. 023
 
+if   test ${#@} -ne 1
+then error "Error: Incorrect arguments provided to new_milestone function"
+     echo
+     "$BT_UTILS_DIR/display_usage"
+     exit 1
+fi
+
 ## Note: the 'error' function used here is defined in the main bashtickets
   # script and exported here
 
@@ -22,6 +29,9 @@
   then :
   else echo "Error: Invalid ticket specified; file ${TICKET} does not exist!" && exit 1
   fi
+
+# Save state of original ticket in case we need to revert at the end
+  ORIGINAL_TICKET="$(cat $TICKET)"
 
 # Get today's date
   TODAY=$(date +"%Y-%m-%d")
@@ -79,8 +89,19 @@
 # Change status to Closed
   sed -i "s/Status: .*/Status: Closed/" "${TICKET}"
 
+# Save current status of ticket before manual editing
+  UNEDITED_TICKET="$(cat $TICKET)"
+
 # Open default editor and put cursor in the right place for editing
   if   test $EDITOR == "vim"
   then vim  +"$LINENUM" "${TICKET}"
   else nano +"$LINENUM" "${TICKET}"
+  fi
+
+  EDITED_TICKET="$(cat $TICKET)"
+
+  if   test "$UNEDITED_TICKET" = "$EDITED_TICKET"
+  then error "Error: No edits detected at ticket closing."
+       error "'Close' operation aborted and ticket reverted to original state."
+       echo "$ORIGINAL_TICKET" > "$TICKET"
   fi
