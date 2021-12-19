@@ -1,5 +1,8 @@
 #!/bin/bash
 
+## Note: the 'error' function used here is defined in the main bashtickets
+  # script and exported here
+
 case "$1" in
     ("ticket")     shift && "$BT_UTILS_DIR/new_ticket"    "$@" ;;
     ("milestone")  shift && "$BT_UTILS_DIR/new_milestone" "$@" ;;
