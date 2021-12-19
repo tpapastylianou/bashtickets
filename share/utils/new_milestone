@@ -4,7 +4,9 @@
   # script and exported here
 
 if   test ${#@} -gt 0
-then "$BT_UTILS_DIR/display_usage"
+then error "Error: Incorrect arguments provided to new_milestone function"
+     echo
+     "$BT_UTILS_DIR/display_usage"
      exit 1
 fi
 
@@ -22,11 +24,11 @@ fi
 
 ## If this is the first milestone, start numbering from 1; otherwise, find the
   # last milestone number, and increment by one.
-  if     test "!" "-f" *.milestone
-  then   NEW_MILESTONE_NUM=1
-  else   LAST_MILESTONE_NUM=$(ls *.milestone | sort -n | tail -n -1)   # list files, sort in numerical (not alphabetical) order, and keep last filename
+  if     test -f 1.milestone
+  then   LAST_MILESTONE_NUM=$(ls *.milestone | sort -n | tail -n -1)   # list files, sort in numerical (not alphabetical) order, and keep last filename
          LAST_MILESTONE_NUM=${LAST_MILESTONE_NUM%.milestone}   # parameter expansion: remove '.milestone' suffix
          NEW_MILESTONE_NUM=$(( $LAST_MILESTONE_NUM + 1 ))
+  else   NEW_MILESTONE_NUM=1
   fi
 
   NEW_MILESTONE_FILE="${NEW_MILESTONE_NUM}.milestone"

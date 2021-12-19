@@ -4,7 +4,9 @@
 # and exported here
 
 if   test ${#@} -gt 0
-then "$BT_UTILS_DIR/display_usage"
+then error "Error: Incorrect arguments provided to new_ticket function"
+     echo
+     "$BT_UTILS_DIR/display_usage"
      exit 1
 fi
 
@@ -22,11 +24,11 @@ fi
 
 # If this is the first ticket, start numbering from 1; otherwise, find the
 # last ticket number, and increment by one.
-  if     test "!" "-f" *.ticket
-  then   NEW_TICKET_NUM=1
-  else   LAST_TICKET_NUM=$(ls *.ticket | sort -n | tail -n -1)   # list files, sort in numerical (not alphabetical) order, and keep last filename
+  if     test -f 1.ticket
+  then   LAST_TICKET_NUM=$(ls *.ticket | sort -n | tail -n -1)   # list files, sort in numerical (not alphabetical) order, and keep last filename
          LAST_TICKET_NUM=${LAST_TICKET_NUM%.ticket}   # parameter expansion: remove '.ticket' suffix
          NEW_TICKET_NUM=$(( $LAST_TICKET_NUM + 1 ))
+  else   NEW_TICKET_NUM=1
   fi
 
   NEW_TICKET_FILE="${NEW_TICKET_NUM}.ticket"
