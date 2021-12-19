@@ -1,3 +1,9 @@
 #!/bin/bash
 
-# test arg, and redirect to ticket or milestone respectively, otherwise show usage.
+case "$1" in
+    ("ticket")     shift && "$BT_UTILS_DIR/new_ticket"    "$@" ;;
+    ("milestone")  shift && "$BT_UTILS_DIR/new_milestone" "$@" ;;
+    (*)            error "Error: invalid argument given to 'new'."
+                   error "Valid arguments are 'ticket' or 'milestone'."
+                   exit 1 ;;
+esac
