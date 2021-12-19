@@ -1,50 +1,50 @@
 #!/bin/bash
 
 # If called without arguments or with more than one arguments, display usage
-if   test "$#" -ne 1 || test "$1" = "--help" | test "$1" = "-h"
-then echo "Usage:"
-     echo "    $(basename $0) <milestone>"
-     echo
-     echo "e.g.:"
-     echo "    $(basename $0) 001.milestone"
-     echo
-     echo "or simply:"
-     echo "    $(basename $0) 001"
-     echo
-     echo "Note: Using '0' as the milestone displays tickets that are not assigned to any milestones"
-     exit
-fi
+  if   test "$#" -ne 1 || test "$1" = "--help" | test "$1" = "-h"
+  then echo "Usage:"
+       echo "    $(basename $0) <milestone>"
+       echo
+       echo "e.g.:"
+       echo "    $(basename $0) 001.milestone"
+       echo
+       echo "or simply:"
+       echo "    $(basename $0) 001"
+       echo
+       echo "Note: Using '0' as the milestone displays tickets that are not assigned to any milestones"
+       exit
+  fi
 
 # Obtain relevant absolute paths
-BASHTICKETS_PATH="$( dirname $BASH_SOURCE | xargs realpath )"
-TICKETS_PATH="$BASHTICKETS_PATH/tickets"
-MILESTONES_PATH="$BASHTICKETS_PATH/milestones"
+  BASHTICKETS_PATH="$( dirname $BASH_SOURCE | xargs realpath )"
+  TICKETS_PATH="$BASHTICKETS_PATH/tickets"
+  MILESTONES_PATH="$BASHTICKETS_PATH/milestones"
 
 # Confirm validity of inputs
-MILESTONE="$1"
-ERRORS=0
+  MILESTONE="$1"
+  ERRORS=0
 
-if   test "${MILESTONE%.milestone}" = "0"
-then MILESTONE=""
-elif test -f "$MILESTONES_PATH/${MILESTONE%.milestone}.milestone"
-then :
-else echo "Input Error: No such milestone (${MILESTONE%.milestone}.milestone) exists in $MILESTONES_PATH"
-     ERRORS=$((ERRORS + 1))
-fi
+  if   test "${MILESTONE%.milestone}" = "0"
+  then MILESTONE=""
+  elif test -f "$MILESTONES_PATH/${MILESTONE%.milestone}.milestone"
+  then :
+  else echo "Input Error: No such milestone (${MILESTONE%.milestone}.milestone) exists in $MILESTONES_PATH"
+       ERRORS=$((ERRORS + 1))
+  fi
 
-if test "$ERRORS" -gt 0
-then echo "Encountered input errors. Aborting."
-     exit 1
-fi
+  if test "$ERRORS" -gt 0
+  then echo "Encountered input errors. Aborting."
+       exit 1
+  fi
 
-cd $TICKETS_PATH
+  cd $TICKETS_PATH
 
-MILESTONE_TICKETS=( $(egrep --color=never  -l "Milestone: $MILESTONE\$" *.ticket) )
+  MILESTONE_TICKETS=( $(egrep --color=never  -l "Milestone: $MILESTONE\$" *.ticket) )
 
-for  TICKET in "${MILESTONE_TICKETS[@]}"
-do   TICKETNAME="$(grep -l --color=never "Status: Closed" "$TICKET")"
-     TICKETSUMMARY="$(grep --color=never "Summary: " "$TICKET")"
-     if test -n "$TICKETNAME"
-     then echo "$TICKETNAME $TICKETSUMMARY"
-     fi
-done
+  for  TICKET in "${MILESTONE_TICKETS[@]}"
+  do   TICKETNAME="$(grep -l --color=never "Status: Closed" "$TICKET")"
+       TICKETSUMMARY="$(grep --color=never "Summary: " "$TICKET")"
+       if test -n "$TICKETNAME"
+       then echo "$TICKETNAME $TICKETSUMMARY"
+       fi
+  done

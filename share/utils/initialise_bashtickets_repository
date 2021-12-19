@@ -1,63 +1,63 @@
 #!/bin/bash
 
 # Note: the 'error' function used here is defined in the main bashtickets script
-# and exported here
+ # and exported here
 
-if   test ${#@} -gt 0
-then "$BT_UTILS_DIR/display_usage"
-     exit 1
-fi
-
-
-if     test $( ls -A | wc -l ) -eq 0   # empty directory detected
-
-then   if     mkdir .bashtickets
-
-       then   :
-
-       else   error "Error: Could not create a '.bashtickets' subdirectory in the current directory."
-              error "       Please ensure you have the necessary permissions."
-              exit 1
-       fi
-
-
-       if   cp  "$BT_DOC_DIR/sample_config" ".bashtickets/config"
-
-       then :
-
-       else   error "Error: Could not create a 'config' file in the '.bashtickets' subdirectory."
-              error "       Please ensure you have the necessary permissions."
-              exit 1
-       fi
-
-
-       if     mkdir tickets
-
-       then   :
-
-       else   error "Error: Could not create 'tickets' directory."
-              exit 1
-       fi
-
-
-       if     mkdir milestones
-
-       then   :
-
-       else   error "Error: Could not create 'milestones' directory."
-              exit 1
-       fi
-
-       echo   "Bashtickets repository initialised successfully."
-
-elif   "$BT_UTILS_DIR/is_valid_bashtickets_repository" 2> /dev/null
-
-then   error "Error: Current directory is already a valid bashtickets repository"
-       error "       Aborting..."
+  if   test ${#@} -gt 0
+  then "$BT_UTILS_DIR/display_usage"
        exit 1
+  fi
 
-else   error "Error: Non-empty directory detected."
-       error "       To initialise as a bashtickets repository, please delete all files"
-       error "       (including hidden files) and try again."
-       exit 1
-fi
+
+  if     test $( ls -A | wc -l ) -eq 0   # empty directory detected
+
+  then   if     mkdir .bashtickets
+
+         then   :
+
+         else   error "Error: Could not create a '.bashtickets' subdirectory in the current directory."
+                error "       Please ensure you have the necessary permissions."
+                exit 1
+         fi
+
+
+         if   cp  "$BT_DOC_DIR/sample_config" ".bashtickets/config"
+
+         then :
+
+         else   error "Error: Could not create a 'config' file in the '.bashtickets' subdirectory."
+                error "       Please ensure you have the necessary permissions."
+                exit 1
+         fi
+
+
+         if     mkdir tickets
+
+         then   :
+
+         else   error "Error: Could not create 'tickets' directory."
+                exit 1
+         fi
+
+
+         if     mkdir milestones
+
+         then   :
+
+         else   error "Error: Could not create 'milestones' directory."
+                exit 1
+         fi
+
+         echo   "Bashtickets repository initialised successfully."
+
+  elif   "$BT_UTILS_DIR/is_valid_bashtickets_repository" 2> /dev/null
+
+  then   error "Error: Current directory is already a valid bashtickets repository"
+         error "       Aborting..."
+         exit 1
+
+  else   error "Error: Non-empty directory detected."
+         error "       To initialise as a bashtickets repository, please delete all files"
+         error "       (including hidden files) and try again."
+         exit 1
+  fi

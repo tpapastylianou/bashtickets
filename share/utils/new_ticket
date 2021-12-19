@@ -1,17 +1,17 @@
 #!/bin/bash
 
 # Note: the 'error' function used here is defined in the main bashtickets script
-# and exported here
+ # and exported here
 
-if   test ${#@} -gt 0
-then error "Error: Incorrect arguments provided to new_ticket function"
-     echo
-     "$BT_UTILS_DIR/display_usage"
-     exit 1
-fi
+  if   test ${#@} -gt 0
+  then error "Error: Incorrect arguments provided to new_ticket function"
+       echo
+       "$BT_UTILS_DIR/display_usage"
+       exit 1
+  fi
 
 # Note: no 'valid repo' sanity checks here, since they will have been already
-# performed by the main 'bashtickets' executable
+ # performed by the main 'bashtickets' executable
 
 # 'Import' arrays defined in config
   source "$CONFIG_FILE"
@@ -22,8 +22,10 @@ fi
 
   cd $TICKETS_PATH
 
+
 # If this is the first ticket, start numbering from 1; otherwise, find the
-# last ticket number, and increment by one.
+ # last ticket number, and increment by one.
+
   if     test -f 1.ticket
   then   LAST_TICKET_NUM=$(ls *.ticket | sort -n | tail -n -1)   # list files, sort in numerical (not alphabetical) order, and keep last filename
          LAST_TICKET_NUM=${LAST_TICKET_NUM%.ticket}   # parameter expansion: remove '.ticket' suffix
@@ -70,10 +72,11 @@ fi
   sed -i "s/Status: /Status: Open/" "${NEW_TICKET_FILE}"
 
 # Open resulting file in the user's editor of choice, as detected by the
-# EDITOR environmental variable. This can be overriden per bashtickets
-# repository, by assigning to this variable in the repository's config file
-# instead. If the EDITOR variable is not defined at all, nano is used as the
-# default editor.
+ # EDITOR environmental variable. This can be overriden per bashtickets
+  # repository, by assigning to this variable in the repository's config file
+  # instead. If the EDITOR variable is not defined at all, nano is used as the
+  # default editor.
+
   if   test $EDITOR = "vim"
   then vim '+cal cursor(2,14)' "${NEW_TICKET_FILE}"
   else nano +2,14 "${NEW_TICKET_FILE}"

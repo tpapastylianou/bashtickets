@@ -2,6 +2,13 @@
 
 # Usage: add_comment_to_ticket <ticket number>   # e.g. 023
 
+  if   test ${#@} -ne 1
+  then error "Error: Incorrect arguments provided to new_milestone function"
+       echo
+       "$BT_UTILS_DIR/display_usage"
+       exit 1
+  fi
+
   # Ensure script is initial-path agnostic
     TICKETS_PATH="$( dirname $BASH_SOURCE )"
     TICKETS_PATH="$TICKETS_PATH/tickets"

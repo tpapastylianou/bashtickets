@@ -1,62 +1,62 @@
 #!/bin/bash
 
 # If called without arguments, display usage
-if   test "$#" -le 1
-then echo "Usage:"
-     echo "    $(basename $0) <ticket> [<ticket2> <ticket3> ... <ticketN>] <milestone>"
-     echo
-     echo "e.g.:"
-     echo "    $(basename $0) 001.ticket 002.ticket 001.milestone"
-     echo
-     echo "or simply:"
-     echo "    $(basename $0) 001 002 001"
-     echo
-     echo "Note: Using '0' as the milestone removes any existing milestones from the specified tickets instead"
-     exit
-fi
+  if   test "$#" -le 1
+  then echo "Usage:"
+       echo "    $(basename $0) <ticket> [<ticket2> <ticket3> ... <ticketN>] <milestone>"
+       echo
+       echo "e.g.:"
+       echo "    $(basename $0) 001.ticket 002.ticket 001.milestone"
+       echo
+       echo "or simply:"
+       echo "    $(basename $0) 001 002 001"
+       echo
+       echo "Note: Using '0' as the milestone removes any existing milestones from the specified tickets instead"
+       exit
+  fi
 
 # Process Input Arguments
-ARGS=( "$@" )                               # Get all positional arguments as a bash array
-MILESTONE_ARG="${ARGS[-1]}"                 # Get the last element of the array
-TICKET_ARGS=( "${ARGS[@]: 0 : $# - 1 }" )   # Create a sub-array, from index 0 to N-1
+  ARGS=( "$@" )                               # Get all positional arguments as a bash array
+  MILESTONE_ARG="${ARGS[-1]}"                 # Get the last element of the array
+  TICKET_ARGS=( "${ARGS[@]: 0 : $# - 1 }" )   # Create a sub-array, from index 0 to N-1
 
 # Obtain relevant absolute paths
-BASHTICKETS_PATH="$( dirname $BASH_SOURCE | xargs realpath )"
-TICKETS_PATH="$BASHTICKETS_PATH/tickets"
-MILESTONES_PATH="$BASHTICKETS_PATH/milestones"
+  BASHTICKETS_PATH="$( dirname $BASH_SOURCE | xargs realpath )"
+  TICKETS_PATH="$BASHTICKETS_PATH/tickets"
+  MILESTONES_PATH="$BASHTICKETS_PATH/milestones"
 
 # Confirm validity of inputs
-ERRORS=0
+  ERRORS=0
 
-for  TICKET_ARG in "${TICKET_ARGS[@]}"
-do   if   test -f "$TICKETS_PATH/${TICKET_ARG%.ticket}.ticket"
-     then :
-     else echo "Input Error: No such ticket (${TICKET_ARG%.ticket}.ticket) exists in $TICKETS_PATH"
-          ERRORS=$((ERRORS + 1))
-     fi
-done
+  for  TICKET_ARG in "${TICKET_ARGS[@]}"
+  do   if   test -f "$TICKETS_PATH/${TICKET_ARG%.ticket}.ticket"
+       then :
+       else echo "Input Error: No such ticket (${TICKET_ARG%.ticket}.ticket) exists in $TICKETS_PATH"
+            ERRORS=$((ERRORS + 1))
+       fi
+  done
 
-if   test -f "$MILESTONES_PATH/${MILESTONE_ARG%.milestone}.milestone"
-then :
-else echo "Input Error: No such milestone (${MILESTONE_ARG%.milestone}.milestone) exists in $MILESTONES_PATH"
-     ERRORS=$((ERRORS + 1))
-fi
+  if   test -f "$MILESTONES_PATH/${MILESTONE_ARG%.milestone}.milestone"
+  then :
+  else echo "Input Error: No such milestone (${MILESTONE_ARG%.milestone}.milestone) exists in $MILESTONES_PATH"
+       ERRORS=$((ERRORS + 1))
+  fi
 
-if test "$ERRORS" -gt 0
-then echo "Encountered $ERRORS input errors. Aborting."
-     exit 1
-fi
+  if test "$ERRORS" -gt 0
+  then echo "Encountered $ERRORS input errors. Aborting."
+       exit 1
+  fi
 
 # Process all tickets
-MILESTONE_NO="${MILESTONE_ARG%.milestone}"   # Remove .milestone suffix
-MILESTONE_NO="${MILESTONE_NO%0}"           # If milestone was '0', use empty string instead.
-MILESTONE_FILE="$MILESTONES_PATH/${MILESTONE_ARG%.milestone}.milestone"
+  MILESTONE_NO="${MILESTONE_ARG%.milestone}"   # Remove .milestone suffix
+  MILESTONE_NO="${MILESTONE_NO%0}"           # If milestone was '0', use empty string instead.
+  MILESTONE_FILE="$MILESTONES_PATH/${MILESTONE_ARG%.milestone}.milestone"
 
-for  TICKET_ARG in "${TICKET_ARGS[@]}"
-do   TICKET_NO="${TICKET_ARG%.ticket}"
-     TICKET_FILE="$TICKETS_PATH/${TICKET_ARG%.ticket}.ticket"
-     sed -i "s/  Milestone: .*\$/  Milestone: ${MILESTONE_NO}/" "$TICKET_FILE"
-done
+  for  TICKET_ARG in "${TICKET_ARGS[@]}"
+  do   TICKET_NO="${TICKET_ARG%.ticket}"
+       TICKET_FILE="$TICKETS_PATH/${TICKET_ARG%.ticket}.ticket"
+       sed -i "s/  Milestone: .*\$/  Milestone: ${MILESTONE_NO}/" "$TICKET_FILE"
+  done
 
 # update milestones accordingly - note, we need to update ALL milestones, because more than one may have changed
-"$BASHTICKETS_PATH/update_milestones"
+  "$BASHTICKETS_PATH/update_milestones"
