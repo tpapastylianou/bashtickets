@@ -20,6 +20,14 @@ TICKET_TYPES=(
   "Task"
 )
 
+TICKET_RESOLUTIONS=(
+  "Completed"
+  "Delegated"
+  "Postponed"
+  "Cancelled"
+  "Invalid"
+)
+
 function get_default_milestone_startdate () {
   date +"%Y-%m-%d"   # i.e. today's date
 }
