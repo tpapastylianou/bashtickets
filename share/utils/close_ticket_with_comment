@@ -2,73 +2,85 @@
 
 # Usage: close_ticket_with_comment <ticket number>   # e.g. 023
 
-  # Ensure script is initial-path agnostic
-    TICKETS_PATH="$( dirname $BASH_SOURCE )"
-    TICKETS_PATH="$TICKETS_PATH/tickets"
-    TICKETS_PATH="$( realpath $TICKETS_PATH )"
+## Note: the 'error' function used here is defined in the main bashtickets
+  # script and exported here
 
-    cd $TICKETS_PATH
+# Note: no 'valid repo' sanity checks here, since they will have been already
+# performed by the main 'bashtickets' executable
 
-  # This is the ticket file we're about to modify
-    TICKET="${1%.ticket}.ticket"
-    if test -f "$TICKET"
-    then :
-    else echo "Error: Invalid ticket specified; file ${TICKET} does not exist!" && exit
-    fi
+# 'Import' arrays defined in config
+  source "$CONFIG_FILE"
 
-  # Get today's date
-    TODAY=$(date +"%Y-%m-%d")
+# Capture ticket path and template onto the relevant variables
+  TICKETS_PATH="$( realpath ./tickets )"
 
-  # Check that ticket is actually open
-    grep "Status: Open" $TICKET > /dev/null
-    if     test $? -eq 0
-    then   :
-    else   echo "Ticket No. $TICKET is not marked as Open! Please edit manually if necessary." && exit
-    fi
+  cd $TICKETS_PATH
 
-  # Change status to Closed
-    sed -i "s/Status: .*/Status: Closed/" "${TICKET}"
+# This is the ticket file we're about to modify
+  TICKET="${1%.ticket}.ticket"
+  if test -f "$TICKET"
+  then :
+  else echo "Error: Invalid ticket specified; file ${TICKET} does not exist!" && exit 1
+  fi
 
-  # Select an appropriate resolution
-    echo "Closing ticket ${1} ($(grep -o "Summary: .*" "${TICKET}"))"
-    echo
-    echo "Select a resolution for this ticket:"
-    select RESOLUTION in Completed Delegated Postponed Cancelled Invalid
-    do
-        sed -i "s/Resolution: /Resolution: $RESOLUTION/" "${TICKET}"
-        break
-    done
+# Get today's date
+  TODAY=$(date +"%Y-%m-%d")
 
-  # Check if owner is set. If not, make me the owner.
-    CURRENT_OWNER=$(grep -oP "(?<=Owner: ).*" "${TICKET}")
-    WHOAMI=$(whoami)
-    WHOAMI=${WHOAMI^}   # parameter expansion: make first character uppercase
-    if test -z ${CURRENT_OWNER}   # If it's an empty string
-    then
-        sed -i "s/Owner: /Owner: $WHOAMI/" "${TICKET}"
-        CURRENT_OWNER="$WHOAMI"
-    fi
+# Check that ticket is actually open
+  grep "Status: Open" $TICKET > /dev/null
+  if     test $? -eq 0
+  then   :
+  else   echo "Ticket No. $TICKET is not marked as Open! Please reopen if necessary." && exit
+  fi
 
-  # Start a new comment:
-    echo             >> "${TICKET}"
-    echo             >> "${TICKET}"
-    echo "== $TODAY" >> "${TICKET}"
+# Select an appropriate resolution
+  echo "Closing ticket ${1} ($(grep -o "Summary: .*" "${TICKET}"))"
+  echo
+  echo "Select a resolution for this ticket:"
+  declare -i REPLY   # The user's input is assigned to this variable; we want to ensure it only takes numeric values
+  select RESOLUTION in "${TICKET_RESOLUTIONS[@]}"
+  do
+      if   test $REPLY -gt 0 && test $REPLY -le ${#TICKET_RESOLUTIONS[@]}
+      then sed -i "s/Resolution: .*\$/Resolution: $RESOLUTION/" "${TICKET}"
+           break
+      else error "Invalid selection, please chose a number between 1 and ${#TICKET_RESOLUTIONS[@]}"
+      fi
+  done
+  declare +i REPLY
 
-  # Leave empty line where the comment will go, and capture that line number
-    echo >> "${TICKET}"
-    LINENUM=$(cat "${TICKET}" | wc -l)
+# Check if owner is set. If not, make me the owner.
+  CURRENT_OWNER=$(grep -oP "(?<=Owner: ).*" "${TICKET}")
+  WHOAMI=$(whoami)
+  WHOAMI=${WHOAMI^}   # parameter expansion: make first character uppercase
+  if test -z ${CURRENT_OWNER}   # If it's an empty string
+  then
+      sed -i "s/Owner: /Owner: $WHOAMI/" "${TICKET}"
+      CURRENT_OWNER="$WHOAMI"
+  fi
 
-  # Finalise ticket closing.
-    echo "Closing ticket." >> "${TICKET}"
+# Start a new comment:
+  echo             >> "${TICKET}"
+  echo             >> "${TICKET}"
+  echo "== $TODAY" >> "${TICKET}"
 
-  # If owner is different than closer, mention the closer's name in the closing comment explicitly
-    if test "$CURRENT_OWNER" != "$WHOAMI"
-    then
-        echo "($WHOAMI)" >> "${TICKET}"
-    fi
+# Leave empty line where the comment will go, and capture that line number
+  echo >> "${TICKET}"
+  LINENUM=$(cat "${TICKET}" | wc -l)
 
-  # Open default editor and put cursor in the right place for editing
-    if   test $EDITOR == "vim"
-    then vim  +"$LINENUM" "${TICKET}"
-    else nano +"$LINENUM" "${TICKET}"
-    fi
+# Finalise ticket closing.
+  echo "Closing ticket." >> "${TICKET}"
+
+# If owner is different than closer, mention the closer's name in the closing comment explicitly
+  if test "$CURRENT_OWNER" != "$WHOAMI"
+  then
+      echo "($WHOAMI)" >> "${TICKET}"
+  fi
+
+# Change status to Closed
+  sed -i "s/Status: .*/Status: Closed/" "${TICKET}"
+
+# Open default editor and put cursor in the right place for editing
+  if   test $EDITOR == "vim"
+  then vim  +"$LINENUM" "${TICKET}"
+  else nano +"$LINENUM" "${TICKET}"
+  fi
