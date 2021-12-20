@@ -9,40 +9,62 @@
        exit 1
   fi
 
-  # Ensure script is initial-path agnostic
-    TICKETS_PATH="$( dirname $BASH_SOURCE )"
-    TICKETS_PATH="$TICKETS_PATH/tickets"
-    TICKETS_PATH="$( realpath $TICKETS_PATH )"
+## Note: the 'error' function used here is defined in the main bashtickets
+  # script and exported here
 
-    cd $TICKETS_PATH
+# Note: no 'valid repo' sanity checks here, since they will have been already
+# performed by the main 'bashtickets' executable
 
-  # This is the ticket file we're about to modify
-    TICKET="${1%.ticket}.ticket"
-    if test -f "$TICKET"
-    then :
-    else echo "Error: Invalid ticket specified; file ${TICKET} does not exist!" && exit
-    fi
+# 'Import' arrays defined in config
+  source "$CONFIG_FILE"
 
-  # Get today's date
-    TODAY=$(date +"%Y-%m-%d")
+# Capture ticket path and template onto the relevant variables
+  TICKETS_PATH="$( realpath ./tickets )"
 
-  # Start a new comment:
-    echo             >> "${TICKET}"
-    echo             >> "${TICKET}"
-    echo "== $TODAY" >> "${TICKET}"
+  cd $TICKETS_PATH
 
-  # Leave empty line where the comment will go, and capture that line number
-    echo >> "${TICKET}"
-    LINENUM=$(cat "${TICKET}" | wc -l)
+# This is the ticket file we're about to modify
+  TICKET="${1%.ticket}.ticket"
+  if test -f "$TICKET"
+  then :
+  else error "Error: Invalid ticket specified; file ${TICKET} does not exist!" && exit 1
+  fi
 
-  # If owner is different than closer, mention the closer's name in the closing comment explicitly
-    if test "$CURRENT_OWNER" != "$WHOAMI"
-    then
-        echo "($WHOAMI)" >> "${TICKET}"
-    fi
+# Save state of original ticket in case we need to revert at the end
+  ORIGINAL_TICKET="$(cat $TICKET)"
 
-  # Open default editor and put cursor in the right place for editing
-    if   test $EDITOR == "vim"
-    then vim  +"$LINENUM" "${TICKET}"
-    else nano +"$LINENUM" "${TICKET}"
-    fi
+# Get today's date
+  TODAY=$(date +"%Y-%m-%d")
+
+# Start a new comment:
+  echo             >> "${TICKET}"
+  echo             >> "${TICKET}"
+  echo "== $TODAY" >> "${TICKET}"
+
+# Leave empty line where the comment will go, and capture that line number
+  echo >> "${TICKET}"
+  LINENUM=$(cat "${TICKET}" | wc -l)
+
+# If owner is different than closer, mention the closer's name in the closing comment explicitly
+  if test "$CURRENT_OWNER" != "$WHOAMI"
+  then
+      echo "($WHOAMI)" >> "${TICKET}"
+  fi
+
+# Save current status of ticket before manual editing
+  UNEDITED_TICKET="$(cat $TICKET)"
+
+# Open default editor and put cursor in the right place for editing
+  if   test $EDITOR == "vim"
+  then vim  +"$LINENUM" "${TICKET}"
+  else nano +"$LINENUM" "${TICKET}"
+  fi
+
+  EDITED_TICKET="$(cat $TICKET)"
+
+  if   test "$UNEDITED_TICKET" = "$EDITED_TICKET"
+  then error "Error: No edits detected."
+       error "'Add comment' operation aborted and ticket reverted to original state."
+       echo "$ORIGINAL_TICKET" > "$TICKET"
+       exit 1
+  fi

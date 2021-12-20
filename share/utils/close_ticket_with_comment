@@ -53,7 +53,7 @@
       if   test $REPLY -gt 0 && test $REPLY -le ${#TICKET_RESOLUTIONS[@]}
       then sed -i "s/Resolution: .*\$/Resolution: $RESOLUTION/" "${TICKET}"
            break
-      else error "Invalid selection, please chose a number between 1 and ${#TICKET_RESOLUTIONS[@]}"
+      else error "Invalid selection, please chose a number between 1 and ${#TICKET_RESOLUTIONS[@]}" && exit 1
       fi
   done
   declare +i REPLY
@@ -101,7 +101,8 @@
   EDITED_TICKET="$(cat $TICKET)"
 
   if   test "$UNEDITED_TICKET" = "$EDITED_TICKET"
-  then error "Error: No edits detected at ticket closing."
+  then error "Error: No edits detected."
        error "'Close' operation aborted and ticket reverted to original state."
        echo "$ORIGINAL_TICKET" > "$TICKET"
+       exit 1
   fi
