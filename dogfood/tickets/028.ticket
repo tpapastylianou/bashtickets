@@ -1,0 +1,13 @@
+ Ticket No.: 028
+    Summary: Ensure ticket editing actions complain if single-line fields exceed 1 line
+   Reporter: Tasos
+       Type: Task
+   Priority: Normal
+  Milestone: 
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2021-12-20
+     Status: Open
+ Resolution: 
+Description: 
