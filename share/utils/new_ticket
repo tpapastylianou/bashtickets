@@ -49,20 +49,30 @@
 
 # Select a valid type:
   echo "Select a valid ticket type:"
+  declare -i REPLY   # The user's input is assigned to this variable; we want to ensure it only takes numeric values
   select TICKET_TYPE in "${TICKET_TYPES[@]}"   # TICKET_TYPES obtained from config
   do
-      sed -i "s/Type: /Type: $TICKET_TYPE/" "${NEW_TICKET_FILE}"
-      break
+      if   test $REPLY -gt 0 && test $REPLY -le ${#TICKET_TYPES[@]}
+      then sed -i "s/Type: /Type: $TICKET_TYPE/" "${NEW_TICKET_FILE}"
+           break
+      else error "Invalid selection, please chose a number between 1 and ${#TICKET_TYPES[@]}" && exit 1
+      fi
   done
+  declare +i REPLY
 
 # Select a valid priority:
   echo
   echo "Select a valid ticket priority"
+  declare -i REPLY   # The user's input is assigned to this variable; we want to ensure it only takes numeric values
   select TICKET_PRIORITY in "${TICKET_PRIORITY_LEVELS[@]}"   # TICKET_PRIORITY_LEVELS obtained from config
   do
-      sed -i "s/Priority: /Priority: ${TICKET_PRIORITY%% *}/" "${NEW_TICKET_FILE}"   # Remove everything in the priority string after the first space (i.e. the explanation of the priority level)
-      break
+      if   test $REPLY -gt 0 && test $REPLY -le ${#TICKET_PRIORITY_LEVELS[@]}
+      then sed -i "s/Priority: /Priority: ${TICKET_PRIORITY%% *}/" "${NEW_TICKET_FILE}"   # Remove everything in the priority string after the first space (i.e. the explanation of the priority level)
+           break
+      else error "Invalid selection, please chose a number between 1 and ${#TICKET_PRIORITY_LEVELS[@]}" && exit 1
+      fi
   done
+  declare +i REPLY
 
 # Set today's date
   TODAY=$(date +"%Y-%m-%d")
@@ -70,6 +80,9 @@
 
 # Declare status as Open
   sed -i "s/Status: /Status: Open/" "${NEW_TICKET_FILE}"
+
+# Save current status of ticket before manual editing
+  UNEDITED_TICKET="$(cat $NEW_TICKET_FILE)"
 
 # Open resulting file in the user's editor of choice, as detected by the
  # EDITOR environmental variable. This can be overriden per bashtickets
@@ -82,7 +95,14 @@
   else nano +2,14 "${NEW_TICKET_FILE}"
   fi
 
-# Report successful creation of new ticket, mentioning number.
-  echo
-  echo "Ticket No. ${NEW_TICKET_NUM} created successfully"
-  echo
+  EDITED_TICKET="$(cat $NEW_TICKET_FILE)"
+
+  if   test "$UNEDITED_TICKET" = "$EDITED_TICKET"
+  then error "Error: No edits detected."
+       error "Aborting new ticket creation."
+       rm "$NEW_TICKET_FILE"
+       exit 1
+  else echo
+       echo "Ticket No. ${NEW_TICKET_NUM} created successfully"
+       echo
+  fi

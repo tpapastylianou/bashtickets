@@ -48,13 +48,23 @@
   DEFAULT_DEADLINE="$( get_default_milestone_deadline $DEFAULT_STARTDATE )"
   sed -i "s/Deadline: /Deadline: $DEFAULT_DEADLINE/" "${NEW_MILESTONE_FILE}"
 
+# Save current status of ticket before manual editing
+  UNEDITED_MILESTONE="$(cat $NEW_MILESTONE_FILE)"
+
 # Open resulting file in vim or nano for further editing, place cursor at Title field
   if   test $EDITOR = "vim"
   then vim '+cal cursor(2,16)' "${NEW_MILESTONE_FILE}"
   else nano +2,16 "${NEW_MILESTONE_FILE}"
   fi
 
-# Report successful creation of new ticket, mentioning number.
-  echo
-  echo "Milestone No. ${NEW_MILESTONE_NUM} created successfully"
-  echo
+  EDITED_MILESTONE="$(cat $NEW_MILESTONE_FILE)"
+
+  if   test "$UNEDITED_MILESTONE" = "$EDITED_MILESTONE"
+  then error "Error: No edits detected."
+       error "Aborting new milestone creation."
+       rm "$NEW_MILESTONE_FILE"
+       exit 1
+  else echo
+       echo "Milestone No. ${NEW_MILESTONE_NUM} created successfully"
+       echo
+  fi
