@@ -8,6 +8,14 @@
          Cc: 
       Owner: Tasos
        Date: 2021-12-03
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Completed
 Description: 
+
+
+== 2021-12-22
+bt init expects a (Completely) empty directory, and displays appropriate error
+messages if alreadt initialised etc.
+
+I'm happy with its current state for now.
+Closing ticket.

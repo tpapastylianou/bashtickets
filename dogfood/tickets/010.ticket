@@ -8,6 +8,12 @@
          Cc: 
       Owner: Tasos
        Date: 2021-12-03
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Completed
 Description: 
+
+
+== 2021-12-22
+Adapted comment utility for use in command-based interface.
+Also implemented aborting when no edits have taken place.
+Closing ticket.

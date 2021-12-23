@@ -8,8 +8,8 @@
          Cc: 
       Owner: Tasos
        Date: 2021-12-02
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Completed
 Description: In bashtickets v1 and v2, the various interactive 'menus' were
              hardwired in the code. In v3, it would be good if these could be
              user-editable via a config file, presumably the .bashtickets.repo
@@ -29,3 +29,9 @@ bash script.
 
 The validation scripts will need to be adapted to check if there is a valid
 config file etc.
+
+
+== 2021-12-22
+This has been implemented as described above, including checks for a valid
+config file
+Closing ticket.

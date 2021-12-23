@@ -8,11 +8,21 @@
          Cc: 
       Owner: Tasos
        Date: 2021-12-03
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Completed
 Description: Note, this also relates to 'new ticket' as well as the 'nt'
              shortcuts, and similarly new milestone vs nm
 
              These may or may not require separate tickets.
 
              This ticket will be used to track progress.
+
+
+== 2021-12-22
+
+Implemented command-based version of the new_ticket and new_milestone utilities.
+
+The relevant commands are 'new ticket', 'new milestone', 'nt', 'nm', or 'create'
+(and equivalently 'ct', 'cm') as an alias of 'new'.
+
+Closing ticket.
