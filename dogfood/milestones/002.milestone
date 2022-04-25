@@ -1,0 +1,23 @@
+MileStn No.: 002
+      Title: Desirable but not essential features
+    Created: 2022-04-25
+   Deadline: 2022-05-25
+Description: This milestone is created to separate desirable but non-essential
+features from the essential features for the MVP.
+
+
+
+=== Open Tickets ===
+
+002.ticket     Summary: selectable milestone?
+003.ticket     Summary: Implement man pages
+017.ticket     Summary: Colour support
+018.ticket     Summary: Should user be able to choose auto vs manual milestone updating
+020.ticket     Summary: Implement autocompletion for subcommands
+022.ticket     Summary: Ensure appropriate / consistent use of reference links throughout codebase
+023.ticket     Summary: Helper utils to detect if tickets/milestones have valid syntax
+027.ticket     Summary: Ensure appropriate checking of correct input arguments in all operations
+028.ticket     Summary: Ensure ticket editing actions complain if single-line fields exceed 1 line
+
+=== Closed Tickets ===
+

@@ -1,0 +1,13 @@
+ Ticket No.: 030
+    Summary: Milestone deadlines should support N/A value 
+   Reporter: Tasos
+       Type: Task
+   Priority: Normal
+  Milestone: 001
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2022-04-25
+     Status: Open
+ Resolution: 
+Description: Possible values: N/A, or simply empty

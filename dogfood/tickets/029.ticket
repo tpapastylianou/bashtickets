@@ -1,0 +1,15 @@
+ Ticket No.: 029
+    Summary: Enable milestones to also track milestones
+   Reporter: Tasos
+       Type: Feature
+   Priority: Normal
+  Milestone: 001
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2022-04-25
+     Status: Open
+ Resolution: 
+Description: this involves:
+             1. a field in milestones, denoting the "parent" milestone
+             2. the ability for the updater to detect active vs complete milestones

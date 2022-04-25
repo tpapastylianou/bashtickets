@@ -1,5 +1,5 @@
 MileStn No.: 001
-      Title: Bashtickets v2: command based interface
+      Title: Bashtickets v2: command based interface - MVP
     Created: 2021-12-02
    Deadline: 2022-01-02
 Description: v1 relies on single commands, which are getting rather numerous,
@@ -13,34 +13,27 @@ Description: v1 relies on single commands, which are getting rather numerous,
 
 === Open Tickets ===
 
-002.ticket     Summary: selectable milestone?
-003.ticket     Summary: Implement man pages
 004.ticket     Summary: Ensure all subcommand errors have appropriate messages and exit statuses
 005.ticket     Summary: Create appropriate help message
 006.ticket     Summary: Create appropriate 'usage' when called with no arguments
-007.ticket     Summary: Ensure bt init works correctly
 008.ticket     Summary: Ensure bt update works correctly
 009.ticket     Summary: Ensure bt show works correctly
-010.ticket     Summary: Ensure appropriate function for 'comment' subcommand
 011.ticket     Summary: Ensure appropriate function for 'assign' subcommand
-012.ticket     Summary: Ensure appropriate function for 'close' subcommand
-013.ticket     Summary: Ensure appropriate function of 'new' subcommand
 014.ticket     Summary: Ensure appropriate function of 'status' subcommand
 015.ticket     Summary: Ensure appropriate function of the 'remove' subcommand
 016.ticket     Summary: Ensure appropriate function of 'edit' subcommand
-017.ticket     Summary: Colour support
-018.ticket     Summary: Should user be able to choose auto vs manual milestone updating
-019.ticket     Summary: Remove zero-padding, adjust with ls | sort -n where appropriate
-020.ticket     Summary: Implement autocompletion for subcommands
 021.ticket     Summary: Convert 'show' to 'list' commands (or add an alias)
-022.ticket     Summary: Ensure appropriate / consistent use of reference links throughout codebase
-023.ticket     Summary: Helper utils to detect if tickets/milestones have valid syntax
 024.ticket     Summary: Ability to add fields as optional arguments, bypassing the interactive menu.
-025.ticket     Summary: Prevent selection of invalid options
-026.ticket     Summary: Implement Abort if no edits to all operations to which it applies 
-027.ticket     Summary: Ensure appropriate checking of correct input arguments in all operations
-028.ticket     Summary: Ensure ticket editing actions complain if single-line fields exceed 1 line
+029.ticket     Summary: Enable milestones to also track milestones
+030.ticket     Summary: Milestone deadlines should support N/A value 
 
 === Closed Tickets ===
 
 001.ticket     Summary: Selectable options specified in bt.repo config file.
+007.ticket     Summary: Ensure bt init works correctly
+010.ticket     Summary: Ensure appropriate function for 'comment' subcommand
+012.ticket     Summary: Ensure appropriate function for 'close' subcommand
+013.ticket     Summary: Ensure appropriate function of 'new' subcommand
+019.ticket     Summary: Remove zero-padding, adjust with ls | sort -n where appropriate
+025.ticket     Summary: Prevent selection of invalid options
+026.ticket     Summary: Implement Abort if no edits to all operations to which it applies 

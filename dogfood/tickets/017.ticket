@@ -3,7 +3,7 @@
    Reporter: Tasos
        Type: Task
    Priority: Normal
-  Milestone: 001
+  Milestone: 002
    Keywords: 
          Cc: 
       Owner: Tasos
@@ -20,3 +20,14 @@ Description: In v1 (v2) of bashtickets, colour was hardcoded.
 
              Unclear if this should also be configurable (or left to the user to
              alias).
+
+
+== 2022-04-25
+
+Additionally, default colours could be defined via a config file, so that users
+can choose their own colours.
+
+When a colours config file is not found, default colours should be defined
+directy in the source code.
+
+Also, a NOCOLOR env var should be honored (see relevant HN post)
