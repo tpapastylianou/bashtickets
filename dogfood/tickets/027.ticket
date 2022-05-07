@@ -11,3 +11,8 @@
      Status: Open
  Resolution: 
 Description: 
+
+
+== 2022-05-07
+Addendum: also ensure correct processing of '--' argument in the conventional
+unix manner (i.e. dictates that there are no more 'options')
