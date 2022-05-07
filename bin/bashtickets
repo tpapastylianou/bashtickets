@@ -93,8 +93,9 @@ function trycatch () {
 
 
 function check_bashtickets_installation () {
+# Assert everything is installed in the expected locations (relative to this
+# script)
 
-  # Assert everything is installed in the expected locations (relative to this script)
     if     test -d "$BT_ROOT_DIR"      &&
            test -d "$BT_BIN_DIR"       &&
            test -d "$BT_SHARE_DIR"     &&
@@ -107,6 +108,53 @@ function check_bashtickets_installation () {
            return 1
     fi
 }
+
+
+
+
+function is_valid_bashtickets_repository () {
+# In order for a directory to be a valid 'bashtickets repository', it needs to
+# contain a directory called '.bashtickets'; this directory should contain a
+# file called "config", which should be sourceable without errors.
+# Furthermore, it should contain a directory called 'tickets', and a directory
+# called 'milestones'.
+
+    if   test -d ./.bashtickets
+    then :
+    else error "Error: Not a valid bashtickets repository ('.bashtickets' directory missing)"
+         return 1
+    fi
+
+    if   test -f ./.bashtickets/config
+    then :
+    else error "Error: Not a valid bashtickets repository ('.bashtickets/config' file missing)"
+         return 1
+    fi
+
+    # test if the config file can be sourced without errors
+    ( set -e; source ./.bashtickets/config )
+    if   test $? -eq 0
+    then :
+    else error "Error: Not a valid bashtickets repository (errors found in '.bashtickets/config' file)"
+         return 1
+    fi
+
+    if   test -d ./tickets
+    then :
+    else error "Error: Not a valid bashtickets repository ('tickets' directory missing)"
+         return 1
+    fi
+
+    if   test -d ./milestones
+    then :
+    else error "Error: Not a valid bashtickets repository ('milestones' directory missing)"
+         return 1
+    fi
+
+  # If all tests passed successfully, exit normally.
+    return 0
+}
+
 
 
 
@@ -185,7 +233,7 @@ function initialise_bashtickets_repository () {
 
            echo   "Bashtickets repository initialised successfully."
 
-    elif   "$BT_UTILS_DIR/is_valid_bashtickets_repository" 2> /dev/null
+    elif   is_valid_bashtickets_repository 2> /dev/null
 
     then   error "Error: Current directory is already a valid bashtickets repository"
            error "       Aborting..."
@@ -213,8 +261,33 @@ function display_help  () { echo "Showing help... TODO"; exit 0; }
 # Perform initial sanity checks
 # -----------------------------
 
+# Ensure we have a valid bashtickets installation
 trycatch "check_bashtickets_installation" $EXIT_STATUS__INVALID_BASHTICKETS_INSTALLATION
-trycatch "check_repo" $EXIT_STATUS__NOT_A_VALID_BASHTICKETS_REPOSITORY
+
+# Ensure valid bashtickets repository for commands that require it
+case "$1" in
+
+    ( "init"   | "help"    | "h" )
+        ;;   # do nothing for now
+
+
+    ( "update"  | "up" | "show"   | "sh"     | "list"   | "ls" | "add"  | \
+      "comment" | "a"  | "m"      | "assign" | "close"  | "cl" | "open" | \
+      "reopen"  | "re" | "op"     | "new"    | "create" | "nt" | "ct"   | \
+      "nm"      | "cm" | "status" | "st"     | "remove" | "rm" | "edit" | \
+      "ed"  )
+
+        trycatch "check_repo" \
+                 $EXIT_STATUS__NOT_A_VALID_BASHTICKETS_REPOSITORY
+        ;;
+
+
+    ( * )   # Unknown / invalid command
+
+        display_usage && exit 1
+        ;;
+esac
+
 
 # ---------------------------
 # Execute bashtickets command
@@ -222,18 +295,18 @@ trycatch "check_repo" $EXIT_STATUS__NOT_A_VALID_BASHTICKETS_REPOSITORY
 
 case "$1" in
     ("init")                             trycatch "initialise_bashtickets_repository" $EXIT_STATUS__FAILED_TO_INITIALIZE_REPOSITORY ;;
-    ("update" | "up")                    check_repo && echo "Updating Milestones" ;;
-    ("show" | "sh" | "list" | "ls" )     check_repo && echo "Showing tickets" ;;
-    ( "add" | "comment" | "a" | "m")     check_repo && shift && trycatch "add_comment_to_ticket" "$@" $EXIT_STATUS__FAILED_TO_ADD_COMMENT_TO_TICKET ;;
-    ("assign")                           check_repo && shift && trycatch "assign_tickets_to_milestone" "$@" $EXIT_STATUS__FAILED_TO_ASSIGN_TICKETS_TO_MILESTONE ;;
-    ("close" | "cl")                     check_repo && shift && trycatch "close_ticket_with_comment" "$@" $EXIT_STATUS__FAILED_TO_CLOSE_TICKET ;;
-    ("open" | "reopen" | "re" | "op" )   check_repo && shift && trycatch "reopen_ticket" "$@" $EXIT_STATUS__FAILED_TO_REOPEN_TICKET ;;
-    ("new" | "create" )                  check_repo && shift && trycatch "new_ticket_or_milestone" "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET_OR_MILESTONE ;;
-    ("nt" | "ct" )                       check_repo && shift && trycatch "new_ticket" "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET ;;
-    ("nm" | "cm" )                       check_repo && shift && trycatch "new_milestone" "$@" $EXIT_STATUS__FAILED_TO_CREATE_MILESTONE ;;
+    ("update" | "up")                    echo "Updating Milestones" ;;
+    ("show" | "sh" | "list" | "ls" )     echo "Showing tickets" ;;
+    ( "add" | "comment" | "a" | "m")     shift && trycatch "add_comment_to_ticket" "$@" $EXIT_STATUS__FAILED_TO_ADD_COMMENT_TO_TICKET ;;
+    ("assign")                           shift && trycatch "assign_tickets_to_milestone" "$@" $EXIT_STATUS__FAILED_TO_ASSIGN_TICKETS_TO_MILESTONE ;;
+    ("close" | "cl")                     shift && trycatch "close_ticket_with_comment" "$@" $EXIT_STATUS__FAILED_TO_CLOSE_TICKET ;;
+    ("open" | "reopen" | "re" | "op" )   shift && trycatch "reopen_ticket" "$@" $EXIT_STATUS__FAILED_TO_REOPEN_TICKET ;;
+    ("new" | "create" )                  shift && trycatch "new_ticket_or_milestone" "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET_OR_MILESTONE ;;
+    ("nt" | "ct" )                       shift && trycatch "new_ticket" "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET ;;
+    ("nm" | "cm" )                       shift && trycatch "new_milestone" "$@" $EXIT_STATUS__FAILED_TO_CREATE_MILESTONE ;;
     ("help" | "h")                       display_help ;;
-    ("status" | "st")                    check_repo && echo "Displaying milestone status (all/open/closed)" ;;
-    ("remove" | "rm")                    check_repo && echo "Removing last ticket / milestone or by number" ;;
-    ("edit" | "ed")                      check_repo && echo "Edit ticket / milestone" ;;
-    (*)                                  display_usage
+    ("status" | "st")                    echo "Displaying milestone status (all/open/closed)" ;;
+    ("remove" | "rm")                    echo "Removing last ticket / milestone or by number" ;;
+    ("edit" | "ed")                      echo "Edit ticket / milestone" ;;
+    (*)                                  display_usage && exit 1 ;;
 esac
