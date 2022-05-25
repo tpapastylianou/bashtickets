@@ -1,4 +1,10 @@
-# A bash array of strings of the form
+# Bashtickets repo configuration file
+
+#####################
+### Mandatory options
+#####################
+
+# Ticket priority Levels: Defined as a bash array of strings of the form
 #     "PriorityLevel   (optional description)"
 #
 # The full string is shown in the interactive menu. 'PriorityLevel' is what is
@@ -13,6 +19,9 @@ TICKET_PRIORITY_LEVELS=(
   "Highest    (both important and urgent)"
 )
 
+# Ticket types: Defined as a bash array of single-word strings.
+# This list will be used to create an interactive menu when creating a new
+# ticket. The selected option will be used to populate the 'Type:' field.
 TICKET_TYPES=(
   "Investigation"
   "Bugfix"
@@ -20,6 +29,7 @@ TICKET_TYPES=(
   "Task"
 )
 
+# Ticket resolutions: This menu is used when closing tickets.
 TICKET_RESOLUTIONS=(
   "Completed"
   "Delegated"
@@ -28,11 +38,19 @@ TICKET_RESOLUTIONS=(
   "Invalid"
 )
 
-function get_default_milestone_startdate () {
-  date +"%Y-%m-%d"   # i.e. today's date
-}
 
-function get_default_milestone_deadline () {
-  local STARTDATE="$1"
-  date --date="$STARTDATE +1 month" +"%Y-%m-%d"
-}
+
+####################
+### Optional options
+####################
+
+### Items here can be defined to override defaults defined in the main script.
+
+#function get_default_milestone_startdate () {
+#  date +"%Y-%m-%d"   # i.e. today's date
+#}
+
+#function get_default_milestone_deadline () {
+#  local STARTDATE="$1"
+#  date --date="$STARTDATE +1 month" +"%Y-%m-%d"
+#}

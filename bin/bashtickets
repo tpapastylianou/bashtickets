@@ -183,6 +183,24 @@ function display_usage () { echo "Displaying usage ... TODO"; exit $EXIST_STATUS
 
 
 
+
+function get_default_milestone_startdate () {
+# Note: This function can be overridden in the config if desired
+  date +"%Y-%m-%d"   # i.e. today's date
+}
+
+
+
+
+
+function get_default_milestone_deadline () {
+# Note: This function can be overridden in the config if desired
+  local STARTDATE="$1"
+  date --date="$STARTDATE +1 month" +"%Y-%m-%d"
+}
+
+
+
 # -------------------
 # Bashticket commands
 # -------------------
@@ -377,6 +395,71 @@ function new_ticket () {
     fi
 }
 
+
+
+
+function new_milestone () {
+
+  if   test ${#@} -gt 0
+  then error "Error: Incorrect arguments provided to new_milestone function"
+       echo
+       display_usage
+       exit 1
+  fi
+
+# Capture milestones path and template onto the relevant variables
+  MILESTONES_PATH="$( realpath ./milestones )"
+  MILESTONE_TEMPLATE="$BT_DOC_DIR/milestone.template"
+
+  cd $MILESTONES_PATH
+
+# If this is the first milestone, start numbering from 1; otherwise, find the
+ # last milestone number, and increment by one.
+
+  if     test -f 1.milestone
+  then   LAST_MILESTONE_NUM=$(ls *.milestone | sort -n | tail -n -1)   # list files, sort in numerical (not alphabetical) order, and keep last filename
+         LAST_MILESTONE_NUM=${LAST_MILESTONE_NUM%.milestone}   # parameter expansion: remove '.milestone' suffix
+         NEW_MILESTONE_NUM=$(( $LAST_MILESTONE_NUM + 1 ))
+  else   NEW_MILESTONE_NUM=1
+  fi
+
+  NEW_MILESTONE_FILE="${NEW_MILESTONE_NUM}.milestone"
+
+# Create a new milestone from template
+  cp "$MILESTONE_TEMPLATE" "${NEW_MILESTONE_FILE}"
+
+# Update milestone number
+  sed -i "s/Milestone No.: /Milestone No.: ${NEW_MILESTONE_NUM}/" "${NEW_MILESTONE_FILE}"
+
+# Set start date from default
+  DEFAULT_STARTDATE="$(get_default_milestone_startdate)"
+  sed -i "s/Startdate: /Startdate: $DEFAULT_STARTDATE/" "${NEW_MILESTONE_FILE}"
+
+# Set deadline from default
+  DEFAULT_DEADLINE="$( get_default_milestone_deadline $DEFAULT_STARTDATE )"
+  sed -i "s/Deadline: /Deadline: $DEFAULT_DEADLINE/" "${NEW_MILESTONE_FILE}"
+
+# Save current status of ticket before manual editing
+  UNEDITED_MILESTONE="$(cat $NEW_MILESTONE_FILE)"
+
+# Open resulting file in vim or nano for further editing, place cursor at Title field
+  if   test $EDITOR = "vim"
+  then vim '+cal cursor(2,16)' "${NEW_MILESTONE_FILE}"
+  else nano +2,16 "${NEW_MILESTONE_FILE}"
+  fi
+
+  EDITED_MILESTONE="$(cat $NEW_MILESTONE_FILE)"
+
+  if   test "$UNEDITED_MILESTONE" = "$EDITED_MILESTONE"
+  then error "Error: No edits detected."
+       error "Aborting new milestone creation."
+       rm "$NEW_MILESTONE_FILE"
+       exit 1
+  else echo
+       echo "Milestone No. ${NEW_MILESTONE_NUM} created successfully"
+       echo
+  fi
+}
 
 
 
