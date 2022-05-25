@@ -14,10 +14,13 @@
 ###     - error
 ###     - trycatch
 ###     - check_bashtickets_installation
+###     - is_valid_bashtickets_repository
 ###     - check_repo
 ###     - load_config
+###     - display_usage
 ###   - Bashticket Commands
 ###     - initialise_bashtickets_repository
+###     - display_help
 ### - Main body
 ###   - Perform initial sanity checks
 ###   - Execute bashtickets command
@@ -73,10 +76,10 @@ function error () {
 
 function trycatch () {
 
-    declare    COMMAND=( "${@: 1: ${#@} - 1}" )   # Collect all input arguments 
-                                                  # except last, as an array
+    declare COMMAND=( "${@: 1: ${#@} - 1}" )   # Collect all input arguments
+                                               # except last, as an array
 
-    declare -i EXITSTATUS="${@: -1}"              # Get last input argument only
+    declare -i EXITSTATUS="${@: -1}"   # Get last input argument only
 
     if   "${COMMAND[@]}"   # Run the respective command with accompanying
                            # arguments
@@ -179,11 +182,13 @@ function load_config () {
 function display_usage () { echo "Displaying usage ... TODO"; exit $EXIST_STATUS__INVALID_SUBCOMMAND; }
 
 
+
 # -------------------
 # Bashticket commands
 # -------------------
 
 function initialise_bashtickets_repository () {
+# command: 'init'
 
   # Ensure this command was called with no arguments
     if   test ${#@} -gt 0
@@ -249,7 +254,130 @@ function initialise_bashtickets_repository () {
 
 
 
-function display_help  () { echo "Showing help... TODO"; exit 0; }
+function display_help  () {
+# command: help | h
+
+    echo "Showing help... TODO"
+    return 0
+}
+
+
+
+
+function new_ticket_or_milestone () {
+    case "$1" in
+        ("ticket")     shift && new_ticket    "$@" ;;
+        ("milestone")  shift && new_milestone "$@" ;;
+        (*)            error "Error: invalid argument given to 'new'."
+                       error "Valid arguments are 'ticket' or 'milestone'."
+                       return 1 ;;
+    esac
+}
+
+
+
+
+function new_ticket () {
+    if   test ${#@} -gt 0
+    then error "Error: Incorrect arguments provided to new_ticket function"
+         echo
+         display_usage
+         return 1
+    fi
+
+  # Capture ticket path and template onto the relevant variables
+    TICKETS_PATH="$( realpath ./tickets )"
+    TICKET_TEMPLATE="$BT_DOC_DIR/ticket.template"
+
+    cd $TICKETS_PATH
+
+
+  # If this is the first ticket, start numbering from 1; otherwise, find the
+   # last ticket number, and increment by one.
+
+    if     test -f 1.ticket
+    then   LAST_TICKET_NUM=$(ls *.ticket | sort -n | tail -n -1)   # list files, sort in numerical (not alphabetical) order, and keep last filename
+           LAST_TICKET_NUM=${LAST_TICKET_NUM%.ticket}   # parameter expansion: remove '.ticket' suffix
+           NEW_TICKET_NUM=$(( $LAST_TICKET_NUM + 1 ))
+    else   NEW_TICKET_NUM=1
+    fi
+
+    NEW_TICKET_FILE="${NEW_TICKET_NUM}.ticket"
+
+  # Create a new ticket from template
+    cp "$TICKET_TEMPLATE" "${NEW_TICKET_FILE}"
+
+  # Update ticket number
+    sed -i "s/Ticket No.: /Ticket No.: ${NEW_TICKET_NUM}/" "${NEW_TICKET_FILE}"
+
+  # Try to set owner and reporter automatically:
+    WHOAMI=$(whoami)
+    WHOAMI=${WHOAMI^}   # parameter expansion: make first character uppercase
+    sed -i "s/Reporter: /Reporter: $WHOAMI/" "${NEW_TICKET_FILE}"
+    sed -i "s/Owner:/Owner: $WHOAMI/" "${NEW_TICKET_FILE}"
+
+  # Select a valid type:
+    echo "Select a valid ticket type:"
+    declare -i REPLY   # The user's input is assigned to this variable; we want to ensure it only takes numeric values
+    select TICKET_TYPE in "${TICKET_TYPES[@]}"   # TICKET_TYPES obtained from config
+    do
+        if   test $REPLY -gt 0 && test $REPLY -le ${#TICKET_TYPES[@]}
+        then sed -i "s/Type: /Type: $TICKET_TYPE/" "${NEW_TICKET_FILE}"
+             break
+        else error "Invalid selection, please chose a number between 1 and ${#TICKET_TYPES[@]}" && exit 1
+        fi
+    done
+    declare +i REPLY
+
+  # Select a valid priority:
+    echo
+    echo "Select a valid ticket priority"
+    declare -i REPLY   # The user's input is assigned to this variable; we want to ensure it only takes numeric values
+    select TICKET_PRIORITY in "${TICKET_PRIORITY_LEVELS[@]}"   # TICKET_PRIORITY_LEVELS obtained from config
+    do
+        if   test $REPLY -gt 0 && test $REPLY -le ${#TICKET_PRIORITY_LEVELS[@]}
+        then sed -i "s/Priority: /Priority: ${TICKET_PRIORITY%% *}/" "${NEW_TICKET_FILE}"   # Remove everything in the priority string after the first space (i.e. the explanation of the priority level)
+             break
+        else error "Invalid selection, please chose a number between 1 and ${#TICKET_PRIORITY_LEVELS[@]}" && exit 1
+        fi
+    done
+    declare +i REPLY
+
+  # Set today's date
+    TODAY=$(date +"%Y-%m-%d")
+    sed -i "s/Date: /Date: $TODAY/" "${NEW_TICKET_FILE}"
+
+  # Declare status as Open
+    sed -i "s/Status: /Status: Open/" "${NEW_TICKET_FILE}"
+
+  # Save current status of ticket before manual editing
+    UNEDITED_TICKET="$(cat $NEW_TICKET_FILE)"
+
+  # Open resulting file in the user's editor of choice, as detected by the
+   # EDITOR environmental variable. This can be overriden per bashtickets
+    # repository, by assigning to this variable in the repository's config file
+    # instead. If the EDITOR variable is not defined at all, nano is used as the
+    # default editor.
+
+    if   test $EDITOR = "vim"
+    then vim '+cal cursor(2,14)' "${NEW_TICKET_FILE}"
+    else nano +2,14 "${NEW_TICKET_FILE}"
+    fi
+
+    EDITED_TICKET="$(cat $NEW_TICKET_FILE)"
+
+    if   test "$UNEDITED_TICKET" = "$EDITED_TICKET"
+    then error "Error: No edits detected."
+         error "Aborting new ticket creation."
+         rm "$NEW_TICKET_FILE"
+         exit 1
+    else echo
+         echo "Ticket No. ${NEW_TICKET_NUM} created successfully"
+         echo
+    fi
+}
+
+
 
 
 
@@ -292,6 +420,8 @@ esac
 # ---------------------------
 # Execute bashtickets command
 # ---------------------------
+
+load_config
 
 case "$1" in
     ("init")                             trycatch "initialise_bashtickets_repository" $EXIT_STATUS__FAILED_TO_INITIALIZE_REPOSITORY ;;
