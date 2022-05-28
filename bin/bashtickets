@@ -566,6 +566,71 @@ function close_ticket_with_comment () {
 
 
 
+
+function add_comment_to_ticket () {
+# Usage: add_comment_to_ticket <ticket number>   # e.g. 23
+
+  if   test ${#@} -ne 1
+  then error "Error: Incorrect arguments provided to add_comment_to_ticket function"
+       echo
+       display_usage
+       exit 1
+  fi
+
+# Capture ticket path and template onto the relevant variables
+  TICKETS_PATH="$( realpath ./tickets )"
+
+  cd $TICKETS_PATH
+
+# This is the ticket file we're about to modify
+  TICKET="${1%.ticket}.ticket"
+  if test -f "$TICKET"
+  then :
+  else error "Error: Invalid ticket specified; file ${TICKET} does not exist!" && exit 1
+  fi
+
+# Save state of original ticket in case we need to revert at the end
+  ORIGINAL_TICKET="$(cat $TICKET)"
+
+# Get today's date
+  TODAY=$(date +"%Y-%m-%d")
+
+# Start a new comment:
+  echo             >> "${TICKET}"
+  echo             >> "${TICKET}"
+  echo "== $TODAY" >> "${TICKET}"
+
+# Leave empty line where the comment will go, and capture that line number
+  echo >> "${TICKET}"
+  LINENUM=$(cat "${TICKET}" | wc -l)
+
+# If owner is different than closer, mention the closer's name in the closing comment explicitly
+  if test "$CURRENT_OWNER" != "$WHOAMI"
+  then
+      echo "($WHOAMI)" >> "${TICKET}"
+  fi
+
+# Save current status of ticket before manual editing
+  UNEDITED_TICKET="$(cat $TICKET)"
+
+# Open default editor and put cursor in the right place for editing
+  if   test $EDITOR == "vim"
+  then vim  +"$LINENUM" "${TICKET}"
+  else nano +"$LINENUM" "${TICKET}"
+  fi
+
+  EDITED_TICKET="$(cat $TICKET)"
+
+  if   test "$UNEDITED_TICKET" = "$EDITED_TICKET"
+  then error "Error: No edits detected."
+       error "'Add comment' operation aborted and ticket reverted to original state."
+       echo "$ORIGINAL_TICKET" > "$TICKET"
+       exit 1
+  fi
+}
+
+
+
 #############
 ### Main body
 #############
