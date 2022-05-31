@@ -1,0 +1,15 @@
+ Ticket No.: 032
+    Summary: Ensure empty milestones shown without error
+   Reporter: Tasos
+       Type: Investigation
+   Priority: Normal
+  Milestone: 001
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2022-05-31
+     Status: Open
+ Resolution: 
+Description: If you try to 'show active / completed milestones', does an empty
+             milestone show without error, or does it display a division by zero
+             error?
