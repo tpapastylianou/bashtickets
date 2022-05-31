@@ -52,8 +52,8 @@ declare -i EXIT_STATUS__FAILED_TO_REOPEN_TICKET=9
 declare -i EXIT_STATUS__FAILED_TO_ADD_COMMENT_TO_TICKET=10
 declare -i EXIT_STATUS__FAILED_TO_ASSIGN_TICKETS_TO_MILESTONE=11
 
-declare -i EXIST_STATUS__INVALID_SUBCOMMAND=100
-
+declare -i EXIT_STATUS__INVALID_SUBCOMMAND=100
+declare -i EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX=101
 
 
 ########################
@@ -179,8 +179,43 @@ function load_config () {
 
 
 
-function display_usage () { echo "Displaying usage ... TODO"; exit $EXIST_STATUS__INVALID_SUBCOMMAND; }
+function display_usage () {
+# TODO: This function will need to display appropriate usage for the bashtickets
+# main program, AS WELL AS for the relevant subcommands (threfore it will
+# require processing of an input argument).
 
+  case $1 in
+
+      ('assign_tickets_to_milestone')
+           echo "Usage:"
+           echo "    $(basename $0) assign <ticket> [<ticket2> <ticket3> ... <ticketN>] <milestone>"
+           echo
+           echo "e.g.:"
+           echo "    $(basename $BASH_SOURCE) assign 1.ticket 2.ticket 1.milestone"
+           echo
+           echo "or simply:"
+           echo "    $(basename $BASH_SOURCE) 1 2 1"
+           echo
+           echo "Using '0' as the milestone removes any existing milestones from the specified tickets instead"
+
+      ('update_milestones')
+           echo "Usage:"
+           echo
+           echo "    $(basename $0) [milestone1 milestone2 ... milestoneN]"
+           echo
+           echo "Updates all or specific milestones from tickets"
+           echo
+           echo "e.g.:"
+           echo "    $(basename $0) 001.milestone   # update milestone 001 only"
+           echo "    $(basename $0) 001             # short version of above"
+           echo "    $(basename $0) 001 002 003     # update milestones 001 002 and 003 only"
+           echo "    $(basename $0)                 # update all milestones"
+
+      (*)
+          echo "Displaying usage ... TODO";
+
+  esac
+}
 
 
 
@@ -197,6 +232,55 @@ function get_default_milestone_deadline () {
 # Note: This function can be overridden in the config if desired
   local STARTDATE="$1"
   date --date="$STARTDATE +1 month" +"%Y-%m-%d"
+}
+
+
+
+
+function is_valid_ticket () (
+
+   TICKET="${1%.ticket}.ticket"
+   TICKETS_PATH="$( realpath ./tickets )"
+
+ # Test if ticket file exists in the first place
+   if   test -f "$TICKETS_PATH/$TICKET"
+   then :
+   else error "Warning: ticket '$TICKET' does not exist in '$TICKETS_PATH'."
+        return 1
+   fi
+
+ # Test if ticket file is of valid form
+   if   head "$TICKETS_PATH/$TICKET" -n +1 | egrep "^ Ticket No.: "
+   then :
+   else error "Warning: file '$TICKET' does not appear to be of valid ticket syntax"
+        error "         (line 1 should start with: ' Ticket No.: ')
+        return 1
+   fi
+)
+
+
+
+
+
+function is_valid_milestone () {
+
+   MILESTONE="${1%.milestone}.milestone"
+   MILESTONES_PATH="$( realpath ./milestones )"
+
+ # Test if milestone file exists in the first place
+   if   test -f "$MILESTONES_PATH/${MILESTONE"
+   then :
+   else error "Warning: milestone '$MILESTONE' does not exist in '$MILESTONES_PATH'."
+        return 1
+   fi
+
+ # Test if milestone file is of valid form
+   if   head "$MILESTONES_PATH/$MILESTONE" -n +1 | egrep "^Milestone No.: "
+   then :
+   else error "Warning: file '$MILESTONE' does not appear to be of valid milestone syntax"
+        error "         (line 1 should start with: 'Milestone No.: ')
+        return 1
+   fi
 }
 
 
@@ -631,6 +715,127 @@ function add_comment_to_ticket () {
 
 
 
+
+function assign_tickets_to_milestone () {
+
+# If called without arguments, display usage
+  if   test "$#" -le 1
+  then display_usage 'assign_tickets_to_milestone'
+       exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+  fi
+
+# Process Input Arguments
+  ARGS=( "$@" )                               # Get all positional arguments as a bash array
+  MILESTONE_ARG="${ARGS[-1]}"                 # Get the last element of the array
+  TICKET_ARGS=( "${ARGS[@]: 0 : $# - 1 }" )   # Create a sub-array, from index 0 to N-1
+
+# Obtain relevant absolute paths
+  REPO_PATH="$( realpath . )"
+  TICKETS_PATH="$( realpath ./tickets )"
+
+# Confirm validity of inputs
+  ERRORS=0
+
+  for  TICKET_ARG in "${TICKET_ARGS[@]}"
+  do   if   is_valid_ticket "$TICKET_ARG"
+       then :
+       else ERRORS=$((ERRORS + 1))
+       fi
+  done
+
+  if   is_valid_milestone "MILESTONE_ARG"
+  then :
+  else ERRORS=$((ERRORS + 1))
+  fi
+
+  if test "$ERRORS" -gt 0
+  then error "Encountered $ERRORS input errors. Aborting."
+       exit 1
+  fi
+
+# Process all tickets
+  MILESTONE_NO="${MILESTONE_ARG%.milestone}"   # Remove .milestone suffix
+  MILESTONE_NO="${MILESTONE_NO%0}"             # If milestone was '0', use empty string instead.
+
+  for  TICKET_ARG in "${TICKET_ARGS[@]}"
+  do   TICKET_NO="${TICKET_ARG%.ticket}"
+       TICKET_FILE="$TICKETS_PATH/${TICKET_NO}.ticket"
+       sed -i "s/  Milestone: .*\$/  Milestone: ${MILESTONE_NO}/" "$TICKET_FILE"
+  done
+
+# update milestones accordingly - note, we need to update ALL milestones, because more than one may have changed
+  "$REPO_PATH/update_milestones"
+}
+
+
+
+
+function update_milestones () {
+# TODO TBC
+#!/bin/bash
+
+# If called without arguments, display usage
+  if   test "$#" -eq 1 && test "$1" = "--help" || test "$1" = "-h"
+  then display_usage 'update_milestones'
+       exit
+  fi
+
+# Process Input Arguments
+  ARGS=( "$@" )   # Get all positional arguments as a bash array
+
+# Obtain relevant absolute paths
+  BASHTICKETS_PATH="$( dirname $BASH_SOURCE | xargs realpath )"
+  TICKETS_PATH="$BASHTICKETS_PATH/tickets"
+  MILESTONES_PATH="$BASHTICKETS_PATH/milestones"
+
+  if   test "${#ARGS[@]}" -eq 0                         # Command was called without inputs
+
+  then ARGS=( $MILESTONES_PATH/*.milestone )            # Collect all milestone filenames
+       ARGS=( ${ARGS[@]:1} )                            # Remove first element of array
+       for  i in $( seq 0 "$(( ${#ARGS[@]} - 1))" )     # loop from index 0 to N-1
+       do   ARGS["$i"]="${ARGS[$i]#$MILESTONES_PATH/}"  # Remove path prefix
+       done
+
+  else
+
+    # Confirm validity of inputs
+      ERRORS=0
+
+      for  ARG in "${ARGS[@]}"
+      do   if   test "${ARG%.milestone}" = "0"
+           then echo "Invalid input (0) as milestone in this context."
+                exit 1
+           elif test -f "$MILESTONES_PATH/${ARG%.milestone}.milestone"
+           then :
+           else echo "Input Error: No such milestone (${ARG%.milestone}.milestone) exists in $MILESTONES_PATH"
+                ERRORS=$((ERRORS + 1))
+           fi
+      done
+
+      if test "$ERRORS" -gt 0
+      then echo "Encountered $ERRORS input errors. Aborting."
+           exit 1
+      fi
+  fi
+
+  for ARG in "${ARGS[@]}"
+  do  MILESTONE_NO="${ARG%.milestone}"   # Remove .milestone suffix
+      MILESTONE_FILE="$MILESTONES_PATH/${ARG%.milestone}.milestone"
+      HEADER=$(grep --color=never "=== Open Tickets ===" "$MILESTONE_FILE" -n | cut -d: -f1 )
+
+      head -n "+$HEADER" "$MILESTONE_FILE"                                  > "$MILESTONE_FILE.bak"
+      echo                                                                 >> "$MILESTONE_FILE.bak"
+      "$BASHTICKETS_PATH/show_open_tickets_by_milestone" "$MILESTONE_NO"   >> "$MILESTONE_FILE.bak"
+      echo                                                                 >> "$MILESTONE_FILE.bak"
+      echo "=== Closed Tickets ==="                                        >> "$MILESTONE_FILE.bak"
+      echo                                                                 >> "$MILESTONE_FILE.bak"
+      "$BASHTICKETS_PATH/show_closed_tickets_by_milestone" "$MILESTONE_NO" >> "$MILESTONE_FILE.bak"
+      mv "$MILESTONE_FILE.bak" "$MILESTONE_FILE"
+  done
+}
+
+
+
 #############
 ### Main body
 #############
@@ -677,16 +882,16 @@ case "$1" in
     ("init")                             trycatch "initialise_bashtickets_repository" $EXIT_STATUS__FAILED_TO_INITIALIZE_REPOSITORY ;;
     ("update" | "up")                    echo "Updating Milestones" ;;
     ("show" | "sh" | "list" | "ls" )     echo "Showing tickets" ;;
-    ( "add" | "comment" | "a" | "m")     shift && trycatch "add_comment_to_ticket" "$@" $EXIT_STATUS__FAILED_TO_ADD_COMMENT_TO_TICKET ;;
+    ( "add" | "comment" | "a" | "m")     shift && trycatch "add_comment_to_ticket"       "$@" $EXIT_STATUS__FAILED_TO_ADD_COMMENT_TO_TICKET       ;;
     ("assign")                           shift && trycatch "assign_tickets_to_milestone" "$@" $EXIT_STATUS__FAILED_TO_ASSIGN_TICKETS_TO_MILESTONE ;;
-    ("close" | "cl")                     shift && trycatch "close_ticket_with_comment" "$@" $EXIT_STATUS__FAILED_TO_CLOSE_TICKET ;;
-    ("open" | "reopen" | "re" | "op" )   shift && trycatch "reopen_ticket" "$@" $EXIT_STATUS__FAILED_TO_REOPEN_TICKET ;;
-    ("new" | "create" )                  shift && trycatch "new_ticket_or_milestone" "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET_OR_MILESTONE ;;
-    ("nt" | "ct" )                       shift && trycatch "new_ticket" "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET ;;
-    ("nm" | "cm" )                       shift && trycatch "new_milestone" "$@" $EXIT_STATUS__FAILED_TO_CREATE_MILESTONE ;;
+    ("close" | "cl")                     shift && trycatch "close_ticket_with_comment"   "$@" $EXIT_STATUS__FAILED_TO_CLOSE_TICKET                ;;
+    ("open" | "reopen" | "re" | "op" )   shift && trycatch "reopen_ticket"               "$@" $EXIT_STATUS__FAILED_TO_REOPEN_TICKET               ;;
+    ("new" | "create" )                  shift && trycatch "new_ticket_or_milestone"     "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET_OR_MILESTONE  ;;
+    ("nt" | "ct" )                       shift && trycatch "new_ticket"                  "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET               ;;
+    ("nm" | "cm" )                       shift && trycatch "new_milestone"               "$@" $EXIT_STATUS__FAILED_TO_CREATE_MILESTONE            ;;
     ("help" | "h")                       display_help ;;
     ("status" | "st")                    echo "Displaying milestone status (all/open/closed)" ;;
     ("remove" | "rm")                    echo "Removing last ticket / milestone or by number" ;;
     ("edit" | "ed")                      echo "Edit ticket / milestone" ;;
-    (*)                                  display_usage && exit 1 ;;
+    (*)                                  display_usage && exit $EXIT_STATUS__INVALID_SUBCOMMAND ;;
 esac
