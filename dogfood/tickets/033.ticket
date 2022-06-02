@@ -1,0 +1,16 @@
+ Ticket No.: 033
+    Summary: show_completed_milestones - more appropriate completion date calculation
+   Reporter: Tasos
+       Type: Task
+   Priority: Lowest
+  Milestone: 001
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2022-06-02
+     Status: Open
+ Resolution: 
+
+Description: The formula for the completion date currently used doesn't actually
+             estimate completion dates (for tickets), but 'most recent
+             activity'. This is low priority, but should be fixed eventually.
