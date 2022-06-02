@@ -922,6 +922,118 @@ function show_closed_tickets_by_milestone () {
 
 
 
+function show_active_milestones () {
+
+local OPEN_LINE
+local CLOSE_LINE
+local NUM_OPEN_TICKETS
+local NUM_CLOSED_TICKETS
+local NUM_TICKETS
+local PERCENTAGE
+local DEADLINE
+local TODAY
+local DAYS_LEFT
+
+
+cd $MILESTONES_PATH
+
+for i in *.milestone
+do
+
+  # Detect open and closed tickets
+    OPEN_LINE=$(  grep --color=never -n "=== Open Tickets ==="   "$i" | cut -d: -f1 )
+    CLOSE_LINE=$( grep --color=never -n "=== Closed Tickets ===" "$i" | cut -d: -f1 )
+    NUM_OPEN_TICKETS=$( cat "$i" | head -n "+$(( CLOSE_LINE - 1 ))" | tail -n "+$(( OPEN_LINE + 1 ))" |  egrep "^\s*\$" -v | wc -l )
+
+    if   test "$NUM_OPEN_TICKETS" -eq 0
+    then continue
+    fi
+
+    NUM_CLOSED_TICKETS=$( cat "$i" | tail -n "+$(( CLOSE_LINE + 1 ))" |  egrep "^\s*\$" -v | wc -l )
+    NUM_TICKETS="$(( NUM_OPEN_TICKETS + NUM_CLOSED_TICKETS ))"
+    if   test $NUM_TICKETS -eq 0
+    then PERCENTAGE="Empty"
+    else PERCENTAGE="$(( 100 * NUM_CLOSED_TICKETS / NUM_TICKETS ))%"
+    fi
+
+  # Calculate days left from deadline (assumes correct date format!)
+    DEADLINE=$(grep --color=never "   Deadline: " "$i" | cut -d$':' -f2 )
+    DEADLINE=$(date --date "$DEADLINE" "+%s")
+    TODAY=$(date "+%s")
+    DAYS_LEFT=$(( (DEADLINE - TODAY) / 86400 ))
+
+  # Print entry to terminal (unsorted)
+    printf "%-15s -- " "Milestone ${i%.milestone}"
+    printf "%-27s -- " "Completion: $NUM_CLOSED_TICKETS / $NUM_TICKETS ($PERCENTAGE)"
+    printf "%-15s -- " "Days left: ${DAYS_LEFT}"
+    printf "Title: " && grep --color=never "      Title:" "$i" | cut -d$':' -f2
+done
+}
+
+
+
+
+function show_completed_milestones () {
+
+local OPEN_LINE
+local CLOSE_LINE
+local CLOSED_TICKETS
+local NUM_OPEN_TICKETS
+local NUM_CLOSED_TICKETS
+local NUM_TICKETS
+local PERCENTAGE
+local DEADLINE
+local TODAY
+local DAYS_LEFT
+local d="[[:digit:]]"   # for convenience in later regular expressions
+
+cd $MILESTONES_PATH
+
+for i in *.milestone
+do
+
+  # Detect open and closed tickets
+    OPEN_LINE=$(  grep --color=never -n "=== Open Tickets ==="   "$i" | cut -d: -f1 )
+    CLOSE_LINE=$( grep --color=never -n "=== Closed Tickets ===" "$i" | cut -d: -f1 )
+    NUM_OPEN_TICKETS=$( cat "$i" | head -n "+$(( CLOSE_LINE - 1 ))" | tail -n "+$(( OPEN_LINE + 1 ))" |  egrep "^\s*\$" -v | wc -l )
+    CLOSED_TICKETS=( $(cat "$i" | tail -n "+$(( CLOSE_LINE + 1 ))" | egrep --color=never -o "^.+\.ticket\b" ) )
+    NUM_CLOSED_TICKETS="${#CLOSED_TICKETS[@]}"
+
+    if   test $NUM_OPEN_TICKETS   -gt 0 ||   # if there are open tickets then milestone is not complete
+         test $NUM_CLOSED_TICKETS -eq 0      # if milestone is empty, then it is not considered complete
+    then continue
+    else : # Past this point, we assume this milestones has no open tickets, and
+           # has at least one closed ticket
+    fi
+
+  # Determine final date of ticket with most recent activity
+    COMPLETION_DATE=$( for  t in "${CLOSED_TICKETS[@]}"
+                       do   egrep "== $d{4}-$d{2}-$d{2}" "../tickets/$t" | cut -b 4-
+                       done | sort | head -n +1 )
+
+  # Calculate difference from deadline (assumes correct date format!)
+    DEADLINE=$(grep --color=never "   Deadline: " "$i" | cut -d$':' -f2 )
+    DEADLINE=$(date --date "$DEADLINE" "+%s")
+    COMPLETION_DATE_SECONDS=$( date --date "$COMPLETION_DATE" "+%s" )
+    DATEDIFF=$(( (DEADLINE - COMPLETION_DATE_SECONDS) / 86400 ))
+
+    if   test $((DATEDIFF)) -eq 0; then DATESTR="on time"
+    elif test $((DATEDIFF)) -gt 0; then DATESTR="$DATEDIFF days ahead of deadline"
+    else                                DATESTR="$((-DATEDIFF)) days late"
+    fi
+
+  # Print entry to terminal (unsorted)
+    printf "%-15s -- " "Milestone ${i%.milestone}"
+    printf "%-27s -- " "${NUM_CLOSED_TICKETS} tickets completed"
+    printf "%s -- " "Last ticket completed on: $COMPLETION_DATE ($DATESTR)"
+    printf "Title: " && grep --color=never "      Title:" "$i" | cut -d$':' -f2
+done
+}
+
+
+
+
+
 #############
 ### Main body
 #############
@@ -963,7 +1075,7 @@ esac
 
 case "$1" in
     ("init")                             trycatch "initialise_bashtickets_repository" $EXIT_STATUS__FAILED_TO_INITIALIZE_REPOSITORY ;;
-    ("update" | "up")                    echo "Updating Milestones ...TODO" ;;
+    ("update" | "up")                    trycatch update_milestones $EXIT_STATUS__OTHER_ERROR ;;
     ("show" | "sh" | "list" | "ls" )     echo "Showing tickets ...TODO" ;;
     ( "add" | "comment" | "a" | "m")     shift && trycatch "add_comment_to_ticket"       "$@" $EXIT_STATUS__FAILED_TO_ADD_COMMENT_TO_TICKET       ;;
     ("assign")                           shift && trycatch "assign_tickets_to_milestone" "$@" $EXIT_STATUS__FAILED_TO_ASSIGN_TICKETS_TO_MILESTONE ;;
@@ -978,8 +1090,10 @@ case "$1" in
     ("edit" | "ed")                      echo "Edit ticket / milestone...TODO" ;;
 
   # Let's also include "fullname" subcommands ... this is mostly for testing. FIXME: REMOVE WHEN NO LONGER NEEDED
-    ("show_open_tickets_by_milestone")   shift && trycatch show_open_tickets_by_milestone "$@" $EXIT_STATUS__OTHER_ERROR ;;
+    ("show_open_tickets_by_milestone")   shift && trycatch show_open_tickets_by_milestone   "$@" $EXIT_STATUS__OTHER_ERROR ;;
     ("show_closed_tickets_by_milestone") shift && trycatch show_closed_tickets_by_milestone "$@" $EXIT_STATUS__OTHER_ERROR ;;
+    ("show_active_milestones")           shift && trycatch show_active_milestones           "$@" $EXIT_STATUS__OTHER_ERROR ;;
+    ("show_completed_milestones")        shift && trycatch show_completed_milestones        "$@" $EXIT_STATUS__OTHER_ERROR ;;
 
     (*)                                  display_usage && exit $EXIT_STATUS__INVALID_SUBCOMMAND ;;
 esac
