@@ -247,6 +247,14 @@ function display_usage () {
           echo "Note: Using '0' as the milestone displays tickets that are not assigned to any milestones"
           ;;
 
+      ('editor')
+          echo "Usage:"
+          echo "   $(basename $0) <filename> <line number> <column number>"
+          echo
+          echo "Note: All three fields are mandatory."
+          echo "      Lines and columns are numbered starting from '1'."
+          ;;
+
       (*)
           echo "Displaying usage ... TODO";
           ;;
@@ -486,16 +494,9 @@ function new_ticket () {
   # Save current status of ticket before manual editing
     UNEDITED_TICKET="$(cat $NEW_TICKET_FILE)"
 
-  # Open resulting file in the user's editor of choice, as detected by the
-   # EDITOR environmental variable. This can be overriden per bashtickets
-    # repository, by assigning to this variable in the repository's config file
-    # instead. If the EDITOR variable is not defined at all, nano is used as the
-    # default editor.
-
-    if   test $EDITOR = "vim"
-    then vim '+cal cursor(2,14)' "${NEW_TICKET_FILE}"
-    else nano +2,14 "${NEW_TICKET_FILE}"
-    fi
+    # Open the resulting file for editing (see 'editor' function), placing the
+    # cursor at the Summary field.
+    editor "${NEW_TICKET_FILE}" 2 14
 
     EDITED_TICKET="$(cat $NEW_TICKET_FILE)"
 
@@ -555,11 +556,9 @@ function new_milestone () {
 # Save current status of ticket before manual editing
   UNEDITED_MILESTONE="$(cat $NEW_MILESTONE_FILE)"
 
-# Open resulting file in vim or nano for further editing, place cursor at Title field
-  if   test $EDITOR = "vim"
-  then vim '+cal cursor(2,16)' "${NEW_MILESTONE_FILE}"
-  else nano +2,16 "${NEW_MILESTONE_FILE}"
-  fi
+# Open the resulting file for editing (see 'editor' function), placing the cursor
+# at the Title field.
+  editor "${NEW_MILESTONE_FILE}" 2 16
 
   EDITED_MILESTONE="$(cat $NEW_MILESTONE_FILE)"
 
@@ -659,10 +658,7 @@ function close_ticket_with_comment () {
   UNEDITED_TICKET="$(cat $TICKET)"
 
 # Open default editor and put cursor in the right place for editing
-  if   test $EDITOR == "vim"
-  then vim  +"$LINENUM" "${TICKET}"
-  else nano +"$LINENUM" "${TICKET}"
-  fi
+  editor "${TICKET}" $LINENUM 1
 
   EDITED_TICKET="$(cat $TICKET)"
 
@@ -671,6 +667,29 @@ function close_ticket_with_comment () {
        error "'Close' operation aborted and ticket reverted to original state."
        echo "$ORIGINAL_TICKET" > "$TICKET"
        exit 1
+  fi
+}
+
+
+
+## Note: This function may be overriden in the config.
+function editor () {
+  echo 'builtin editor used!!!!'
+
+  if   test $# -eq 3
+  then :
+  else error "Error: incorrect number of arguments used."
+       display_usage editor
+       return 1
+  fi
+
+  local FILE="$1"
+  local LINE="$2"
+  local COLUMN="$3"
+
+  if   test $EDITOR = "vim"
+  then vim "+cal cursor($LINE,$COLUMN)" "$FILE"
+  else nano +$LINE,$COLUMN "$FILE"
   fi
 }
 
@@ -721,10 +740,7 @@ function add_comment_to_ticket () {
   UNEDITED_TICKET="$(cat $TICKET)"
 
 # Open default editor and put cursor in the right place for editing
-  if   test $EDITOR == "vim"
-  then vim  +"$LINENUM" "${TICKET}"
-  else nano +"$LINENUM" "${TICKET}"
-  fi
+  editor "${TICKET}" $LINENUM 1
 
   EDITED_TICKET="$(cat $TICKET)"
 
@@ -1065,7 +1081,7 @@ case "$1" in
         ;;
 
     ( * )   ;;
-esac
+esac   # FIXME UPDATE AS APPROPRIATE
 
 
 # ---------------------------
@@ -1074,26 +1090,31 @@ esac
 
 
 case "$1" in
-    ("init")                             trycatch "initialise_bashtickets_repository" $EXIT_STATUS__FAILED_TO_INITIALIZE_REPOSITORY ;;
+    ("init")                             trycatch initialise_bashtickets_repository $EXIT_STATUS__FAILED_TO_INITIALIZE_REPOSITORY ;;
     ("update" | "up")                    trycatch update_milestones $EXIT_STATUS__OTHER_ERROR ;;
     ("show" | "sh" | "list" | "ls" )     echo "Showing tickets ...TODO" ;;
-    ( "add" | "comment" | "a" | "m")     shift && trycatch "add_comment_to_ticket"       "$@" $EXIT_STATUS__FAILED_TO_ADD_COMMENT_TO_TICKET       ;;
-    ("assign")                           shift && trycatch "assign_tickets_to_milestone" "$@" $EXIT_STATUS__FAILED_TO_ASSIGN_TICKETS_TO_MILESTONE ;;
-    ("close" | "cl")                     shift && trycatch "close_ticket_with_comment"   "$@" $EXIT_STATUS__FAILED_TO_CLOSE_TICKET                ;;
-    ("open" | "reopen" | "re" | "op" )   shift && trycatch "reopen_ticket"               "$@" $EXIT_STATUS__FAILED_TO_REOPEN_TICKET               ;;
-    ("new" | "create" )                  shift && trycatch "new_ticket_or_milestone"     "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET_OR_MILESTONE  ;;
-    ("nt" | "ct" )                       shift && trycatch "new_ticket"                  "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET               ;;
-    ("nm" | "cm" )                       shift && trycatch "new_milestone"               "$@" $EXIT_STATUS__FAILED_TO_CREATE_MILESTONE            ;;
+    ( "add" | "comment" | "a" | "m")     shift && trycatch add_comment_to_ticket       "$@" $EXIT_STATUS__FAILED_TO_ADD_COMMENT_TO_TICKET       ;;
+    ("assign")                           shift && trycatch assign_tickets_to_milestone "$@" $EXIT_STATUS__FAILED_TO_ASSIGN_TICKETS_TO_MILESTONE ;;
+    ("close" | "cl")                     shift && trycatch close_ticket_with_comment   "$@" $EXIT_STATUS__FAILED_TO_CLOSE_TICKET                ;;
+    ("open" | "reopen" | "re" | "op" )   shift && trycatch reopen_ticket               "$@" $EXIT_STATUS__FAILED_TO_REOPEN_TICKET               ;;
+    ("new" | "create" )                  shift && trycatch new_ticket_or_milestone     "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET_OR_MILESTONE  ;;
+    ("nt" | "ct" )                       shift && trycatch new_ticket                  "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET               ;;
+    ("nm" | "cm" )                       shift && trycatch new_milestone               "$@" $EXIT_STATUS__FAILED_TO_CREATE_MILESTONE            ;;
     ("help" | "h")                       display_help ;;
     ("status" | "st")                    echo "Displaying milestone status (all/open/closed)...TODO" ;;
     ("remove" | "rm")                    echo "Removing last ticket / milestone or by number...TODO" ;;
-    ("edit" | "ed")                      echo "Edit ticket / milestone...TODO" ;;
+    ("edit" | "ed")                      shift && trycatch edit_ticket_or_milestone "$@" $EXIT_STATUS__FAILED_TO_EDIT_TICKET_OR_MILESTONE ;;
+    ("et")                               shift && trycatch edit_ticket              "$@" $EXIT_STATUS__FAILED_TO_EDIT_TICKET              ;;
+    ("em")                               shift && trycatch edit_milestone           "$@" $EXIT_STATUS__FILED_TO_EDIT_MILESTONE            ;;
 
   # Let's also include "fullname" subcommands ... this is mostly for testing. FIXME: REMOVE WHEN NO LONGER NEEDED
     ("show_open_tickets_by_milestone")   shift && trycatch show_open_tickets_by_milestone   "$@" $EXIT_STATUS__OTHER_ERROR ;;
     ("show_closed_tickets_by_milestone") shift && trycatch show_closed_tickets_by_milestone "$@" $EXIT_STATUS__OTHER_ERROR ;;
     ("show_active_milestones")           shift && trycatch show_active_milestones           "$@" $EXIT_STATUS__OTHER_ERROR ;;
     ("show_completed_milestones")        shift && trycatch show_completed_milestones        "$@" $EXIT_STATUS__OTHER_ERROR ;;
+    ("edit_ticket_or_milestone")         shift && trycatch edit_ticket_or_milestone         "$@" $EXIT_STATUS__FAILED_TO_EDIT_TICKET_OR_MILESTONE ;;
+    ("edit_ticket")                      shift && trycatch edit_ticket                      "$@" $EXIT_STATUS__FAILED_TO_EDIT_TICKET              ;;
+    ("edit_milestone")                   shift && trycatch edit_milestone                   "$@" $EXIT_STATUS__FILED_TO_EDIT_MILESTONE            ;;
 
     (*)                                  display_usage && exit $EXIT_STATUS__INVALID_SUBCOMMAND ;;
 esac

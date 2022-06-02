@@ -45,12 +45,61 @@ TICKET_RESOLUTIONS=(
 ####################
 
 ### Items here can be defined to override defaults defined in the main script.
+### For convenience, the functions provided in the sample config file are
+### identical to the default definitions used in the main script.
 
-#function get_default_milestone_startdate () {
-#  date +"%Y-%m-%d"   # i.e. today's date
-#}
 
-#function get_default_milestone_deadline () {
-#  local STARTDATE="$1"
-#  date --date="$STARTDATE +1 month" +"%Y-%m-%d"
-#}
+## Wrapper function to invoke the user's preferred editor. Expects to be called
+## via the following syntax: "editor <filename> <line> <column>".
+##
+## The default version here tries to detect the user's EDITOR environmental
+## variable; if the EDITOR variable is not defined at all, nano is used as the
+## default editor.
+##
+## If you are using an editor other than nano or vim, you can either redefine
+## this function from scratch or simply add another 'case' below; in the latter
+## case, the EDITOR variable can either be from your environmental variables, or
+## it can be defined locally in this script.
+function editor () {
+  echo 'config-override editor used!!!'
+
+
+  if   test $# -eq 3
+  then :
+  else error "Error: incorrect number of arguments used."
+       display_usage editor
+       return 1
+  fi
+
+  local FILE="$1"
+  local LINE="$2"
+  local COLUMN="$3"
+
+  if   test $EDITOR = "vim"
+  then vim "+cal cursor($LINE,$COLUMN)" "$FILE"
+  else nano +$LINE,$COLUMN "$FILE"
+  fi
+}
+
+
+## This function should return an appropriate date in "%Y-%m-%d" format, to be
+## used as the starting date when creating new milestones. It should not expect
+## arguments.
+##
+## The default version here simply returns the current date at the time of
+## creation of the new milestone.
+function get_default_milestone_startdate () {
+  date +"%Y-%m-%d"   # i.e. today's date
+}
+
+## This function should return an appropriate date in "%Y-%m-%d" format, to be
+## used as the default 'deadline' date when creating new milestones. It should
+## expect a single argument, corresponding to the particular milestone's
+## starting date.
+##
+## The default version here simply returns the date corresponding to one month
+## after the date provided as the input argument.
+function get_default_milestone_deadline () {
+  local STARTDATE="$1"
+  date --date="$STARTDATE +1 month" +"%Y-%m-%d"
+}
