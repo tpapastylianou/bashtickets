@@ -59,6 +59,9 @@ declare -i EXIT_STATUS__FAILED_TO_CLOSE_TICKET=8
 declare -i EXIT_STATUS__FAILED_TO_REOPEN_TICKET=9
 declare -i EXIT_STATUS__FAILED_TO_ADD_COMMENT_TO_TICKET=10
 declare -i EXIT_STATUS__FAILED_TO_ASSIGN_TICKETS_TO_MILESTONE=11
+declare -i EXIT_STATUS__FAILED_TO_EDIT_TICKET_OR_MILESTONE=12
+declare -i EXIT_STATUS__FAILED_TO_EDIT_TICKET=13
+declare -i EXIT_STATUS__FAILED_TO_EDIT_MILESTONE=14
 
 declare -i EXIT_STATUS__INVALID_SUBCOMMAND=100
 declare -i EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX=101
@@ -674,7 +677,6 @@ function close_ticket_with_comment () {
 
 ## Note: This function may be overriden in the config.
 function editor () {
-  echo 'builtin editor used!!!!'
 
   if   test $# -eq 3
   then :
@@ -1049,6 +1051,47 @@ done
 
 
 
+function edit_ticket () {
+
+    local TICKET="${1%.ticket}.ticket"
+
+    if   is_valid_ticket "$TICKET"
+    then :
+    else return 1
+    fi
+
+    editor "$TICKETS_PATH/$TICKET" 1 1
+}
+
+
+
+
+function edit_milestone () {
+
+    local MILESTONE="${1%.milestone}.milestone"
+
+    if   is_valid_milestone "$MILESTONE"
+    then :
+    else return 1
+    fi
+
+    editor "$MILESTONES_PATH/$MILESTONE" 1 1
+}
+
+
+
+
+function edit_ticket_or_milestone () {
+    case "$1" in
+        ("ticket")     shift && edit_ticket    "$@" ;;
+        ("milestone")  shift && edit_milestone "$@" ;;
+        (*)            error "Error: invalid argument given to 'edit'."
+                       error "Valid arguments are 'ticket' or 'milestone'."
+                       return 1 ;;
+    esac
+}
+
+
 
 #############
 ### Main body
@@ -1072,7 +1115,7 @@ case "$1" in
       "comment" | "a"  | "m"      | "assign" | "close"  | "cl" | "open" | \
       "reopen"  | "re" | "op"     | "new"    | "create" | "nt" | "ct"   | \
       "nm"      | "cm" | "status" | "st"     | "remove" | "rm" | "edit" | \
-      "ed"  )
+      "et"      | "em"  )
 
         trycatch "check_repo" \
                  $EXIT_STATUS__NOT_A_VALID_BASHTICKETS_REPOSITORY
@@ -1105,7 +1148,7 @@ case "$1" in
     ("remove" | "rm")                    echo "Removing last ticket / milestone or by number...TODO" ;;
     ("edit" | "ed")                      shift && trycatch edit_ticket_or_milestone "$@" $EXIT_STATUS__FAILED_TO_EDIT_TICKET_OR_MILESTONE ;;
     ("et")                               shift && trycatch edit_ticket              "$@" $EXIT_STATUS__FAILED_TO_EDIT_TICKET              ;;
-    ("em")                               shift && trycatch edit_milestone           "$@" $EXIT_STATUS__FILED_TO_EDIT_MILESTONE            ;;
+    ("em")                               shift && trycatch edit_milestone           "$@" $EXIT_STATUS__FAILED_TO_EDIT_MILESTONE           ;;
 
   # Let's also include "fullname" subcommands ... this is mostly for testing. FIXME: REMOVE WHEN NO LONGER NEEDED
     ("show_open_tickets_by_milestone")   shift && trycatch show_open_tickets_by_milestone   "$@" $EXIT_STATUS__OTHER_ERROR ;;
@@ -1114,7 +1157,7 @@ case "$1" in
     ("show_completed_milestones")        shift && trycatch show_completed_milestones        "$@" $EXIT_STATUS__OTHER_ERROR ;;
     ("edit_ticket_or_milestone")         shift && trycatch edit_ticket_or_milestone         "$@" $EXIT_STATUS__FAILED_TO_EDIT_TICKET_OR_MILESTONE ;;
     ("edit_ticket")                      shift && trycatch edit_ticket                      "$@" $EXIT_STATUS__FAILED_TO_EDIT_TICKET              ;;
-    ("edit_milestone")                   shift && trycatch edit_milestone                   "$@" $EXIT_STATUS__FILED_TO_EDIT_MILESTONE            ;;
+    ("edit_milestone")                   shift && trycatch edit_milestone                   "$@" $EXIT_STATUS__FAILED_TO_EDIT_MILESTONE           ;;
 
     (*)                                  display_usage && exit $EXIT_STATUS__INVALID_SUBCOMMAND ;;
 esac

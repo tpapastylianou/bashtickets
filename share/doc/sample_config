@@ -61,8 +61,6 @@ TICKET_RESOLUTIONS=(
 ## case, the EDITOR variable can either be from your environmental variables, or
 ## it can be defined locally in this script.
 function editor () {
-  echo 'config-override editor used!!!'
-
 
   if   test $# -eq 3
   then :
