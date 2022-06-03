@@ -13,3 +13,5 @@
 Description: this involves:
              1. a field in milestones, denoting the "parent" milestone
              2. the ability for the updater to detect active vs complete milestones
+             3. a new command that shows milestone 'trees' (active/completed) with associated deadlines
+             4. a decision regarding deadline handling in compound milestones

@@ -16,7 +16,6 @@ Description: v1 relies on single commands, which are getting rather numerous,
 004.ticket     Summary: Ensure all subcommand errors have appropriate messages and exit statuses
 005.ticket     Summary: Create appropriate help message
 006.ticket     Summary: Create appropriate 'usage' when called with no arguments
-008.ticket     Summary: Ensure bt update works correctly
 009.ticket     Summary: Ensure bt show works correctly
 011.ticket     Summary: Ensure appropriate function for 'assign' subcommand
 014.ticket     Summary: Ensure appropriate function of 'status' subcommand
@@ -26,11 +25,15 @@ Description: v1 relies on single commands, which are getting rather numerous,
 024.ticket     Summary: Ability to add fields as optional arguments, bypassing the interactive menu.
 029.ticket     Summary: Enable milestones to also track milestones
 030.ticket     Summary: Milestone deadlines should support N/A value 
+031.ticket     Summary: Convert command-script dependencies to sourceable functions
+032.ticket     Summary: Ensure empty milestones shown without error
+033.ticket     Summary: show_completed_milestones - more appropriate completion date calculation
 
 === Closed Tickets ===
 
 001.ticket     Summary: Selectable options specified in bt.repo config file.
 007.ticket     Summary: Ensure bt init works correctly
+008.ticket     Summary: Ensure bt update works correctly
 010.ticket     Summary: Ensure appropriate function for 'comment' subcommand
 012.ticket     Summary: Ensure appropriate function for 'close' subcommand
 013.ticket     Summary: Ensure appropriate function of 'new' subcommand

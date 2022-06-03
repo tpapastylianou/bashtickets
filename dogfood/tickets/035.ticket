@@ -1,0 +1,33 @@
+ Ticket No.: 035
+    Summary: Handle Ctrl-C in interactive menus appropriately
+   Reporter: Tasos
+       Type: Bugfix
+   Priority: Normal
+  Milestone: 001
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2022-06-03
+     Status: Open
+ Resolution: 
+Description: At the moment, if Ctrl-C is pressed during an interactive menu, a
+             (blank) ticket/milestone file is still generated.
+
+             This should be fixed such that no file is generated unless the
+             process completes successfully.
+
+             There are two approaches that I can think of; one is using trap to
+             trap the SIGTERM signal appropriately.
+
+             The other, and likely the easiest / most appropriate one, is to
+             simply not generate the candidate ticket in the actual location
+             directly from the start of the script, but create it in a temporary
+             location first, and only copy to the final location if the menu
+             process has been completed successfully.
+
+             (presumably it might also make sense to simply ignore unedited
+             tickets rather than explicitly remove them too).
+
+             It will be assumed that the current bt repository has the
+             appropriate read/write permissions, rather than checking explicitly
+             (right?). Presumably `tempfile` doesn't need permissions checking.
