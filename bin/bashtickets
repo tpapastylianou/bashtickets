@@ -48,6 +48,17 @@ REPO_PATH="$( realpath . )"
 TICKETS_PATH="$REPO_PATH/tickets"
 MILESTONES_PATH="$REPO_PATH/milestones"
 
+# Other constants
+ANSI_RED="\033[91m"
+ANSI_GREEN="\033[92m"
+ANSI_PURPLE="\033[95m"
+ANSI_RESET="\033[39m"
+
+ANSI_COLOR_LIGHTBLUE="\033[94m"
+ANSI_BOLD_ON="\033[1m"
+ANSI_BOLD_OFF="\033[22m"
+
+
 # Declare exit statuses for various errors
 declare -i EXIT_STATUS__INVALID_BASHTICKETS_INSTALLATION=2
 declare -i EXIT_STATUS__NOT_A_VALID_BASHTICKETS_REPOSITORY=3
@@ -458,7 +469,7 @@ function new_ticket () {
     WHOAMI=$(whoami)
     WHOAMI=${WHOAMI^}   # parameter expansion: make first character uppercase
     sed -i "s/Reporter: /Reporter: $WHOAMI/" "${NEW_TICKET_FILE}"
-    sed -i "s/Owner:/Owner: $WHOAMI/" "${NEW_TICKET_FILE}"
+    sed -i "s/Owner: /Owner: $WHOAMI/" "${NEW_TICKET_FILE}"
 
   # Select a valid type:
     echo "Select a valid ticket type:"
@@ -1093,6 +1104,165 @@ function edit_ticket_or_milestone () {
 
 
 
+# ----------------
+# Legacy Functions
+# ----------------
+
+function show_all_ticket_summaries () {
+
+cd $TICKETS_PATH
+
+for i in *.ticket
+do
+  if   grep "Status: Open" "$i" > /dev/null
+  then echo -e -n "$i: ${ANSI_RED}[ Open ]${ANSI_RESET} "
+  elif grep "Status: Closed" "$i" > /dev/null
+  then echo -en "$i: ${ANSI_GREEN}[Closed]${ANSI_RESET} "
+  else echo -en "$i: ${ANSI_PURPLE}[ ???? ]${ANSI_RESET} "
+  fi
+  grep Summary "$i"
+done
+}
+
+
+
+
+function show_closed_ticket_resolutions () {
+
+local TICKET
+
+cd $TICKETS_PATH
+
+for TICKET in $(grep --color=never -l "Status: Closed" *.ticket)
+do
+    echo -n "$TICKET "
+    grep --color=always "Resolution:" "$TICKET"        \
+        | sed "s/Completed/\\x1b[92mCompleted\\x1b[39m/" \
+        | sed "s/Delegated/\\x1b[94mDelegated\\x1b[39m/" \
+        | sed "s/Postponed/\\x1b[93mPostponed\\x1b[39m/" \
+        | sed "s/Cancelled/\\x1b[91mCancelled\\x1b[39m/" \
+        | sed "s/Invalid/\\x1b[95mInvalid\\x1b[39m/"
+
+done
+}
+
+
+
+
+function show_closed_ticket_summaries () {
+
+cd $TICKETS_PATH
+local COUNT=0
+
+for i in *.ticket
+do
+  if   grep "Status: Closed" "$i" > /dev/null
+  then COUNT=$((COUNT + 1))
+       echo -n "$i:"
+       grep Summary "$i"
+  fi
+done
+
+echo
+echo "There are $COUNT closed tickets in total."
+}
+
+
+
+
+function show_open_ticket_summaries () {
+
+cd $TICKETS_PATH
+local COUNT=0
+
+for i in *.ticket
+do
+  if   grep "Status: Open" "$i" > /dev/null
+  then COUNT=$((COUNT + 1))
+       echo -n "$i:"
+       grep Summary "$i"
+  fi
+done
+
+echo
+echo "There are $COUNT open tickets in total."
+}
+
+
+
+
+# FIXME The function below fails because the owner had spaces in the tickets. But WHY????? XXX
+
+
+function show_open_ticket_summaries_by_owner () {
+
+
+cd $TICKETS_PATH
+
+local OWNERS="$( grep --color=never 'Owner:' *.ticket | cut -d: -f3 | cut -b 2- | sort -u )"
+
+while read -r OWNER
+do
+  local OWNERS_TICKETS="$( egrep -l "Owner: ${OWNER}$" *.ticket )"
+
+  local COUNT=0
+  local PRINTOUT=
+
+  for i in $OWNERS_TICKETS;
+  do
+    if   grep "Status: Open" "$i" > /dev/null
+    then COUNT=$((COUNT + 1))
+         PRINTOUT="$PRINTOUT$i:"
+         PRINTOUT="$PRINTOUT $(grep Summary "$i")"
+         PRINTOUT=${PRINTOUT}$'\n'
+    fi
+  done
+
+  echo -e "${ANSI_COLOR_LIGHTBLUE}== ${ANSI_BOLD_ON}Owner: ${OWNER:-(Nobody)}${ANSI_BOLD_OFF} (${COUNT} open tickets)${ANSI_RESET}"
+  echo "$PRINTOUT"
+
+done <<< "$OWNERS"
+}
+
+
+
+
+function show_open_ticket_summaries_by_priority () {
+
+cd $TICKETS_PATH
+
+for PRIORITY in Lowest Normal Important Urgent Highest
+do
+
+  local PRIORITY_TICKETS=$(grep -l "Priority: $PRIORITY" *.ticket)
+  local COUNT=0
+  local PRINTOUT=
+
+  for i in $PRIORITY_TICKETS;
+  do
+
+
+    if   grep "Status: Open" "$i" > /dev/null
+    then COUNT=$((COUNT + 1))
+         PRINTOUT="$PRINTOUT$i:"
+         PRINTOUT="$PRINTOUT $(grep Summary "$i")"
+         PRINTOUT=${PRINTOUT}$'\n'
+    fi
+  done
+
+  echo -e "${ANSI_COLOR_LIGHTBLUE}== Priority: ${ANSI_BOLD_ON}${PRIORITY}${ANSI_BOLD_OFF} (${COUNT} open tickets)${ANSI_RESET}"
+  echo "$PRINTOUT"
+
+done
+}
+
+
+
+
+
+
+
+
 #############
 ### Main body
 #############
@@ -1150,14 +1320,29 @@ case "$1" in
     ("et")                               shift && trycatch edit_ticket              "$@" $EXIT_STATUS__FAILED_TO_EDIT_TICKET              ;;
     ("em")                               shift && trycatch edit_milestone           "$@" $EXIT_STATUS__FAILED_TO_EDIT_MILESTONE           ;;
 
-  # Let's also include "fullname" subcommands ... this is mostly for testing. FIXME: REMOVE WHEN NO LONGER NEEDED
+
+  # -------------------------------------------------------------------------
+  # Let's also include "fullname" subcommands ... this is mostly for testing.
+  # -------------------------------------------------------------------------
+    # FIXME: REMOVE WHEN NO LONGER NEEDED
+
+  # subcommands that take arguments
     ("show_open_tickets_by_milestone")   shift && trycatch show_open_tickets_by_milestone   "$@" $EXIT_STATUS__OTHER_ERROR ;;
     ("show_closed_tickets_by_milestone") shift && trycatch show_closed_tickets_by_milestone "$@" $EXIT_STATUS__OTHER_ERROR ;;
-    ("show_active_milestones")           shift && trycatch show_active_milestones           "$@" $EXIT_STATUS__OTHER_ERROR ;;
-    ("show_completed_milestones")        shift && trycatch show_completed_milestones        "$@" $EXIT_STATUS__OTHER_ERROR ;;
     ("edit_ticket_or_milestone")         shift && trycatch edit_ticket_or_milestone         "$@" $EXIT_STATUS__FAILED_TO_EDIT_TICKET_OR_MILESTONE ;;
     ("edit_ticket")                      shift && trycatch edit_ticket                      "$@" $EXIT_STATUS__FAILED_TO_EDIT_TICKET              ;;
     ("edit_milestone")                   shift && trycatch edit_milestone                   "$@" $EXIT_STATUS__FAILED_TO_EDIT_MILESTONE           ;;
+
+  # subcommands that take no arguments
+    ("show_active_milestones")                 trycatch show_active_milestones                 $EXIT_STATUS__OTHER_ERROR ;;
+    ("show_completed_milestones")              trycatch show_completed_milestones              $EXIT_STATUS__OTHER_ERROR ;;
+    ("show_all_ticket_summaries")              trycatch show_all_ticket_summaries              $EXIT_STATUS__OTHER_ERROR ;;
+    ("show_closed_ticket_resolutions")         trycatch show_closed_ticket_resolutions         $EXIT_STATUS__OTHER_ERROR ;;
+    ("show_closed_ticket_summaries")           trycatch show_closed_ticket_summaries           $EXIT_STATUS__OTHER_ERROR ;;
+    ("show_open_ticket_summaries")             trycatch show_open_ticket_summaries             $EXIT_STATUS__OTHER_ERROR ;;
+    ("show_open_ticket_summaries_by_owner")    trycatch show_open_ticket_summaries_by_owner    $EXIT_STATUS__OTHER_ERROR ;;
+    ("show_open_ticket_summaries_by_priority") trycatch show_open_ticket_summaries_by_priority $EXIT_STATUS__OTHER_ERROR ;;
+
 
     (*)                                  display_usage && exit $EXIT_STATUS__INVALID_SUBCOMMAND ;;
 esac

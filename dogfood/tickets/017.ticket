@@ -31,3 +31,10 @@ When a colours config file is not found, default colours should be defined
 directy in the source code.
 
 Also, a NOCOLOR env var should be honored (see relevant HN post)
+
+
+== 2022-06-02
+
+Additionally, I should investigate the use of 'colour profiles', as opposed to
+fixed colours, that may break visibility when one uses a white terminal vs a
+black one, for instance
