@@ -11,3 +11,16 @@
      Status: Open
  Resolution: 
 Description:
+
+
+== 2022-06-03
+
+Within the subcommands, each subcommand should check for valid syntax, and if
+this is not the case, it should display an informative error, call
+display_usage, and exit with the EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX error
+(rather than simply return 1)
+
+All other return points within functions that should not be exiting with an
+explicit error, should return 1 instead, thus delegating the appropriate exit
+status to the trycatch function.
+

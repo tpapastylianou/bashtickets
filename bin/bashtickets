@@ -93,6 +93,9 @@ function error () {
     awk "BEGIN { print \"$*\" > \"/dev/stderr\" }"
 }
 
+function warning () {
+    error "${ANSI_COLOR_LIGHTBLUE}$*${ANSI_RESET}"
+}
 
 
 
@@ -302,15 +305,15 @@ function is_valid_ticket () {
  # Test if ticket file exists in the first place
    if   test -f "$TICKETS_PATH/$TICKET"
    then :
-   else error "Warning: ticket '$TICKET' does not exist in '$TICKETS_PATH'."
+   else warning "Warning: ticket '$TICKET' does not exist in '$TICKETS_PATH'."
         return 1
    fi
 
  # Test if ticket file is of valid form
    if   head "$TICKETS_PATH/$TICKET" -n +1 | egrep "^ Ticket No.: " > /dev/null
    then :
-   else error "Warning: file '$TICKET' does not appear to be of valid ticket syntax"
-        error "         (line 1 should start with: ' Ticket No.: ')"
+   else warning "Warning: file '$TICKET' does not appear to be of valid ticket syntax"
+        warning "         (line 1 should start with: ' Ticket No.: ')"
         return 1
    fi
 }
@@ -326,15 +329,15 @@ function is_valid_milestone () {
  # Test if milestone file exists in the first place
    if   test -f "$MILESTONES_PATH/$MILESTONE"
    then :
-   else error "Warning: milestone '$MILESTONE' does not exist in '$MILESTONES_PATH'."
+   else warning "Warning: milestone '$MILESTONE' does not exist in '$MILESTONES_PATH'."
         return 1
    fi
 
  # Test if milestone file is of valid form
    if   head "$MILESTONES_PATH/$MILESTONE" -n +1 | egrep "^Milestone No.: " > /dev/null
    then :
-   else error "Warning: file '$MILESTONE' does not appear to be of valid milestone syntax"
-        error "         (line 1 should start with: 'Milestone No.: ')"
+   else warning "Warning: file '$MILESTONE' does not appear to be of valid milestone syntax"
+        warning "         (line 1 should start with: 'Milestone No.: ')"
         return 1
    fi
 }
@@ -479,7 +482,7 @@ function new_ticket () {
         if   test $REPLY -gt 0 && test $REPLY -le ${#TICKET_TYPES[@]}
         then sed -i "s/Type: /Type: $TICKET_TYPE/" "${NEW_TICKET_FILE}"
              break
-        else error "Invalid selection, please chose a number between 1 and ${#TICKET_TYPES[@]}" && exit 1
+        else error "Invalid selection, please chose a number between 1 and ${#TICKET_TYPES[@]}" && return 1
         fi
     done
     declare +i REPLY
@@ -493,7 +496,7 @@ function new_ticket () {
         if   test $REPLY -gt 0 && test $REPLY -le ${#TICKET_PRIORITY_LEVELS[@]}
         then sed -i "s/Priority: /Priority: ${TICKET_PRIORITY%% *}/" "${NEW_TICKET_FILE}"   # Remove everything in the priority string after the first space (i.e. the explanation of the priority level)
              break
-        else error "Invalid selection, please chose a number between 1 and ${#TICKET_PRIORITY_LEVELS[@]}" && exit 1
+        else error "Invalid selection, please chose a number between 1 and ${#TICKET_PRIORITY_LEVELS[@]}" && return 1
         fi
     done
     declare +i REPLY
@@ -518,7 +521,7 @@ function new_ticket () {
     then error "Error: No edits detected."
          error "Aborting new ticket creation."
          rm "$NEW_TICKET_FILE"
-         exit 1
+         return 1
     else echo
          echo "Ticket No. ${NEW_TICKET_NUM} created successfully"
          echo
@@ -534,7 +537,7 @@ function new_milestone () {
   then error "Error: Incorrect arguments provided to new_milestone function"
        echo
        display_usage
-       exit 1
+       return 1
   fi
 
 # Capture milestones path and template onto the relevant variables
@@ -580,7 +583,7 @@ function new_milestone () {
   then error "Error: No edits detected."
        error "Aborting new milestone creation."
        rm "$NEW_MILESTONE_FILE"
-       exit 1
+       return 1
   else echo
        echo "Milestone No. ${NEW_MILESTONE_NUM} created successfully"
        echo
@@ -594,10 +597,10 @@ function close_ticket_with_comment () {
 # Usage: close_ticket_with_comment <ticket number>   # e.g. 23
 
   if   test ${#@} -ne 1
-  then error "Error: Incorrect arguments provided to new_milestone function"
+  then error "Error: Incorrect arguments provided to close_ticket_with_comment function"
        echo
        display_usage
-       exit 1
+       return 1
   fi
 
   cd $TICKETS_PATH
@@ -606,7 +609,7 @@ function close_ticket_with_comment () {
   TICKET="${1%.ticket}.ticket"
   if   test -f "$TICKET"
   then :
-  else echo "Error: Invalid ticket specified; file ${TICKET} does not exist!" && exit 1
+  else echo "Error: Invalid ticket specified; file ${TICKET} does not exist!" && return 1
   fi
 
 # Save state of original ticket in case we need to revert at the end
@@ -619,7 +622,7 @@ function close_ticket_with_comment () {
   grep "Status: Open" $TICKET > /dev/null
   if     test $? -eq 0
   then   :
-  else   echo "Ticket No. $TICKET is not marked as Open! Please reopen if necessary." && exit
+  else   echo "Ticket No. $TICKET is not marked as Open! Please reopen if necessary." && return 1
   fi
 
 # Select an appropriate resolution
@@ -632,7 +635,7 @@ function close_ticket_with_comment () {
       if   test $REPLY -gt 0 && test $REPLY -le ${#TICKET_RESOLUTIONS[@]}
       then sed -i "s/Resolution: .*\$/Resolution: $RESOLUTION/" "${TICKET}"
            break
-      else error "Invalid selection, please chose a number between 1 and ${#TICKET_RESOLUTIONS[@]}" && exit 1
+      else error "Invalid selection, please chose a number between 1 and ${#TICKET_RESOLUTIONS[@]}" && return 1
       fi
   done
   declare +i REPLY
@@ -680,7 +683,7 @@ function close_ticket_with_comment () {
   then error "Error: No edits detected."
        error "'Close' operation aborted and ticket reverted to original state."
        echo "$ORIGINAL_TICKET" > "$TICKET"
-       exit 1
+       return 1
   fi
 }
 
@@ -716,7 +719,7 @@ function add_comment_to_ticket () {
   then error "Error: Incorrect arguments provided to add_comment_to_ticket function"
        echo
        display_usage
-       exit 1
+       return 1
   fi
 
   cd $TICKETS_PATH
@@ -725,7 +728,7 @@ function add_comment_to_ticket () {
   TICKET="${1%.ticket}.ticket"
   if test -f "$TICKET"
   then :
-  else error "Error: Invalid ticket specified; file ${TICKET} does not exist!" && exit 1
+  else error "Error: Invalid ticket specified; file ${TICKET} does not exist!" && return 1
   fi
 
 # Save state of original ticket in case we need to revert at the end
@@ -761,7 +764,7 @@ function add_comment_to_ticket () {
   then error "Error: No edits detected."
        error "'Add comment' operation aborted and ticket reverted to original state."
        echo "$ORIGINAL_TICKET" > "$TICKET"
-       exit 1
+       return 1
   fi
 }
 
@@ -805,7 +808,7 @@ function assign_tickets_to_milestone () {
 
   if test "$ERRORS" -gt 0
   then error "Encountered $ERRORS input errors. Aborting."
-       exit 1
+       return 1
   fi
 
 # Process all tickets
@@ -826,6 +829,12 @@ function assign_tickets_to_milestone () {
 
 
 function update_milestones () {
+
+  if   test -f "$MILESTONES_PATH/1.milestone"
+  then :
+  else warning "Warning: No milestones found in '$MILESTONES_PATH'. Aborting update."
+       return 1
+  fi
 
   local ARGS
   local MILESTONE_NO
@@ -861,7 +870,7 @@ function update_milestones () {
 
   if test "$ERRORS" -gt 0
   then echo "Encountered $ERRORS input errors. Aborting."
-       exit 1
+       return 1
   fi
 
   for ARG in "${ARGS[@]}"
@@ -888,7 +897,7 @@ function show_open_tickets_by_milestone () {
 # If called without arguments or with more than one arguments, display usage
   if   test "$#" -ne 1
   then display_usage "show_open_tickets_by_milestone"
-       exit 1
+       exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
   fi
 
   local MILESTONE="${1%.milestone}"
@@ -898,7 +907,7 @@ function show_open_tickets_by_milestone () {
   elif is_valid_milestone "$MILESTONE"
   then :
   else echo "Encountered input errors. Aborting."
-       exit 1
+       return 1
   fi
 
   cd $TICKETS_PATH
@@ -922,7 +931,7 @@ function show_closed_tickets_by_milestone () {
 # If called without arguments or with more than one arguments, display usage
   if   test "$#" -ne 1
   then display_usage "show_closed_tickets_by_milestone"
-       exit 1
+       exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
   fi
 
   local MILESTONE="${1%.milestone}"
@@ -932,7 +941,7 @@ function show_closed_tickets_by_milestone () {
   elif is_valid_milestone "$MILESTONE"
   then :
   else echo "Encountered input errors. Aborting."
-       exit 1
+       return 1
   fi
 
   cd $TICKETS_PATH
