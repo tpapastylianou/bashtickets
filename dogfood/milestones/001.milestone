@@ -28,6 +28,8 @@ Description: v1 relies on single commands, which are getting rather numerous,
 031.ticket     Summary: Convert command-script dependencies to sourceable functions
 032.ticket     Summary: Ensure empty milestones shown without error
 033.ticket     Summary: show_completed_milestones - more appropriate completion date calculation
+034.ticket     Summary: Ensure all local variables in functions have local scope
+035.ticket     Summary: Handle Ctrl-C in interactive menus appropriately
 
 === Closed Tickets ===
 

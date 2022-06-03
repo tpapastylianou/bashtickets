@@ -27,6 +27,8 @@
 ###
 ################################################################################
 
+# FIXME update above
+
 
 
 ####################
@@ -49,14 +51,15 @@ TICKETS_PATH="$REPO_PATH/tickets"
 MILESTONES_PATH="$REPO_PATH/milestones"
 
 # Other constants
-ANSI_RED="\033[91m"
-ANSI_GREEN="\033[92m"
-ANSI_PURPLE="\033[95m"
-ANSI_RESET="\033[39m"
+ANSI_RED="\x1b[91m"
+ANSI_GREEN="\x1b[92m"
+ANSI_PURPLE="\x1b[95m"
+ANSI_RESET="\x1b[39m"
+ANSI_YELLOW="\x1b[93m"
 
-ANSI_COLOR_LIGHTBLUE="\033[94m"
-ANSI_BOLD_ON="\033[1m"
-ANSI_BOLD_OFF="\033[22m"
+ANSI_COLOR_LIGHTBLUE="\x1b[94m"
+ANSI_BOLD_ON="\x1b[1m"
+ANSI_BOLD_OFF="\x1b[22m"
 
 
 # Declare exit statuses for various errors
@@ -1193,6 +1196,58 @@ function edit_ticket_or_milestone () {
 
 
 
+function view_ticket_or_milestone () {
+    case "$1" in
+        ("ticket")     shift && view_ticket    "$@" ;;
+        ("milestone")  shift && view_milestone "$@" ;;
+        (*)            error "Error: invalid argument given to 'view'."
+                       error "Valid arguments are 'ticket' or 'milestone'."
+                       return 1 ;;
+    esac
+}
+
+
+function view_ticket () {
+
+    local TICKET="${1%.ticket}.ticket"
+    local d="[[:digit:]]"   # for convenience in later regular expressions
+
+    if   is_valid_ticket "$TICKET"
+    then :
+    else return 1
+    fi
+
+    PRINTOUT="$( head -n +12 "$TICKETS_PATH/$TICKET" | sed "s/^\(...........\)\(.*\)\$/${ANSI_COLOR_LIGHTBLUE}\1${ANSI_YELLOW}\2${ANSI_RESET}/" )"$'\n'
+    PRINTOUT="$PRINTOUT$( head -n +13 "$TICKETS_PATH/$TICKET" | tail -n -1 | sed "s/\(...........\)\(:\)/${ANSI_COLOR_LIGHTBLUE}\1${ANSI_YELLOW}\2${ANSI_RESET}/" )"$'\n'
+    PRINTOUT="$PRINTOUT$( tail -n +14 "$TICKETS_PATH/$TICKET" | sed "s/^\(== $d$d$d$d-$d$d-$d$d\)/${ANSI_BOLD_ON}${ANSI_COLOR_LIGHTBLUE}\1${ANSI_BOLD_OFF}${ANSI_RESET}/" )"$'\n'
+    echo "$PRINTOUT" | less -R
+}
+
+
+
+
+function view_milestone () {
+
+    local MILESTONE="${1%.milestone}.milestone"
+    local PRINTOUT
+
+    if   is_valid_milestone "$MILESTONE"
+    then :
+    else return 1
+    fi
+
+    PRINTOUT="$( head -n +6 "$MILESTONES_PATH/$MILESTONE" )"
+    PRINTOUT="$( echo "$PRINTOUT" | sed "s/^\(.............\)\(.*\)\$/${ANSI_COLOR_LIGHTBLUE}\1${ANSI_YELLOW}\2${ANSI_RESET}/" )"$'\n'
+    PRINTOUT="${PRINTOUT}$( tail -n +7 "$MILESTONES_PATH/$MILESTONE" )"
+    PRINTOUT="$( echo "$PRINTOUT" | sed "s/=== Open Tickets ===/${ANSI_BOLD_ON}${ANSI_RED}=== Open Tickets ===${ANSI_BOLD_OFF}${ANSI_RESET}/" )"
+    PRINTOUT="$( echo "$PRINTOUT" | sed "s/=== Closed Tickets ===/${ANSI_GREEN}=== Open Tickets ===${ANSI_RESET}/" )"
+    echo "$PRINTOUT" | less -R
+}
+
+
+
+
+
 # ----------------
 # Legacy Functions
 # ----------------
@@ -1302,8 +1357,7 @@ do
     if   grep "Status: Open" "$i" > /dev/null
     then COUNT=$((COUNT + 1))
          PRINTOUT="$PRINTOUT$i:"
-         PRINTOUT="$PRINTOUT $(grep Summary "$i")"
-         PRINTOUT=${PRINTOUT}$'\n'
+         PRINTOUT="$PRINTOUT $(grep Summary "$i")"$'\n'
     fi
   done
 
@@ -1334,8 +1388,7 @@ do
     if   grep "Status: Open" "$i" > /dev/null
     then COUNT=$((COUNT + 1))
          PRINTOUT="$PRINTOUT$i:"
-         PRINTOUT="$PRINTOUT $(grep Summary "$i")"
-         PRINTOUT=${PRINTOUT}$'\n'
+         PRINTOUT="$PRINTOUT $(grep Summary "$i")"$'\n'
     fi
   done
 
@@ -1344,6 +1397,7 @@ do
 
 done
 }
+
 
 
 
@@ -1374,7 +1428,7 @@ case "$1" in
       "comment" | "a"  | "m"      | "assign" | "close"  | "cl" | "open" | \
       "reopen"  | "re" | "op"     | "new"    | "create" | "nt" | "ct"   | \
       "nm"      | "cm" | "status" | "st"     | "remove" | "rm" | "edit" | \
-      "et"      | "em"  )
+      "et"      | "em" | "view"   | "vt"     | "vm"  )
 
         trycatch "check_repo" \
                  $EXIT_STATUS__NOT_A_VALID_BASHTICKETS_REPOSITORY
@@ -1408,6 +1462,9 @@ case "$1" in
     ("edit" | "ed")                      shift && trycatch edit_ticket_or_milestone "$@" $EXIT_STATUS__FAILED_TO_EDIT_TICKET_OR_MILESTONE ;;
     ("et")                               shift && trycatch edit_ticket              "$@" $EXIT_STATUS__FAILED_TO_EDIT_TICKET              ;;
     ("em")                               shift && trycatch edit_milestone           "$@" $EXIT_STATUS__FAILED_TO_EDIT_MILESTONE           ;;
+    ("view")                             shift && trycatch view_ticket_or_milestone "$@" $EXIT_STATUS__OTHER_ERROR ;;
+    ("vt")                                shift && trycatch view_ticket              "$@" $EXIT_STATUS__OTHER_ERROR ;;
+    ("vm")                               shift && trycatch view_milestone           "$@" $EXIT_STATUS__OTHER_ERROR ;;
 
 
   # -------------------------------------------------------------------------
