@@ -8,8 +8,8 @@
          Cc: 
       Owner: Tasos
        Date: 2021-12-02
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Completed
 Description: In general when one creates a ticket, the user is not prompted if
              they want to assign it to a milestone.
 
@@ -20,3 +20,11 @@ Description: In general when one creates a ticket, the user is not prompted if
 
              Perhaps when opening a 'new ticket' there could be a milestone
              argument, or a --with-milestone / --select-milestone switch
+
+
+== 2022-06-05
+
+I have implemented a --milestone / -m flag for new tickets (and similarly a
+--parent / -p flag for milestones).
+
+Closing ticket.

@@ -8,7 +8,17 @@
          Cc: 
       Owner: Tasos
        Date: 2022-04-25
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Completed
 Description: These functions could be grouped in a more logical way too; no need
              to retain a one-to-one mapping from old commands to new functions
+
+
+== 2022-06-05
+Done. The 'show' commands are left as 'legacy' functions for now, as they will
+need some more thought, but other than that, all util scripts are gone.
+
+Note: the functions are not 'sourceable', in the end I opted for a single
+script, containing all function definitions locally.
+
+Closing ticket.

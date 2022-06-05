@@ -30,7 +30,7 @@ can choose their own colours.
 When a colours config file is not found, default colours should be defined
 directy in the source code.
 
-Also, a NOCOLOR env var should be honored (see relevant HN post)
+Also, a NO_COLOR env var should be honored (see relevant HN post)
 
 
 == 2022-06-02
@@ -38,3 +38,16 @@ Also, a NOCOLOR env var should be honored (see relevant HN post)
 Additionally, I should investigate the use of 'colour profiles', as opposed to
 fixed colours, that may break visibility when one uses a white terminal vs a
 black one, for instance
+
+
+== 2022-06-05
+I will be implementing NO_COLOR support, as per https://no-color.org/
+
+When bashtickets is sufficiently mature to add to the list on that website, I
+would like to add it.
+
+
+
+
+
+

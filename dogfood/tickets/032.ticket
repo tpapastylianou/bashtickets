@@ -8,8 +8,16 @@
          Cc: 
       Owner: Tasos
        Date: 2022-05-31
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Completed
 Description: If you try to 'show active / completed milestones', does an empty
              milestone show without error, or does it display a division by zero
              error?
+
+
+== 2022-06-05
+
+Empty milestones are now considered 'active', and shown as 'empty' in the
+percentage field.
+
+Closing ticket.
