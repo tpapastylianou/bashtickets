@@ -1,0 +1,24 @@
+MileStn No.: 003
+      Title: Checks that need to be deferred until MVP is complete
+    Created: 2022-06-05
+   Deadline: 2022-07-05
+Description: There are some tasks that are effectively checks that can only be
+             made after the main functionality is complete.
+
+             This milestone is to separate these tasks into a different
+             milestone.
+
+
+
+=== Open Tickets ===
+
+003.ticket     Summary: Implement man pages
+004.ticket     Summary: Ensure all subcommand errors have appropriate messages and exit statuses
+005.ticket     Summary: Create appropriate help message
+006.ticket     Summary: Create appropriate 'usage' when called with no arguments
+017.ticket     Summary: Colour support
+027.ticket     Summary: Ensure appropriate checking of correct input arguments in all operations
+034.ticket     Summary: Ensure all local variables in functions have local scope
+
+=== Closed Tickets ===
+

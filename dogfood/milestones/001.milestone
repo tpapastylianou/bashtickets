@@ -13,22 +13,12 @@ Description: v1 relies on single commands, which are getting rather numerous,
 
 === Open Tickets ===
 
-004.ticket     Summary: Ensure all subcommand errors have appropriate messages and exit statuses
-005.ticket     Summary: Create appropriate help message
-006.ticket     Summary: Create appropriate 'usage' when called with no arguments
 009.ticket     Summary: Ensure bt show works correctly
 014.ticket     Summary: Ensure appropriate function of 'status' subcommand
-015.ticket     Summary: Ensure appropriate function of the 'remove' subcommand
-016.ticket     Summary: Ensure appropriate function of 'edit' subcommand
 021.ticket     Summary: Convert 'show' to 'list' commands (or add an alias)
 024.ticket     Summary: Ability to add fields as optional arguments, bypassing the interactive menu.
 029.ticket     Summary: Enable milestones to also track milestones
-030.ticket     Summary: Milestone deadlines should support N/A value 
-031.ticket     Summary: Convert command-script dependencies to sourceable functions
-032.ticket     Summary: Ensure empty milestones shown without error
 033.ticket     Summary: show_completed_milestones - more appropriate completion date calculation
-034.ticket     Summary: Ensure all local variables in functions have local scope
-035.ticket     Summary: Handle Ctrl-C in interactive menus appropriately
 037.ticket     Summary: Ensure ticket modifying functions call update_milestones when necessary
 
 === Closed Tickets ===
@@ -40,6 +30,12 @@ Description: v1 relies on single commands, which are getting rather numerous,
 011.ticket     Summary: Ensure appropriate function for 'assign' subcommand
 012.ticket     Summary: Ensure appropriate function for 'close' subcommand
 013.ticket     Summary: Ensure appropriate function of 'new' subcommand
+015.ticket     Summary: Ensure appropriate function of the 'remove' subcommand
+016.ticket     Summary: Ensure appropriate function of 'edit' subcommand
 019.ticket     Summary: Remove zero-padding, adjust with ls | sort -n where appropriate
 025.ticket     Summary: Prevent selection of invalid options
 026.ticket     Summary: Implement Abort if no edits to all operations to which it applies 
+030.ticket     Summary: Milestone deadlines should support N/A value 
+031.ticket     Summary: Convert command-script dependencies to sourceable functions
+032.ticket     Summary: Ensure empty milestones shown without error
+035.ticket     Summary: Handle Ctrl-C in interactive menus appropriately

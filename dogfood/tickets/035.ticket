@@ -8,8 +8,8 @@
          Cc: 
       Owner: Tasos
        Date: 2022-06-03
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Completed
 Description: At the moment, if Ctrl-C is pressed during an interactive menu, a
              (blank) ticket/milestone file is still generated.
 
@@ -31,3 +31,8 @@ Description: At the moment, if Ctrl-C is pressed during an interactive menu, a
              It will be assumed that the current bt repository has the
              appropriate read/write permissions, rather than checking explicitly
              (right?). Presumably `tempfile` doesn't need permissions checking.
+
+
+== 2022-06-05
+Done via tempfile method.
+Closing ticket.
