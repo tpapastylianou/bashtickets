@@ -684,6 +684,7 @@
       local LAST_TICKET_NUM
       local NEW_TICKET_NUM
       local NEW_TICKET_FILE
+      local TEMP_FILE
       local UNEDITED_TICKET
       local EDITED_TICKET
 
@@ -852,6 +853,7 @@
       local LAST_MILESTONE_NUM
       local NEW_MILESTONE_NUM
       local NEW_MILESTONE_FILE
+      local TEMP_FILE
       local DEFAULT_STARTDATE
       local DEFAULT_DEADLINE
       local UNEDITED_MILESTONE
@@ -908,42 +910,48 @@
       else   NEW_MILESTONE_NUM=1
       fi
 
+      TEMP_FILE="$(tempfile)"
       NEW_MILESTONE_FILE="${NEW_MILESTONE_NUM}.milestone"
 
     # Create a new milestone from template
-      cp "$MILESTONE_TEMPLATE" "${NEW_MILESTONE_FILE}"
+      cp "$MILESTONE_TEMPLATE" "${TEMP_FILE}"
 
     # Update milestone number
-      sed -i "s/Milestone No.: /Milestone No.: ${NEW_MILESTONE_NUM}/" "${NEW_MILESTONE_FILE}"
+      sed -i "s/Milestone No.: /Milestone No.: ${NEW_MILESTONE_NUM}/" "${TEMP_FILE}"
 
     # Set start date from default
       DEFAULT_STARTDATE="$(get_default_milestone_startdate)"
-      sed -i "s/Startdate: /Startdate: $DEFAULT_STARTDATE/" "${NEW_MILESTONE_FILE}"
+      sed -i "s/Startdate: /Startdate: $DEFAULT_STARTDATE/" "${TEMP_FILE}"
 
     # Update parent (milestone) node number
-      sed -i "s/Parent Node: /Parent Node: $PARENT_MILESTONE_NUM/" "${NEW_MILESTONE_FILE}"
+      sed -i "s/Parent Node: /Parent Node: $PARENT_MILESTONE_NUM/" "${TEMP_FILE}"
 
     # Set deadline from default
       DEFAULT_DEADLINE="$( get_default_milestone_deadline $DEFAULT_STARTDATE )"
-      sed -i "s/Deadline: /Deadline: $DEFAULT_DEADLINE/" "${NEW_MILESTONE_FILE}"
+      sed -i "s/Deadline: /Deadline: $DEFAULT_DEADLINE/" "${TEMP_FILE}"
 
     # Save current status of ticket before manual editing
-      UNEDITED_MILESTONE="$(cat $NEW_MILESTONE_FILE)"
+      UNEDITED_MILESTONE="$(cat $TEMP_FILE)"
 
 
     # Open the resulting file for editing (see 'editor' function), placing the cursor
     # at the Title field.
 
-      editor "${NEW_MILESTONE_FILE}" 3 16
+      editor "${TEMP_FILE}" 3 16
 
-      EDITED_MILESTONE="$(cat $NEW_MILESTONE_FILE)"
+      EDITED_MILESTONE="$(cat $TEMP_FILE)"
 
       if   test "$UNEDITED_MILESTONE" = "$EDITED_MILESTONE"
       then error "Error: No edits detected."
            error "Aborting new milestone creation."
-           rm "$NEW_MILESTONE_FILE"
+           rm "$TEMP_FILE"
            return 1
-      else echo
+      else if   cp "$TEMP_FILE" "$NEW_MILESTONE_FILE"
+           then :
+           else error "Error: could not copy temporary milestone file to $MILESTONES_PATH"
+                return 1
+           fi
+           echo
            echo "Milestone No. ${NEW_MILESTONE_NUM} created successfully"
            echo
       fi
