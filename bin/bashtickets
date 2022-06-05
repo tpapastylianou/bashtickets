@@ -1334,6 +1334,7 @@
       local DEADLINE
       local TODAY
       local DAYS_LEFT
+      local d="[[:digit:]]"
 
 
       cd $MILESTONES_PATH
@@ -1346,12 +1347,14 @@
           OPEN_LINE=$(  grep --color=never -n "=== Open Tickets ==="   "$i" | cut -d: -f1 )
           CLOSE_LINE=$( grep --color=never -n "=== Closed Tickets ===" "$i" | cut -d: -f1 )
           NUM_OPEN_TICKETS=$( cat "$i" | head -n "+$(( CLOSE_LINE - 1 ))" | tail -n "+$(( OPEN_LINE + 1 ))" |  egrep "^\s*\$" -v | wc -l )
-
-          if   test "$NUM_OPEN_TICKETS" -eq 0
-          then continue
-          fi
-
           NUM_CLOSED_TICKETS=$( cat "$i" | tail -n "+$(( CLOSE_LINE + 1 ))" |  egrep "^\s*\$" -v | wc -l )
+
+
+          if   test $NUM_OPEN_TICKETS   -gt 0 ||   # if there are open tickets then milestone is not complete
+               test $NUM_CLOSED_TICKETS -eq 0      # if milestone is empty, then it is not considered complete
+          then :
+          else continue
+          fi
 
 
         # Calculate percentage completion
@@ -1363,9 +1366,12 @@
 
         # Calculate days left from deadline (assumes correct date format!)
           DEADLINE=$(grep --color=never "   Deadline: " "$i" | cut -d$':' -f2 )
-          DEADLINE=$(date --date "$DEADLINE" "+%s")
-          TODAY=$(date "+%s")
-          DAYS_LEFT=$(( (DEADLINE - TODAY) / 86400 ))
+          if   echo "$DEADLINE" | egrep "^ $d$d$d$d-$d$d-$d$d$" > /dev/null
+          then DEADLINE=$(date --date "$DEADLINE" "+%s")
+               TODAY=$(date "+%s")
+               DAYS_LEFT=$(( (DEADLINE - TODAY) / 86400 ))
+          else DAYS_LEFT="N/A"
+          fi
 
         # Print entry to terminal (unsorted)
           printf "%-15s -- " "Milestone ${i%.milestone}"
