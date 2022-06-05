@@ -244,6 +244,31 @@
 
 
 
+   function check_for_nocolor () {
+    # --------------------------------------------------------------------------
+    # This function checks for the presence of the NO_COLOR variable, as per
+    # https://no-color.org/. If it is non-empty, it resets all ansi-color
+    # variables used for colorization in this script.
+    #
+    # The NO_COLOR variable may either be set as an environmental variable, or
+    # in the repo's config file.
+    # --------------------------------------------------------------------------
+
+      if   test -n "$NO_COLOR"
+      then ANSI_RED=
+           ANSI_GREEN=
+           ANSI_PURPLE=
+           ANSI_YELLOW=
+           ANSI_BLUE=
+           ANSI_BOLD_ON=
+           ANSI_BOLD_OFF=
+           ANSI_RESET=
+      fi
+   }
+
+
+
+
    function display_usage () {
     # --------------------------------------------------------------------------
     # This function will need to display appropriate usage for the bashtickets
@@ -713,20 +738,21 @@
       else   NEW_TICKET_NUM=1
       fi
 
+      TEMP_FILE="$(tempfile)"
       NEW_TICKET_FILE="${NEW_TICKET_NUM}.ticket"
 
 
     # Create a new ticket from template
-      cp "$TICKET_TEMPLATE" "${NEW_TICKET_FILE}"
+      cp "$TICKET_TEMPLATE" "${TEMP_FILE}"
 
     # Update ticket number
-      sed -i "s/Ticket No.: /Ticket No.: ${NEW_TICKET_NUM}/" "${NEW_TICKET_FILE}"
+      sed -i "s/Ticket No.: /Ticket No.: ${NEW_TICKET_NUM}/" "${TEMP_FILE}"
 
     # Try to set owner and reporter automatically:
       WHOAMI=$(whoami)
       WHOAMI=${WHOAMI^}   # parameter expansion: make first character uppercase
-      sed -i "s/Reporter: /Reporter: $WHOAMI/" "${NEW_TICKET_FILE}"
-      sed -i "s/Owner: /Owner: $WHOAMI/" "${NEW_TICKET_FILE}"
+      sed -i "s/Reporter: /Reporter: $WHOAMI/" "${TEMP_FILE}"
+      sed -i "s/Owner: /Owner: $WHOAMI/" "${TEMP_FILE}"
 
     # Select a valid type:
       echo "Select a valid ticket type:"
@@ -734,7 +760,7 @@
       select TICKET_TYPE in "${TICKET_TYPES[@]}"   # TICKET_TYPES obtained from config
       do
           if   test $REPLY -gt 0 && test $REPLY -le ${#TICKET_TYPES[@]}
-          then sed -i "s/Type: /Type: $TICKET_TYPE/" "${NEW_TICKET_FILE}"
+          then sed -i "s/Type: /Type: $TICKET_TYPE/" "${TEMP_FILE}"
                break
           else error "Invalid selection, please chose a number between 1 and ${#TICKET_TYPES[@]}" && return 1
           fi
@@ -748,7 +774,7 @@
       select TICKET_PRIORITY in "${TICKET_PRIORITY_LEVELS[@]}"   # TICKET_PRIORITY_LEVELS obtained from config
       do
           if   test $REPLY -gt 0 && test $REPLY -le ${#TICKET_PRIORITY_LEVELS[@]}
-          then sed -i "s/Priority: /Priority: ${TICKET_PRIORITY%% *}/" "${NEW_TICKET_FILE}"   # Remove everything in the priority string after the first space (i.e. the explanation of the priority level)
+          then sed -i "s/Priority: /Priority: ${TICKET_PRIORITY%% *}/" "${TEMP_FILE}"   # Remove everything in the priority string after the first space (i.e. the explanation of the priority level)
                break
           else error "Invalid selection, please chose a number between 1 and ${#TICKET_PRIORITY_LEVELS[@]}" && return 1
           fi
@@ -756,32 +782,37 @@
       declare +i REPLY
 
     # Set the provided parent milestone, if one was provided
-      sed -i "s/Milestone: /Milestone: $PARENT_MILESTONE_NUM/" "${NEW_TICKET_FILE}"
+      sed -i "s/Milestone: /Milestone: $PARENT_MILESTONE_NUM/" "${TEMP_FILE}"
 
     # Set today's date
       TODAY=$(date +"%Y-%m-%d")
-      sed -i "s/Date: /Date: $TODAY/" "${NEW_TICKET_FILE}"
+      sed -i "s/Date: /Date: $TODAY/" "${TEMP_FILE}"
 
     # Declare status as Open
-      sed -i "s/Status: /Status: Open/" "${NEW_TICKET_FILE}"
+      sed -i "s/Status: /Status: Open/" "${TEMP_FILE}"
 
     # Save current status of ticket before manual editing
-      UNEDITED_TICKET="$(cat $NEW_TICKET_FILE)"
+      UNEDITED_TICKET="$(cat $TEMP_FILE)"
 
 
     # Open the resulting file for editing (see 'editor' function), placing the
     # cursor at the Summary field.
 
-      editor "${NEW_TICKET_FILE}" 2 14
+      editor "${TEMP_FILE}" 2 14
 
-      EDITED_TICKET="$(cat $NEW_TICKET_FILE)"
+      EDITED_TICKET="$(cat $TEMP_FILE)"
 
       if   test "$UNEDITED_TICKET" = "$EDITED_TICKET"
       then error "Error: No edits detected."
            error "Aborting new ticket creation."
-           rm "$NEW_TICKET_FILE"
+           rm "$TEMP_FILE"
            return 1
-      else echo
+      else if   cp "$TEMP_FILE" "$NEW_TICKET_FILE"
+           then :
+           else error "Error: could not copy temporary ticket file to $TICKETS_PATH"
+                return 1
+           fi
+           echo
            echo "Ticket No. ${NEW_TICKET_NUM} created successfully"
            echo
       fi
@@ -1879,10 +1910,11 @@
                     $EXIT_STATUS__NOT_A_VALID_BASHTICKETS_REPOSITORY
 
            load_config
+           check_for_nocolor
            ;;
 
        ( * )   ;;
-   esac   # FIXME UPDATE AS APPROPRIATE
+   esac   # FIXME UPDATE MENU AS APPROPRIATE
 
 
  # ---------------------------
