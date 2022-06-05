@@ -416,6 +416,35 @@
 
 
 
+   function beg_for_money_lol () {
+      local MSG='!!! Congratulations on your 100th ticket !!!'
+      local MSG_LEN=$(( $( echo $MSG | wc -m ) -1 ))
+      local LEFTPAD=$(( COLUMNS / 2 - MSG_LEN / 2 ))
+      local BANNER_LEN=$(( 4 + MSG_LEN + 4 ))
+      local BANNER="$( yes '*' | head -n +$BANNER_LEN | paste -s -d '' )"
+      echo
+      echo
+      printf "%${LEFTPAD}s${ANSI_BLUE}$BANNER${ANSI_RESET}\n" ""
+      printf "%${LEFTPAD}s${ANSI_BLUE}*** %${MSG_LEN}s ***${ANSI_RESET}\n" "" ""
+      printf "%${LEFTPAD}s${ANSI_BLUE}*** ${ANSI_GREEN}${ANSI_BOLD_ON}$MSG ${ANSI_BOLD_OFF}${ANSI_BLUE}***${ANSI_RESET}\n" ""
+      printf "%${LEFTPAD}s${ANSI_BLUE}*** %${MSG_LEN}s ***${ANSI_RESET}\n" "" ""
+      printf "%${LEFTPAD}s${ANSI_BLUE}$BANNER${ANSI_RESET}\n" ""
+      echo -e "${ANSI_YELLOW}"
+      printf "%${LEFTPAD}sIf you feel that bashtickets have helped you, then\n" ""
+      printf "%${LEFTPAD}sI'm hoping that perhaps you might consider \"buying\n"  ""
+      printf "%${LEFTPAD}sme a cup of coffee\"? :)\n"                         ""
+      echo
+      printf "%${LEFTPAD}sIf so, you can do so here: http://tpapastylianou.com/donate\n" ""
+      echo
+      printf "%${LEFTPAD}sThank you for using bashtickets!\n"
+      echo -e "${ANSI_RESET}"
+      echo
+      echo
+      echo "(Note: This banner only triggers once per bashtickets repository; however if you'd like to disable it altogether, feel free to do so by commenting out the last four lines of the 'new_ticket' function in the main '/bin/bashtickets' script)"
+   }
+
+
+
 
    function editor () {
     # --------------------------------------------------------------------------
@@ -760,6 +789,11 @@
     # Let's also update the relevant milestone
       if   test -n $PARENT_MILESTONE
       then update_milestones $PARENT_MILESTONE_NUM
+      fi
+
+    # If this was the 100th ticket, ask for some dev appreciation :)))
+      if   test $NEW_TICKET_NUM -eq 100
+      then beg_for_money_lol
       fi
    }
 
