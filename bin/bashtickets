@@ -80,6 +80,8 @@
    declare -i EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX=101
    declare -i EXIT_STATUS__OTHER_ERROR=102   # in theory this should never happen
 
+
+
 ########################
 ### Function definitions
 ########################
@@ -210,6 +212,9 @@
 
 
    function check_repo () {
+    # ------------------------------
+    # (a simple convenience wrapper)
+    # ------------------------------
 
       trycatch "is_valid_bashtickets_repository" \
                $EXIT_STATUS__NOT_A_VALID_BASHTICKETS_REPOSITORY
@@ -319,7 +324,7 @@
               ;;
 
           (*)
-              echo "Displaying default usage ... TODO";
+              echo "Displaying default usage for '$1' ... TODO";
               ;;
       esac
    }
@@ -1069,512 +1074,715 @@
 
 
    function update_milestones () {
+    # --------------------------------------------------------------------------
+    # Invoked via 'update' subcommand
+    #
+    # If called without arguments, performs a general update of all milestones.
+    # Otherwise, expects a number of valid milestone numbers to update
+    # selectively.
+    #
+    # To 'update' means to refresh the list of open and closed tickets for the
+    # milestone. This is not implemented in a particularly super-efficient
+    # manner at the moment (goes through all tickets for each milestone); but in
+    # practice this is pretty fast anyway.
+    # --------------------------------------------------------------------------
 
-     if   test -f "$MILESTONES_PATH/1.milestone"
-     then :
-     else warning "Warning: No milestones found in '$MILESTONES_PATH'. Aborting update."
-          return 1
-     fi
+    # Confirm there are milestones present to begin with before proceeding
+      if   test -f "$MILESTONES_PATH/1.milestone"
+      then :
+      else warning "Warning: No milestones found in '$MILESTONES_PATH'. Aborting update."
+           return 1
+      fi
 
-     local ARGS
-     local MILESTONE_NO
-     local MILESTONE_FILE
-     local HEADER
-     local ERRORS
+      local ARGS
+      local MILESTONE_NO
+      local MILESTONE_FILE
+      local HEADER
+      local ERRORS
 
-   # Process Input Arguments
-     ARGS=( "$@" )   # Get all positional arguments as a bash array
+    # Process Input Arguments
+      ARGS=( "$@" )   # Get all positional arguments as a bash array
 
-     ERRORS=0
+      ERRORS=0
 
-     if   test "${#ARGS[@]}" -eq 0                         # function was called without inputs
+      if   test "${#ARGS[@]}" -eq 0                         # function was called without inputs
 
-     then ARGS=( $MILESTONES_PATH/*.milestone )            # Collect all milestone filenames
-          for  i in $( seq 0 "$(( ${#ARGS[@]} - 1))" )     # loop from index 0 to N-1
-          do   ARGS["$i"]="${ARGS[$i]#$MILESTONES_PATH/}"  # Remove path prefix
-               if   is_valid_milestone "${ARGS[$i]}"
+      then ARGS=( $MILESTONES_PATH/*.milestone )            # Collect all milestone filenames
+           for  i in $( seq 0 "$(( ${#ARGS[@]} - 1))" )     # loop from index 0 to N-1
+           do   ARGS["$i"]="${ARGS[$i]#$MILESTONES_PATH/}"  # Remove path prefix
+                if   is_valid_milestone "${ARGS[$i]}"
+                then :
+                else ERRORS=$((ERRORS + 1))
+                fi
+           done
+
+      else   # function was called with specific arguments
+
+          for  ARG in "${ARGS[@]}"
+          do   if   is_valid_milestone $ARG
                then :
                else ERRORS=$((ERRORS + 1))
                fi
           done
+      fi
 
-     else   # function was called with specific arguments
+      if test "$ERRORS" -gt 0
+      then echo "Encountered $ERRORS input errors. Aborting."
+           return 1
+      fi
 
-         for  ARG in "${ARGS[@]}"
-         do   if   is_valid_milestone $ARG
-              then :
-              else ERRORS=$((ERRORS + 1))
-              fi
-         done
-     fi
+    # Perform update on selected milestones
+      for ARG in "${ARGS[@]}"
+      do  MILESTONE_NO="${ARG%.milestone}"   # Remove .milestone suffix
+          MILESTONE_FILE="$MILESTONES_PATH/${ARG%.milestone}.milestone"
+          HEADER=$(grep --color=never "=== Open Tickets ===" "$MILESTONE_FILE" -n | cut -d: -f1 )
 
-     if test "$ERRORS" -gt 0
-     then echo "Encountered $ERRORS input errors. Aborting."
-          return 1
-     fi
-
-     for ARG in "${ARGS[@]}"
-     do  MILESTONE_NO="${ARG%.milestone}"   # Remove .milestone suffix
-         MILESTONE_FILE="$MILESTONES_PATH/${ARG%.milestone}.milestone"
-         HEADER=$(grep --color=never "=== Open Tickets ===" "$MILESTONE_FILE" -n | cut -d: -f1 )
-
-         head -n "+$HEADER" "$MILESTONE_FILE"              > "$MILESTONE_FILE.bak"
-         echo                                             >> "$MILESTONE_FILE.bak"
-         show_open_tickets_by_milestone "$MILESTONE_NO"   >> "$MILESTONE_FILE.bak"
-         echo                                             >> "$MILESTONE_FILE.bak"
-         echo "=== Closed Tickets ==="                    >> "$MILESTONE_FILE.bak"
-         echo                                             >> "$MILESTONE_FILE.bak"
-         show_closed_tickets_by_milestone "$MILESTONE_NO" >> "$MILESTONE_FILE.bak"
-         mv "$MILESTONE_FILE.bak" "$MILESTONE_FILE"
-     done
+          head -n "+$HEADER" "$MILESTONE_FILE"              > "$MILESTONE_FILE.bak"
+          echo                                             >> "$MILESTONE_FILE.bak"
+          show_open_tickets_by_milestone "$MILESTONE_NO"   >> "$MILESTONE_FILE.bak"
+          echo                                             >> "$MILESTONE_FILE.bak"
+          echo                                             >> "$MILESTONE_FILE.bak"
+          echo "=== Closed Tickets ==="                    >> "$MILESTONE_FILE.bak"
+          echo                                             >> "$MILESTONE_FILE.bak"
+          show_closed_tickets_by_milestone "$MILESTONE_NO" >> "$MILESTONE_FILE.bak"
+          mv "$MILESTONE_FILE.bak" "$MILESTONE_FILE"
+      done
    }
 
 
 
 
    function show_open_tickets_by_milestone () {
+    # --------------------------------------------------------------------------
+    # Invoked via 'list' ... FIXME
+    #
+    # Expects a single milestone number/filename.
+    # If the number is "0", this will reflect 'unmilestoned' tickets.
+    # --------------------------------------------------------------------------
 
-   # If called without arguments or with more than one arguments, display usage
-     if   test "$#" -ne 1
-     then display_usage "show_open_tickets_by_milestone"
-          exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
-     fi
+    # If called without arguments or with more than one arguments, display usage
+      if   test "$#" -ne 1
+      then display_usage "show_open_tickets_by_milestone"
+           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      fi
 
-     local MILESTONE="${1%.milestone}"
+      local MILESTONE="${1%.milestone}"
 
-     if   test "$MILESTONE" = "0"
-     then MILESTONE=""
-     elif is_valid_milestone "$MILESTONE"
-     then :
-     else echo "Encountered input errors. Aborting."
-          return 1
-     fi
+      if   test "$MILESTONE" = "0"
+      then MILESTONE=""
+      elif is_valid_milestone "$MILESTONE"
+      then :
+      else echo "Encountered input errors. Aborting."
+           return 1
+      fi
 
-     cd $TICKETS_PATH
 
-     local MILESTONE_TICKETS=( $(egrep --color=never  -l "Milestone: $MILESTONE\$" *.ticket) )
+      cd $TICKETS_PATH
 
-     for  TICKET in "${MILESTONE_TICKETS[@]}"
-     do   local TICKETNAME="$(grep -l --color=never "Status: Open" "$TICKET")"
-          local TICKETSUMMARY="$(grep --color=never "Summary: " "$TICKET")"
-          if test -n "$TICKETNAME"
-          then echo "$TICKETNAME $TICKETSUMMARY"
-          fi
-     done
+
+      local MILESTONE_TICKETS=( $(egrep --color=never  -l "Milestone: $MILESTONE\$" *.ticket) )
+
+      for  TICKET in "${MILESTONE_TICKETS[@]}"
+      do   local TICKETNAME="$(grep -l --color=never "Status: Open" "$TICKET")"
+           local TICKETSUMMARY="$(grep --color=never "Summary: " "$TICKET")"
+           if test -n "$TICKETNAME"
+           then echo "$TICKETNAME $TICKETSUMMARY"
+           fi
+      done
    }
 
 
 
 
    function show_closed_tickets_by_milestone () {
+    # --------------------------------------------------------------------------
+    # Invoked via 'list' ... FIXME
+    #
+    # Expects a single milestone number/filename.
+    # If the number is "0", this will reflect 'unmilestoned' tickets.
+    # --------------------------------------------------------------------------
 
-   # If called without arguments or with more than one arguments, display usage
-     if   test "$#" -ne 1
-     then display_usage "show_closed_tickets_by_milestone"
-          exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
-     fi
+    # If called without arguments or with more than one arguments, display usage
+      if   test "$#" -ne 1
+      then display_usage "show_closed_tickets_by_milestone"
+           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      fi
 
-     local MILESTONE="${1%.milestone}"
+      local MILESTONE="${1%.milestone}"
 
-     if   test "$MILESTONE" = "0"
-     then MILESTONE=""
-     elif is_valid_milestone "$MILESTONE"
-     then :
-     else echo "Encountered input errors. Aborting."
-          return 1
-     fi
+      if   test "$MILESTONE" = "0"
+      then MILESTONE=""
+      elif is_valid_milestone "$MILESTONE"
+      then :
+      else echo "Encountered input errors. Aborting."
+           return 1
+      fi
 
-     cd $TICKETS_PATH
 
-     local MILESTONE_TICKETS=( $(egrep --color=never  -l "Milestone: $MILESTONE\$" *.ticket) )
+      cd $TICKETS_PATH
 
-     for  TICKET in "${MILESTONE_TICKETS[@]}"
-     do   local TICKETNAME="$(grep -l --color=never "Status: Closed" "$TICKET")"
-          local TICKETSUMMARY="$(grep --color=never "Summary: " "$TICKET")"
-          if test -n "$TICKETNAME"
-          then echo "$TICKETNAME $TICKETSUMMARY"
-          fi
-     done
+
+      local MILESTONE_TICKETS=( $(egrep --color=never  -l "Milestone: $MILESTONE\$" *.ticket) )
+
+      for  TICKET in "${MILESTONE_TICKETS[@]}"
+      do   local TICKETNAME="$(grep -l --color=never "Status: Closed" "$TICKET")"
+           local TICKETSUMMARY="$(grep --color=never "Summary: " "$TICKET")"
+           if test -n "$TICKETNAME"
+           then echo "$TICKETNAME $TICKETSUMMARY"
+           fi
+      done
    }
 
 
 
 
    function show_active_milestones () {
+    # --------------------------------------------------------------------------
+    # Invoked via 'list'? 'report'? # FIXME
+    #
+    # Expects no arguments.
+    #
+    # Creates a report of milestones that still have open tickets (or are empty)
+    # --------------------------------------------------------------------------
 
-   local OPEN_LINE
-   local CLOSE_LINE
-   local NUM_OPEN_TICKETS
-   local NUM_CLOSED_TICKETS
-   local NUM_TICKETS
-   local PERCENTAGE
-   local DEADLINE
-   local TODAY
-   local DAYS_LEFT
+    # Confirm called without arguments
+      if   test "$#" -gt 0
+      then display_usage show_active_milestones
+           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      fi
+
+      local OPEN_LINE
+      local CLOSE_LINE
+      local NUM_OPEN_TICKETS
+      local NUM_CLOSED_TICKETS
+      local NUM_TICKETS
+      local PERCENTAGE
+      local DEADLINE
+      local TODAY
+      local DAYS_LEFT
 
 
-   cd $MILESTONES_PATH
+      cd $MILESTONES_PATH
 
-   for i in *.milestone
-   do
 
-     # Detect open and closed tickets
-       OPEN_LINE=$(  grep --color=never -n "=== Open Tickets ==="   "$i" | cut -d: -f1 )
-       CLOSE_LINE=$( grep --color=never -n "=== Closed Tickets ===" "$i" | cut -d: -f1 )
-       NUM_OPEN_TICKETS=$( cat "$i" | head -n "+$(( CLOSE_LINE - 1 ))" | tail -n "+$(( OPEN_LINE + 1 ))" |  egrep "^\s*\$" -v | wc -l )
+      for i in *.milestone
+      do
 
-       if   test "$NUM_OPEN_TICKETS" -eq 0
-       then continue
-       fi
+        # Detect open and closed tickets
+          OPEN_LINE=$(  grep --color=never -n "=== Open Tickets ==="   "$i" | cut -d: -f1 )
+          CLOSE_LINE=$( grep --color=never -n "=== Closed Tickets ===" "$i" | cut -d: -f1 )
+          NUM_OPEN_TICKETS=$( cat "$i" | head -n "+$(( CLOSE_LINE - 1 ))" | tail -n "+$(( OPEN_LINE + 1 ))" |  egrep "^\s*\$" -v | wc -l )
 
-       NUM_CLOSED_TICKETS=$( cat "$i" | tail -n "+$(( CLOSE_LINE + 1 ))" |  egrep "^\s*\$" -v | wc -l )
-       NUM_TICKETS="$(( NUM_OPEN_TICKETS + NUM_CLOSED_TICKETS ))"
-       if   test $NUM_TICKETS -eq 0
-       then PERCENTAGE="Empty"
-       else PERCENTAGE="$(( 100 * NUM_CLOSED_TICKETS / NUM_TICKETS ))%"
-       fi
+          if   test "$NUM_OPEN_TICKETS" -eq 0
+          then continue
+          fi
 
-     # Calculate days left from deadline (assumes correct date format!)
-       DEADLINE=$(grep --color=never "   Deadline: " "$i" | cut -d$':' -f2 )
-       DEADLINE=$(date --date "$DEADLINE" "+%s")
-       TODAY=$(date "+%s")
-       DAYS_LEFT=$(( (DEADLINE - TODAY) / 86400 ))
+          NUM_CLOSED_TICKETS=$( cat "$i" | tail -n "+$(( CLOSE_LINE + 1 ))" |  egrep "^\s*\$" -v | wc -l )
 
-     # Print entry to terminal (unsorted)
-       printf "%-15s -- " "Milestone ${i%.milestone}"
-       printf "%-27s -- " "Completion: $NUM_CLOSED_TICKETS / $NUM_TICKETS ($PERCENTAGE)"
-       printf "%-15s -- " "Days left: ${DAYS_LEFT}"
-       printf "Title: " && grep --color=never "      Title:" "$i" | cut -d$':' -f2
-   done
+
+        # Calculate percentage completion
+          NUM_TICKETS="$(( NUM_OPEN_TICKETS + NUM_CLOSED_TICKETS ))"
+          if   test $NUM_TICKETS -eq 0
+          then PERCENTAGE="Empty"
+          else PERCENTAGE="$(( 100 * NUM_CLOSED_TICKETS / NUM_TICKETS ))%"
+          fi
+
+        # Calculate days left from deadline (assumes correct date format!)
+          DEADLINE=$(grep --color=never "   Deadline: " "$i" | cut -d$':' -f2 )
+          DEADLINE=$(date --date "$DEADLINE" "+%s")
+          TODAY=$(date "+%s")
+          DAYS_LEFT=$(( (DEADLINE - TODAY) / 86400 ))
+
+        # Print entry to terminal (unsorted)
+          printf "%-15s -- " "Milestone ${i%.milestone}"
+          printf "%-27s -- " "Completion: $NUM_CLOSED_TICKETS / $NUM_TICKETS ($PERCENTAGE)"
+          printf "%-15s -- " "Days left: ${DAYS_LEFT}"
+          printf "Title: " && grep --color=never "      Title:" "$i" | cut -d$':' -f2
+      done
    }
 
 
 
 
    function show_completed_milestones () {
+    # ----------------------------------------------------------------------
+    # Invoked via 'list'? 'report'? # FIXME
+    #
+    # Expects no arguments.
+    #
+    # Creates a report of (non-empty) milestones that no longer have tickets
+    # open
+    # ----------------------------------------------------------------------
 
-   local OPEN_LINE
-   local CLOSE_LINE
-   local CLOSED_TICKETS
-   local NUM_OPEN_TICKETS
-   local NUM_CLOSED_TICKETS
-   local NUM_TICKETS
-   local PERCENTAGE
-   local DEADLINE
-   local TODAY
-   local DAYS_LEFT
-   local d="[[:digit:]]"   # for convenience in later regular expressions
+    # Confirm called without arguments
+      if   test "$#" -gt 0
+      then display_usage show_completed_milestones
+           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      fi
 
-   cd $MILESTONES_PATH
+      local OPEN_LINE
+      local CLOSE_LINE
+      local CLOSED_TICKETS
+      local NUM_OPEN_TICKETS
+      local NUM_CLOSED_TICKETS
+      local NUM_TICKETS
+      local PERCENTAGE
+      local DEADLINE
+      local TODAY
+      local DAYS_LEFT
+      local d="[[:digit:]]"   # for convenience in later regular expressions
 
-   for i in *.milestone
-   do
 
-     # Detect open and closed tickets
-       OPEN_LINE=$(  grep --color=never -n "=== Open Tickets ==="   "$i" | cut -d: -f1 )
-       CLOSE_LINE=$( grep --color=never -n "=== Closed Tickets ===" "$i" | cut -d: -f1 )
-       NUM_OPEN_TICKETS=$( cat "$i" | head -n "+$(( CLOSE_LINE - 1 ))" | tail -n "+$(( OPEN_LINE + 1 ))" |  egrep "^\s*\$" -v | wc -l )
-       CLOSED_TICKETS=( $(cat "$i" | tail -n "+$(( CLOSE_LINE + 1 ))" | egrep --color=never -o "^.+\.ticket\b" ) )
-       NUM_CLOSED_TICKETS="${#CLOSED_TICKETS[@]}"
+      cd $MILESTONES_PATH
 
-       if   test $NUM_OPEN_TICKETS   -gt 0 ||   # if there are open tickets then milestone is not complete
-            test $NUM_CLOSED_TICKETS -eq 0      # if milestone is empty, then it is not considered complete
-       then continue
-       else : # Past this point, we assume this milestones has no open tickets, and
-              # has at least one closed ticket
-       fi
 
-     # Determine final date of ticket with most recent activity
-       COMPLETION_DATE=$( for  t in "${CLOSED_TICKETS[@]}"
-                          do   egrep "== $d{4}-$d{2}-$d{2}" "../tickets/$t" | cut -b 4-
-                          done | sort | head -n +1 )
+      for i in *.milestone
+      do
 
-     # Calculate difference from deadline (assumes correct date format!)
-       DEADLINE=$(grep --color=never "   Deadline: " "$i" | cut -d$':' -f2 )
-       DEADLINE=$(date --date "$DEADLINE" "+%s")
-       COMPLETION_DATE_SECONDS=$( date --date "$COMPLETION_DATE" "+%s" )
-       DATEDIFF=$(( (DEADLINE - COMPLETION_DATE_SECONDS) / 86400 ))
+        # Detect open and closed tickets
+          OPEN_LINE=$(  grep --color=never -n "=== Open Tickets ==="   "$i" | cut -d: -f1 )
+          CLOSE_LINE=$( grep --color=never -n "=== Closed Tickets ===" "$i" | cut -d: -f1 )
+          NUM_OPEN_TICKETS=$( cat "$i" | head -n "+$(( CLOSE_LINE - 1 ))" | tail -n "+$(( OPEN_LINE + 1 ))" |  egrep "^\s*\$" -v | wc -l )
+          CLOSED_TICKETS=( $(cat "$i" | tail -n "+$(( CLOSE_LINE + 1 ))" | egrep --color=never -o "^.+\.ticket\b" ) )
+          NUM_CLOSED_TICKETS="${#CLOSED_TICKETS[@]}"
 
-       if   test $((DATEDIFF)) -eq 0; then DATESTR="on time"
-       elif test $((DATEDIFF)) -gt 0; then DATESTR="$DATEDIFF days ahead of deadline"
-       else                                DATESTR="$((-DATEDIFF)) days late"
-       fi
+          if   test $NUM_OPEN_TICKETS   -gt 0 ||   # if there are open tickets then milestone is not complete
+               test $NUM_CLOSED_TICKETS -eq 0      # if milestone is empty, then it is not considered complete
+          then continue
+          else : # Past this point, we assume this milestones has no open tickets, and
+                 # has at least one closed ticket
+          fi
 
-     # Print entry to terminal (unsorted)
-       printf "%-15s -- " "Milestone ${i%.milestone}"
-       printf "%-27s -- " "${NUM_CLOSED_TICKETS} tickets completed"
-       printf "%s -- " "Last ticket completed on: $COMPLETION_DATE ($DATESTR)"
-       printf "Title: " && grep --color=never "      Title:" "$i" | cut -d$':' -f2
-   done
+        # Determine final date of ticket with most recent activity
+          COMPLETION_DATE=$( for  t in "${CLOSED_TICKETS[@]}"
+                             do   egrep "== $d{4}-$d{2}-$d{2}" "../tickets/$t" | cut -b 4-
+                             done | sort | head -n +1 )
+
+        # Calculate difference from deadline (assumes correct date format!)
+          DEADLINE=$(grep --color=never "   Deadline: " "$i" | cut -d$':' -f2 )
+          DEADLINE=$(date --date "$DEADLINE" "+%s")
+          COMPLETION_DATE_SECONDS=$( date --date "$COMPLETION_DATE" "+%s" )
+          DATEDIFF=$(( (DEADLINE - COMPLETION_DATE_SECONDS) / 86400 ))
+
+          if   test $((DATEDIFF)) -eq 0; then DATESTR="on time"
+          elif test $((DATEDIFF)) -gt 0; then DATESTR="$DATEDIFF days ahead of deadline"
+          else                                DATESTR="$((-DATEDIFF)) days late"
+          fi
+
+        # Print entry to terminal (unsorted)
+          printf "%-15s -- " "Milestone ${i%.milestone}"
+          printf "%-27s -- " "${NUM_CLOSED_TICKETS} tickets completed"
+          printf "%s -- " "Last ticket completed on: $COMPLETION_DATE ($DATESTR)"
+          printf "Title: " && grep --color=never "      Title:" "$i" | cut -d$':' -f2
+      done
    }
 
 
 
 
    function edit_ticket () {
+    # -----------------------------------------------------------
+    # Invoked via 'edit ticket' or 'et' subcommand
+    #
+    # Calls the 'editor' helper function on the specified ticket.
+    #
+    # Note: only supports editing one file at a time.
+    # -----------------------------------------------------------
 
-       local TICKET="${1%.ticket}.ticket"
+    # Confirm called with a single argument
+      if   test "$#" -eq 1
+      then display_usage edit_ticket
+           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      fi
 
-       if   is_valid_ticket "$TICKET"
-       then :
-       else return 1
-       fi
+      local TICKET="${1%.ticket}.ticket"
 
-       editor "$TICKETS_PATH/$TICKET" 1 1
+      if   is_valid_ticket "$TICKET"
+      then :
+      else error "Error: Could not open ticket '$TICKETS_PATH/$TICKET' for editing"
+           return 1
+      fi
+
+      editor "$TICKETS_PATH/$TICKET" 1 1
    }
 
 
 
 
    function edit_milestone () {
+    # --------------------------------------------------------------
+    # Invoked via 'edit milestone' or 'em' subcommand
+    #
+    # Calls the 'editor' helper function on the specified milestone.
+    #
+    # Note: only supports editing one file at a time.
+    # --------------------------------------------------------------
 
-       local MILESTONE="${1%.milestone}.milestone"
+    # Confirm called without arguments
+      if   test "$#" -eq 1
+      then display_usage edit_milestone
+           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      fi
 
-       if   is_valid_milestone "$MILESTONE"
-       then :
-       else return 1
-       fi
+      local MILESTONE="${1%.milestone}.milestone"
 
-       editor "$MILESTONES_PATH/$MILESTONE" 1 1
+      if   is_valid_milestone "$MILESTONE"
+      then :
+      else error "Error: Could not open ticket '$MILESTONES_PATH/$MILESTONE' for editing"
+           return 1
+      fi
+
+      editor "$MILESTONES_PATH/$MILESTONE" 1 1
    }
 
 
 
 
    function edit_ticket_or_milestone () {
-       case "$1" in
-           ("ticket")     shift && edit_ticket    "$@" ;;
-           ("milestone")  shift && edit_milestone "$@" ;;
-           (*)            error "Error: invalid argument given to 'edit'."
-                          error "Valid arguments are 'ticket' or 'milestone'."
-                          return 1 ;;
-       esac
+    # --------------------------------------------------------------------------
+    # Invoked via the 'edit' subcommand.
+    #
+    # Expects to be called as either 'edit ticket' or 'edit milestone', and
+    # delegates to the 'edit_ticket' or 'edit_milestone' functions as appropriate,
+    # passing all remaining arguments given during invocation.
+    # --------------------------------------------------------------------------
+      case "$1" in
+          ("ticket")     shift && edit_ticket    "$@" ;;
+          ("milestone")  shift && edit_milestone "$@" ;;
+          (*)            error "Error: invalid argument given to 'edit'."
+                         error "Valid arguments are 'ticket' or 'milestone'."
+                         return 1 ;;
+      esac
    }
+
 
 
 
    function view_ticket_or_milestone () {
-       case "$1" in
-           ("ticket")     shift && view_ticket    "$@" ;;
-           ("milestone")  shift && view_milestone "$@" ;;
-           (*)            error "Error: invalid argument given to 'view'."
-                          error "Valid arguments are 'ticket' or 'milestone'."
-                          return 1 ;;
-       esac
+    # --------------------------------------------------------------------------
+    # Invoked via the 'view' subcommand.
+    #
+    # Expects to be called as either 'view ticket' or 'view milestone', and
+    # delegates to the 'view_ticket' or 'view_milestone' functions as appropriate,
+    # passing all remaining arguments given during invocation.
+    # --------------------------------------------------------------------------
+      case "$1" in
+          ("ticket")     shift && view_ticket    "$@" ;;
+          ("milestone")  shift && view_milestone "$@" ;;
+          (*)            error "Error: invalid argument given to 'view'."
+                         error "Valid arguments are 'ticket' or 'milestone'."
+                         return 1 ;;
+      esac
    }
 
 
+
+
    function view_ticket () {
+    # ----------------------------------------------------------
+    # Invoked via 'view ticket' or 'vt' subcommands
+    #
+    # Expects a single argument corresponding to a valid ticket.
+    #
+    # Applies nice colouring, and then calls less on the result
+    # ----------------------------------------------------------
 
-       local TICKET="${1%.ticket}.ticket"
-       local d="[[:digit:]]"   # for convenience in later regular expressions
+      local TICKET="${1%.ticket}.ticket"
+      local d="[[:digit:]]"   # for convenience in later regular expressions
 
-       if   is_valid_ticket "$TICKET"
-       then :
-       else return 1
-       fi
+      if   is_valid_ticket "$TICKET"
+      then :
+      else return 1
+      fi
 
-       PRINTOUT="$( head -n +12 "$TICKETS_PATH/$TICKET" | sed "s/^\(...........\)\(.*\)\$/${ANSI_BLUE}\1${ANSI_YELLOW}\2${ANSI_RESET}/" )"$'\n'
-       PRINTOUT="$PRINTOUT$( head -n +13 "$TICKETS_PATH/$TICKET" | tail -n -1 | sed "s/\(...........\)\(:\)/${ANSI_BLUE}\1${ANSI_YELLOW}\2${ANSI_RESET}/" )"$'\n'
-       PRINTOUT="$PRINTOUT$( tail -n +14 "$TICKETS_PATH/$TICKET" | sed "s/^\(== $d$d$d$d-$d$d-$d$d\)/${ANSI_BOLD_ON}${ANSI_BLUE}\1${ANSI_BOLD_OFF}${ANSI_RESET}/" )"$'\n'
-       echo "$PRINTOUT" | less -R
+      PRINTOUT="$( head -n +12 "$TICKETS_PATH/$TICKET" | sed "s/^\(...........\)\(.*\)\$/${ANSI_BLUE}\1${ANSI_YELLOW}\2${ANSI_RESET}/" )"$'\n'
+      PRINTOUT="$PRINTOUT$( head -n +13 "$TICKETS_PATH/$TICKET" | tail -n -1 | sed "s/\(...........\)\(:\)/${ANSI_BLUE}\1${ANSI_YELLOW}\2${ANSI_RESET}/" )"$'\n'
+      PRINTOUT="$PRINTOUT$( tail -n +14 "$TICKETS_PATH/$TICKET" | sed "s/^\(== $d$d$d$d-$d$d-$d$d\)/${ANSI_BOLD_ON}${ANSI_BLUE}\1${ANSI_BOLD_OFF}${ANSI_RESET}/" )"$'\n'
+      echo "$PRINTOUT" | less -R
    }
 
 
 
 
    function view_milestone () {
+    # ----------------------------------------------------------
+    # Invoked via 'view ticket' or 'vt' subcommands
+    #
+    # Expects a single argument corresponding to a valid ticket.
+    #
+    # Applies nice colouring, and then calls less on the result
+    # ----------------------------------------------------------
 
-       local MILESTONE="${1%.milestone}.milestone"
-       local PRINTOUT
+      local MILESTONE="${1%.milestone}.milestone"
+      local PRINTOUT
 
-       if   is_valid_milestone "$MILESTONE"
-       then :
-       else return 1
-       fi
+      if   is_valid_milestone "$MILESTONE"
+      then :
+      else return 1
+      fi
 
-       PRINTOUT="$( head -n +6 "$MILESTONES_PATH/$MILESTONE" )"
-       PRINTOUT="$( echo "$PRINTOUT" | sed "s/^\(.............\)\(.*\)\$/${ANSI_BLUE}\1${ANSI_YELLOW}\2${ANSI_RESET}/" )"$'\n'
-       PRINTOUT="${PRINTOUT}$( tail -n +7 "$MILESTONES_PATH/$MILESTONE" )"
-       PRINTOUT="$( echo "$PRINTOUT" | sed "s/=== Open Tickets ===/${ANSI_BOLD_ON}${ANSI_RED}=== Open Tickets ===${ANSI_BOLD_OFF}${ANSI_RESET}/" )"
-       PRINTOUT="$( echo "$PRINTOUT" | sed "s/=== Closed Tickets ===/${ANSI_GREEN}=== Open Tickets ===${ANSI_RESET}/" )"
-       echo "$PRINTOUT" | less -R
+      PRINTOUT="$( head -n +6 "$MILESTONES_PATH/$MILESTONE" )"
+      PRINTOUT="$( echo "$PRINTOUT" | sed "s/^\(.............\)\(.*\)\$/${ANSI_BLUE}\1${ANSI_YELLOW}\2${ANSI_RESET}/" )"$'\n'
+      PRINTOUT="${PRINTOUT}$( tail -n +7 "$MILESTONES_PATH/$MILESTONE" )"
+      PRINTOUT="$( echo "$PRINTOUT" | sed "s/=== Open Tickets ===/${ANSI_BOLD_ON}${ANSI_RED}=== Open Tickets ===${ANSI_BOLD_OFF}${ANSI_RESET}/" )"
+      PRINTOUT="$( echo "$PRINTOUT" | sed "s/=== Closed Tickets ===/${ANSI_GREEN}=== Closed Tickets ===${ANSI_RESET}/" )"
+      echo "$PRINTOUT" | less -R
    }
 
 
 
-
-
-   # ----------------
-   # Legacy Functions
-   # ----------------
+ # ----------------
+ # Legacy Functions
+ # ----------------
 
    function show_all_ticket_summaries () {
+    # --------------------------------------------------------------------------
+    # XXX: Currently invoked via show_all_ticket_summaries legacy subcommand.
+    #      This will be eventually be replaced via a single 'show' or 'list'
+    #      subcommand.
+    #
+    # Expects no arguments.
+    # --------------------------------------------------------------------------
 
-   cd $TICKETS_PATH
+    # Check if called with no arguments
+      if   test ${#@} -gt 0
+      then error "Error: show_all_ticket_summaries does not expect any arguments."
+           display_usage "show_all_ticket_summaries"
+           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      fi
 
-   for i in *.ticket
-   do
-     if   grep "Status: Open" "$i" > /dev/null
-     then echo -e -n "$i: ${ANSI_RED}[ Open ]${ANSI_RESET} "
-     elif grep "Status: Closed" "$i" > /dev/null
-     then echo -en "$i: ${ANSI_GREEN}[Closed]${ANSI_RESET} "
-     else echo -en "$i: ${ANSI_PURPLE}[ ???? ]${ANSI_RESET} "
-     fi
-     grep Summary "$i"
-   done
+
+      cd $TICKETS_PATH
+
+
+      for i in *.ticket
+      do
+
+       # Mark open tickets with a red, 'Open' tag.
+         if   grep "Status: Open" "$i" > /dev/null
+         then echo -en "$i: ${ANSI_RED}[ Open ]${ANSI_RESET} "
+
+       # Mark closed tickets with a green, 'Closed' tag.
+         elif grep "Status: Closed" "$i" > /dev/null
+         then echo -en "$i: ${ANSI_GREEN}[Closed]${ANSI_RESET} "
+
+       # Mark tickets of unknown or missing status with a purple '????' tag.
+         else echo -en "$i: ${ANSI_PURPLE}[ ???? ]${ANSI_RESET} "
+         fi
+
+       # Add summary to tag.
+         grep Summary "$i"
+
+      done
    }
 
 
 
 
    function show_closed_ticket_resolutions () {
+    # --------------------------------------------------------------------------
+    # XXX: Currently invoked via show_closed_ticket_resolutions legacy
+    #      subcommand. This will be eventually be replaced via a single 'show'
+    #      or 'list' subcommand.
+    #
+    # Expects no arguments.
+    # --------------------------------------------------------------------------
 
-   local TICKET
+      if   test ${#@} -gt 0
+      then error "Error: show_closed_ticket_resolutions does not expect any arguments."
+           display_usage "show_closed_ticket_resolutions"
+           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      fi
 
-   cd $TICKETS_PATH
+      local TICKET
 
-   for TICKET in $(grep --color=never -l "Status: Closed" *.ticket)
-   do
-       echo -n "$TICKET "
-       grep --color=always "Resolution:" "$TICKET"        \
-           | sed "s/Completed/\\x1b[92mCompleted\\x1b[39m/" \
-           | sed "s/Delegated/\\x1b[94mDelegated\\x1b[39m/" \
-           | sed "s/Postponed/\\x1b[93mPostponed\\x1b[39m/" \
-           | sed "s/Cancelled/\\x1b[91mCancelled\\x1b[39m/" \
-           | sed "s/Invalid/\\x1b[95mInvalid\\x1b[39m/"
+      cd $TICKETS_PATH
 
-   done
+      for TICKET in $(grep --color=never -l "Status: Closed" *.ticket)
+      do
+          echo -n "$TICKET "
+          grep --color=always "Resolution:" "$TICKET"        \
+              | sed "s/Completed/\\x1b[92mCompleted\\x1b[39m/" \
+              | sed "s/Delegated/\\x1b[94mDelegated\\x1b[39m/" \
+              | sed "s/Postponed/\\x1b[93mPostponed\\x1b[39m/" \
+              | sed "s/Cancelled/\\x1b[91mCancelled\\x1b[39m/" \
+              | sed "s/Invalid/\\x1b[95mInvalid\\x1b[39m/"
+
+      done
    }
 
 
 
 
    function show_closed_ticket_summaries () {
+    # --------------------------------------------------------------------------
+    # XXX: Currently invoked via show_closed_ticket_summaries legacy
+    #      subcommand. This will be eventually be replaced via a single 'show'
+    #      or 'list' subcommand.
+    #
+    # Expects no arguments.
+    # --------------------------------------------------------------------------
 
-   cd $TICKETS_PATH
-   local COUNT=0
+      if   test ${#@} -gt 0
+      then error "Error: show_closed_ticket_summaries does not expect any arguments."
+           display_usage "show_closed_ticket_summaries"
+           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      fi
 
-   for i in *.ticket
-   do
-     if   grep "Status: Closed" "$i" > /dev/null
-     then COUNT=$((COUNT + 1))
-          echo -n "$i:"
-          grep Summary "$i"
-     fi
-   done
 
-   echo
-   echo "There are $COUNT closed tickets in total."
+      cd $TICKETS_PATH
+      local COUNT=0
+
+      for i in *.ticket
+      do
+        if   grep "Status: Closed" "$i" > /dev/null
+        then COUNT=$((COUNT + 1))
+             echo -n "$i:"
+             grep Summary "$i"
+        fi
+      done
+
+      echo
+      echo "There are $COUNT closed tickets in total."
    }
 
 
 
 
    function show_open_ticket_summaries () {
+    # --------------------------------------------------------------------------
+    # XXX: Currently invoked via show_open_ticket_summaries legacy
+    #      subcommand. This will be eventually be replaced via a single 'show'
+    #      or 'list' subcommand.
+    #
+    # Expects no arguments.
+    # --------------------------------------------------------------------------
 
-   cd $TICKETS_PATH
-   local COUNT=0
+      if   test ${#@} -gt 0
+      then error "Error: show_open_ticket_summaries does not expect any arguments."
+           display_usage "show_open_ticket_summaries"
+           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      fi
 
-   for i in *.ticket
-   do
-     if   grep "Status: Open" "$i" > /dev/null
-     then COUNT=$((COUNT + 1))
-          echo -n "$i:"
-          grep Summary "$i"
-     fi
-   done
+      cd $TICKETS_PATH
+      local COUNT=0
 
-   echo
-   echo "There are $COUNT open tickets in total."
+      for i in *.ticket
+      do
+        if   grep "Status: Open" "$i" > /dev/null
+        then COUNT=$((COUNT + 1))
+             echo -n "$i:"
+             grep Summary "$i"
+        fi
+      done
+
+      echo
+      echo "There are $COUNT open tickets in total."
    }
 
 
 
 
-   # FIXME The function below fails because the owner had spaces in the tickets. But WHY????? XXX
-
-
    function show_open_ticket_summaries_by_owner () {
+    # --------------------------------------------------------------------------
+    # XXX: Currently invoked via show_open_ticket_summaries_by_owner legacy
+    #      subcommand. This will be eventually be replaced via a single 'show'
+    #      or 'list' subcommand.
+    #
+    # Expects no arguments.
+    # --------------------------------------------------------------------------
 
+      if   test ${#@} -gt 0
+      then error "Error: show_open_ticket_summaries_by_owner does not expect any arguments."
+           display_usage "show_open_ticket_summaries_by_owner"
+           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      fi
 
-   cd $TICKETS_PATH
+      cd $TICKETS_PATH
 
-   local OWNERS="$( grep --color=never 'Owner:' *.ticket | cut -d: -f3 | cut -b 2- | sort -u )"
+      local OWNERS="$( grep --color=never 'Owner:' *.ticket | cut -d: -f3 | cut -b 2- | sort -u )"
 
-   while read -r OWNER
-   do
-     local OWNERS_TICKETS="$( egrep -l "Owner: ${OWNER}$" *.ticket )"
+      while read -r OWNER
+      do
+         local OWNERS_TICKETS="$( egrep -l "Owner: ${OWNER}$" *.ticket )"
 
-     local COUNT=0
-     local PRINTOUT=
+         local COUNT=0
+         local PRINTOUT=
 
-     for i in $OWNERS_TICKETS;
-     do
-       if   grep "Status: Open" "$i" > /dev/null
-       then COUNT=$((COUNT + 1))
-            PRINTOUT="$PRINTOUT$i:"
-            PRINTOUT="$PRINTOUT $(grep Summary "$i")"$'\n'
-       fi
-     done
+         for i in $OWNERS_TICKETS;
+         do
+           if   grep "Status: Open" "$i" > /dev/null
+           then COUNT=$((COUNT + 1))
+                PRINTOUT="$PRINTOUT$i:"
+                PRINTOUT="$PRINTOUT $(grep Summary "$i")"$'\n'
+           fi
+         done
 
-     echo -e "${ANSI_BLUE}== ${ANSI_BOLD_ON}Owner: ${OWNER:-(Nobody)}${ANSI_BOLD_OFF} (${COUNT} open tickets)${ANSI_RESET}"
-     echo "$PRINTOUT"
+         echo -e "${ANSI_BLUE}== ${ANSI_BOLD_ON}Owner: ${OWNER:-(Nobody)}${ANSI_BOLD_OFF} (${COUNT} open tickets)${ANSI_RESET}"
+         echo "$PRINTOUT"
 
-   done <<< "$OWNERS"
+      done <<< "$OWNERS"
    }
 
 
 
 
    function show_open_ticket_summaries_by_priority () {
+    # --------------------------------------------------------------------------
+    # XXX: Currently invoked via show_open_ticket_summaries_by_priority legacy
+    #      subcommand. This will be eventually be replaced via a single 'show'
+    #      or 'list' subcommand.
+    #
+    # Expects no arguments.
+    # --------------------------------------------------------------------------
 
-   cd $TICKETS_PATH
-
-   for PRIORITY in Lowest Normal Important Urgent Highest
-   do
-
-     local PRIORITY_TICKETS=$(grep -l "Priority: $PRIORITY" *.ticket)
-     local COUNT=0
-     local PRINTOUT=
-
-     for i in $PRIORITY_TICKETS;
-     do
+      if   test ${#@} -gt 0
+      then error "Error: show_open_ticket_summaries_by_priority does not expect any arguments."
+           display_usage "show_open_ticket_summaries_by_priority"
+           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      fi
 
 
-       if   grep "Status: Open" "$i" > /dev/null
-       then COUNT=$((COUNT + 1))
-            PRINTOUT="$PRINTOUT$i:"
-            PRINTOUT="$PRINTOUT $(grep Summary "$i")"$'\n'
-       fi
-     done
+      cd $TICKETS_PATH
 
-     echo -e "${ANSI_BLUE}== Priority: ${ANSI_BOLD_ON}${PRIORITY}${ANSI_BOLD_OFF} (${COUNT} open tickets)${ANSI_RESET}"
-     echo "$PRINTOUT"
+      for PRIORITY in Lowest Normal Important Urgent Highest
+      do
 
-   done
+         local PRIORITY_TICKETS=$(grep -l "Priority: $PRIORITY" *.ticket)
+         local COUNT=0
+         local PRINTOUT=
+
+         for i in $PRIORITY_TICKETS;
+         do
+
+
+           if   grep "Status: Open" "$i" > /dev/null
+           then COUNT=$((COUNT + 1))
+                PRINTOUT="$PRINTOUT$i:"
+                PRINTOUT="$PRINTOUT $(grep Summary "$i")"$'\n'
+           fi
+        done
+
+        echo -e "${ANSI_BLUE}== Priority: ${ANSI_BOLD_ON}${PRIORITY}${ANSI_BOLD_OFF} (${COUNT} open tickets)${ANSI_RESET}"
+        echo "$PRINTOUT"
+
+      done
    }
 
 
 
+#############
+### Main body
+#############
 
+ # -----------------------------
+ # Perform initial sanity checks
+ # -----------------------------
 
-
-
-
-
-   #############
-   ### Main body
-   #############
-
-   # -----------------------------
-   # Perform initial sanity checks
-   # -----------------------------
-
-   # Ensure we have a valid bashtickets installation
+ # Ensure we have a valid bashtickets installation
    trycatch "check_bashtickets_installation" $EXIT_STATUS__INVALID_BASHTICKETS_INSTALLATION
 
-   # Ensure valid bashtickets repository for commands that require it
+ # Ensure valid bashtickets repository for commands that require it
    case "$1" in
 
        ( "init"   | "help"    | "h" )
@@ -1597,9 +1805,9 @@
    esac   # FIXME UPDATE AS APPROPRIATE
 
 
-   # ---------------------------
-   # Execute bashtickets command
-   # ---------------------------
+ # ---------------------------
+ # Execute bashtickets command
+ # ---------------------------
 
 
    case "$1" in
@@ -1627,6 +1835,7 @@
      # -------------------------------------------------------------------------
      # Let's also include "fullname" subcommands ... this is mostly for testing.
      # -------------------------------------------------------------------------
+
        # FIXME: REMOVE WHEN NO LONGER NEEDED
 
      # subcommands that take arguments
@@ -1650,3 +1859,6 @@
        ("")                                 display_usage "bashtickets" && exit 0 ;;
        (*)                                  display_usage && exit $EXIT_STATUS__INVALID_SUBCOMMAND ;;
    esac
+
+
+### END OF SCRIPT
