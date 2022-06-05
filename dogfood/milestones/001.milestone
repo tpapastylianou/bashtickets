@@ -17,7 +17,6 @@ Description: v1 relies on single commands, which are getting rather numerous,
 005.ticket     Summary: Create appropriate help message
 006.ticket     Summary: Create appropriate 'usage' when called with no arguments
 009.ticket     Summary: Ensure bt show works correctly
-011.ticket     Summary: Ensure appropriate function for 'assign' subcommand
 014.ticket     Summary: Ensure appropriate function of 'status' subcommand
 015.ticket     Summary: Ensure appropriate function of the 'remove' subcommand
 016.ticket     Summary: Ensure appropriate function of 'edit' subcommand
@@ -30,6 +29,7 @@ Description: v1 relies on single commands, which are getting rather numerous,
 033.ticket     Summary: show_completed_milestones - more appropriate completion date calculation
 034.ticket     Summary: Ensure all local variables in functions have local scope
 035.ticket     Summary: Handle Ctrl-C in interactive menus appropriately
+037.ticket     Summary: Ensure ticket modifying functions call update_milestones when necessary
 
 === Closed Tickets ===
 
@@ -37,6 +37,7 @@ Description: v1 relies on single commands, which are getting rather numerous,
 007.ticket     Summary: Ensure bt init works correctly
 008.ticket     Summary: Ensure bt update works correctly
 010.ticket     Summary: Ensure appropriate function for 'comment' subcommand
+011.ticket     Summary: Ensure appropriate function for 'assign' subcommand
 012.ticket     Summary: Ensure appropriate function for 'close' subcommand
 013.ticket     Summary: Ensure appropriate function of 'new' subcommand
 019.ticket     Summary: Remove zero-padding, adjust with ls | sort -n where appropriate

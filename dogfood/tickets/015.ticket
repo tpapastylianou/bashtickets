@@ -8,8 +8,8 @@
          Cc: 
       Owner: Tasos
        Date: 2021-12-03
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Cancelled
 Description: This command will be used to remove the last ticket / milestone.
 
              The interface is still not decided.
@@ -24,3 +24,16 @@ would probably be safer to rely on something like
 - remove last milestone (rm lm)
 - remove ticket 015  (rm #015)
 - remove milestone 003  (rm @003)
+
+
+== 2022-06-05
+
+I have decided that it is not a good idea to provide a bespoke subcommand for
+such removals. It would be better for tickets not to be removed in general; if a
+user wants to remove a ticket, they'll be doing so at their own risk.
+
+However, the main motivation for this ticket was to be able to quickly remove
+tickets that were created in error. Therefore, I should ensure that 'error'
+creations happen as rarely as possible (e.g. cancelling if no edits, etc).
+
+Closing ticket.

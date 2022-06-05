@@ -8,8 +8,8 @@
          Cc: 
       Owner: Tasos
        Date: 2021-12-03
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Completed
 Description: Presumably this will be as simple as launching the default editor
              on the appropriate ticket/milestone
 
@@ -25,3 +25,9 @@ Description: Presumably this will be as simple as launching the default editor
 A mechanism will have to be provided, for the user to be able to edit a file in
 their editor of choice, and ALSO be able to specify which line to open their
 file at.
+
+
+== 2022-06-05
+Implemented 'editor' function and 'edit ticket/milestone' subcommands.
+No support for 'last ticket' or #/@ markersfor now.
+Closing ticket.
