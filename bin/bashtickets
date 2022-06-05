@@ -75,6 +75,7 @@
    declare -i EXIT_STATUS__FAILED_TO_EDIT_TICKET_OR_MILESTONE=12
    declare -i EXIT_STATUS__FAILED_TO_EDIT_TICKET=13
    declare -i EXIT_STATUS__FAILED_TO_EDIT_MILESTONE=14
+   declare -i EXIT_STATUS__FAILED_TO_CREATE_NEW_REPOSITORY=15
 
    declare -i EXIT_STATUS__INVALID_SUBCOMMAND=100
    declare -i EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX=101
@@ -521,6 +522,45 @@
       fi
    }
 
+
+
+
+   function mkrepo () {
+    # --------------------------------------------------------------------------
+    # Invoked via 'mkrepo' subcommand.
+    #
+    # Expects a single argument corresponding to the name of the repository to
+    # be created.
+    #
+    # This function creates a new directory and proceeds to initialise it as a
+    # bashtickets repository; if a folder by that name already exists, or a new
+    # directory cannot be created, the process is aborted.
+    # --------------------------------------------------------------------------
+
+    # Ensure this command was called with a single argument
+      if   test ${#@} -eq 1
+      then :
+      elif test ${#@} -eq 0
+      then error "Error: No directory name provided to 'mkrepo' subcommand"
+           display_usage mkrepo
+           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      else error "Error: Invalid number of arguments passed to 'mkrepo' subcommand."
+           display_usage mkrepo
+           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      fi
+
+    # Attempt to create a new directory.
+      if   mkdir "$1"
+      then :
+      else error "Error: unable to create a new '$1' directory at $(realpath .). Aborting."
+           return 1
+      fi
+
+    # Initialise the newly created directory
+      cd "$1"
+      initialise_bashtickets_repository > /dev/null
+      echo "Bashtickets repository '$1' created successfully."
+   }
 
 
 
@@ -1828,8 +1868,9 @@
        ("et")                               shift && trycatch edit_ticket              "$@" $EXIT_STATUS__FAILED_TO_EDIT_TICKET              ;;
        ("em")                               shift && trycatch edit_milestone           "$@" $EXIT_STATUS__FAILED_TO_EDIT_MILESTONE           ;;
        ("view")                             shift && trycatch view_ticket_or_milestone "$@" $EXIT_STATUS__OTHER_ERROR ;;
-       ("vt")                                shift && trycatch view_ticket              "$@" $EXIT_STATUS__OTHER_ERROR ;;
+       ("vt")                               shift && trycatch view_ticket              "$@" $EXIT_STATUS__OTHER_ERROR ;;
        ("vm")                               shift && trycatch view_milestone           "$@" $EXIT_STATUS__OTHER_ERROR ;;
+       ("mkrepo")                           shift && trycatch mkrepo                   "$@" $EXIT_STATUS__FAILED_TO_CREATE_NEW_REPOSITORY ;;
 
 
      # -------------------------------------------------------------------------
