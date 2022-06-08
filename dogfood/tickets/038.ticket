@@ -1,0 +1,15 @@
+ Ticket No.: 038
+    Summary: Consider guidlines from clig.dev
+   Reporter: Tasos
+       Type: Feature
+   Priority: Normal
+  Milestone: 001
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2022-06-08
+     Status: Open
+ Resolution: 
+Description: There was a nice article on hacker news promoting a website called
+             clig.dev: Command-Line Interface Guidelines. I think I'm doing most
+             of these, but it's a very nice list to go through.
