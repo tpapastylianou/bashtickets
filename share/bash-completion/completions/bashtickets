@@ -1,0 +1,33 @@
+# bashtickets completion
+
+# This file should either be copied in your system-defined place where other
+# such completion scripts reside, such as /usr/share/bash-completion/completions
+# or /etc/bash_completion.d (check which one is called by your .bashrc file).
+#
+# Alternatively, simply 'source' it in your .bashrc file.
+
+
+function _bashtickets () {
+
+  _get_comp_words_by_ref -c CURRENT_WORD -p PREVIOUS_WORD -w WORDS_ARRAY -i CURRENT_WORD_INDEX
+
+
+  if   test "$CURRENT_WORD_INDEX" -eq 1   # dealing with a subcommand
+  then COMPREPLY=( $( compgen -W "help init edit view usage add close new nt nm" $CURRENT_WORD ) )
+  fi
+}
+
+complete -F _bashtickets bashtickets
+
+
+## If you would like autocompletion to work with aliases as well, define them
+## separately here.
+##
+## For example, to generate autocompletion for an alias called 'bt', uncomment
+## the line below:
+
+#complete -F _bashtickets bt
+
+
+# Alternatively, you can simply add such extra lines directly in your .bashrc
+# file, alongside their alias definitions.

@@ -11,3 +11,11 @@
      Status: Open
  Resolution: 
 Description: 
+
+
+== 2022-06-11
+
+Created basic completion script in
+'share/bash-completion/completions/bashtickets'. For now this only checks if
+we're dealing with a subcommand, and autocompletes a handful of them, but the
+main idea is there.
