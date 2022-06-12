@@ -76,6 +76,7 @@
    declare -i EXIT_STATUS__FAILED_TO_EDIT_TICKET=13
    declare -i EXIT_STATUS__FAILED_TO_EDIT_MILESTONE=14
    declare -i EXIT_STATUS__FAILED_TO_CREATE_NEW_REPOSITORY=15
+   declare -i EXIT_STATUS__FAILED_TO_CREATE_OR_INITIALIZE_REPOSITORY=16
 
    declare -i EXIT_STATUS__INVALID_SUBCOMMAND=100
    declare -i EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX=101
@@ -504,9 +505,42 @@
  # Bashticket commands
  # -------------------
 
+   function create_or_initialise_bashtickets_repository () {
+    # --------------------------------------------------------------------------
+    # Invoked via the 'init' subcommand
+    #
+    # Delegates to 'initialise_bashtickets_repository' or to
+    # 'create_bashtickets_repository', depending on whether it has been passed
+    # an argument or not.
+    # --------------------------------------------------------------------------
+
+      if   test ${#@} -eq 0   # called with no arguments
+
+      then if   initialise_bashtickets_repository
+           then :
+           else exit $EXIT_STATUS__FAILED_TO_INITIALIZE_REPOSITORY
+           fi
+
+      elif test ${#@} -eq 1   # called with one argument
+
+      then if   create_bashtickets_repository "$1"
+           then :
+           else exit $EXIT_STATUS__FAILED_TO_CREATE_NEW_REPOSITORY
+           fi
+
+      else error "Error: Invalid number of arguments passed to 'init' subcommand."
+           display_usage init
+           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+
+      fi
+   }
+
+
+
+
    function initialise_bashtickets_repository () {
     # --------------------------------------------------------------------------
-    # Invoked via the 'init' subcommand.
+    # Invoked via the 'init' subcommand, when called without arguments.
     #
     # Creates the following tree in the current directory:
     #
@@ -519,13 +553,6 @@
     # The default config file used is the sample_config file found in the
     # 'share/doc' directory from the bashtickets installation folder.
     # --------------------------------------------------------------------------
-
-    # Ensure this command was called with no arguments
-      if   test ${#@} -gt 0
-      then error "Error: The init subcommand does not require any arguments"
-           display_usage initialise_bashtickets_repository
-           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
-      fi
 
     # Desired case: Empty directory detected
       if   test $( ls -A | wc -l ) -eq 0   # empty directory detected
@@ -579,9 +606,9 @@
 
 
 
-   function mkrepo () {
+   function create_bashtickets_repository () {
     # --------------------------------------------------------------------------
-    # Invoked via 'mkrepo' subcommand.
+    # Invoked via 'init' subcommand, when passed an argument.
     #
     # Expects a single argument corresponding to the name of the repository to
     # be created.
@@ -590,18 +617,6 @@
     # bashtickets repository; if a folder by that name already exists, or a new
     # directory cannot be created, the process is aborted.
     # --------------------------------------------------------------------------
-
-    # Ensure this command was called with a single argument
-      if   test ${#@} -eq 1
-      then :
-      elif test ${#@} -eq 0
-      then error "Error: No directory name provided to 'mkrepo' subcommand"
-           display_usage mkrepo
-           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
-      else error "Error: Invalid number of arguments passed to 'mkrepo' subcommand."
-           display_usage mkrepo
-           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
-      fi
 
     # Attempt to create a new directory.
       if   mkdir "$1"
@@ -615,6 +630,7 @@
       initialise_bashtickets_repository > /dev/null
       echo "Bashtickets repository '$1' created successfully."
    }
+
 
 
 
@@ -789,8 +805,8 @@
       TODAY=$(date +"%Y-%m-%d")
       sed -i "s/Date: /Date: $TODAY/" "${TEMP_FILE}"
 
-    # Declare status as Open
-      sed -i "s/Status: /Status: Open/" "${TEMP_FILE}"
+    # Apply default status from TICKET_STATUSES
+      sed -i "s/Status: /Status: ${TICKET_STATUSES[0]}/" "${TEMP_FILE}"
 
     # Save current status of ticket before manual editing
       UNEDITED_TICKET="$(cat $TEMP_FILE)"
@@ -1931,7 +1947,6 @@
 
 
    case "$1" in
-       ("init")                             trycatch initialise_bashtickets_repository $EXIT_STATUS__FAILED_TO_INITIALIZE_REPOSITORY ;;
        ("update" | "up")                    trycatch update_milestones $EXIT_STATUS__OTHER_ERROR ;;
        ("show" | "sh" | "list" | "ls" )     echo "Showing tickets ...TODO" ;;
        ( "add" | "comment" | "a" | "m")     shift && trycatch add_comment_to_ticket       "$@" $EXIT_STATUS__FAILED_TO_ADD_COMMENT_TO_TICKET       ;;
@@ -1941,6 +1956,7 @@
        ("new" | "create" )                  shift && trycatch new_ticket_or_milestone     "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET_OR_MILESTONE  ;;
        ("nt" | "ct" )                       shift && trycatch new_ticket                  "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET               ;;
        ("nm" | "cm" )                       shift && trycatch new_milestone               "$@" $EXIT_STATUS__FAILED_TO_CREATE_MILESTONE            ;;
+       ("init")                             shift && trycatch create_or_initialise_bashtickets_repository "$@" $EXIT_STATUS__FAILED_TO_CREATE_OR_INITIALIZE_REPOSITORY ;;
        ("help" | "h")                       display_help ;;
        ("status" | "st")                    echo "Displaying milestone status (all/open/closed)...TODO" ;;
        ("remove" | "rm")                    echo "Removing last ticket / milestone or by number...TODO" ;;
@@ -1950,7 +1966,6 @@
        ("view")                             shift && trycatch view_ticket_or_milestone "$@" $EXIT_STATUS__OTHER_ERROR ;;
        ("vt")                               shift && trycatch view_ticket              "$@" $EXIT_STATUS__OTHER_ERROR ;;
        ("vm")                               shift && trycatch view_milestone           "$@" $EXIT_STATUS__OTHER_ERROR ;;
-       ("mkrepo")                           shift && trycatch mkrepo                   "$@" $EXIT_STATUS__FAILED_TO_CREATE_NEW_REPOSITORY ;;
 
 
      # -------------------------------------------------------------------------
