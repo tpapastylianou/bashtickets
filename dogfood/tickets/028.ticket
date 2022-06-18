@@ -8,6 +8,13 @@
          Cc: 
       Owner: Tasos
        Date: 2021-12-20
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Cancelled
 Description: 
+
+
+== 2022-06-18
+I think this ticket was created back when the main script relied on things
+occurring at specific lines. This is no longer the case; whenever a particular
+line is required, it is obtained programmatically via grep.
+Closing ticket.

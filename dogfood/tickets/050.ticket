@@ -8,8 +8,8 @@
          Cc: 
       Owner: Tasos
        Date: 2022-06-11
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Completed
 Description: It makes more sense, rather than have close/(re)open subcommands,
              to have "change status" subcommands, which select a status from a
              selection of choices, defined in the config.
@@ -87,8 +87,10 @@ In my mind, some of these are 'open states', and others are 'resolutions'.
 
 Trac uses a different logic. Statuses are fixed, e.g. new, assigned, accepted, reopened, closed. Closed tickets have a resolution. Come to think of it this is similar to what I'm suggesting above.
 
-
-
-
-
-
+== 2022-06-18
+Outcome:
+- Created a new ticket line called Open/Close.
+- Statuses active when ticket is open; resolutions active when tickets closed.
+- Statuses user configurable.
+- Updating menu-based fields will be dealt with in a different ticket
+Closing ticket.

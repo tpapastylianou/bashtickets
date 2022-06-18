@@ -1,0 +1,23 @@
+ Ticket No.: 050
+    Summary: Update command
+   Reporter: Tasos
+       Type: Task
+   Priority: Normal
+  Milestone: 001
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2022-06-11
+     Status: Open
+ Resolution: 
+Description: Update command should update any menu based items.
+
+             Possible command names:
+             - status
+             - change
+             - changestatus
+             - alter
+             - modify
+             - update
+
+             e.g. "update ticket N --status --priority"
