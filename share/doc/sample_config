@@ -35,10 +35,27 @@ TICKET_RESOLUTIONS=(
   "Delegated"
   "Postponed"
   "Cancelled"
+  "Duplicate"
   "Invalid"
+#  "Fixed"
+#  "WontFix"
+#  "WorksForMe"
 )
 
-
+# Ticket statuses: This menu is used when changing ticket status.
+# NOTE: When creating new tickets, bashtickets uses the TOP item in this array
+# as the default status. Similarly the 'close' subcommand will always use the
+# BOTTOM item in this array as the closing status.
+TICKET_STATUSES=(
+  "New"             # The first option will always be used for new tickets 
+  "Assigned"
+  "Accepted"
+  "Confirmed"
+  "InProgress"
+  "NeedInfo"
+  "ReadyForTest"
+  "Reopened"
+)
 
 ####################
 ### Optional options

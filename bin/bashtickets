@@ -4,30 +4,65 @@
 ###
 ### Bashtickets v0.0.1
 ###
-### Code sections in this file:
-###
-### - Script constants
-###   - Bashticket directories
-###   - Error codes
-### - Function definitions
-###   - Helper functions
-###     - error
-###     - trycatch
-###     - check_bashtickets_installation
-###     - is_valid_bashtickets_repository
-###     - check_repo
-###     - load_config
-###     - display_usage
-###   - Bashticket Commands
-###     - initialise_bashtickets_repository
-###     - display_help
-### - Main body
-###   - Perform initial sanity checks
-###   - Execute bashtickets command
+### Contents:
+###    • Script Constants
+###    • Function definitions
+###        • Helper functions
+###            • Function: error
+###            • Function: warning
+###            • Function: process_short_option
+###            • Function: process_long_option
+###            • Function: is_in
+###            • Function: trycatch
+###            • Function: check_bashtickets_installation
+###            • Function: is_valid_bashtickets_repository
+###            • Function: check_repo
+###            • Function: load_config
+###            • Function: check_for_nocolor
+###            • Function: display_usage
+###            • Function: get_default_milestone_startdate
+###            • Function: get_default_milestone_deadline
+###            • Function: is_valid_ticket
+###            • Function: is_valid_milestone
+###            • Function: beg_for_money_lol
+###            • Function: editor
+###        • Functions implementing bashticket commands
+###            • Function: create_or_initialise_bashtickets_repository
+###            • Function: initialise_bashtickets_repository
+###            • Function: create_bashtickets_repository
+###            • Function: display_help
+###            • Function: new_ticket_or_milestone
+###            • Function: new_ticket
+###            • Function: new_milestone
+###            • Function: close_ticket_with_comment
+###            • Function: add_comment_to_ticket
+###            • Function: assign_tickets_to_milestone
+###            • Function: update_milestones
+###            • Function: show_tickets_by_milestone
+###            • Function: show_open_tickets_by_milestone
+###            • Function: show_closed_tickets_by_milestone
+###            • Function: show_active_milestones
+###            • Function: show_completed_milestones
+###            • Function: edit_ticket
+###            • Function: edit_milestone
+###            • Function: edit_ticket_or_milestone
+###            • Function: view_ticket_or_milestone
+###            • Function: view_ticket
+###            • Function: view_milestone
+###        • Legacy functions
+###            • Function: show_all_ticket_summaries
+###            • Function: show_closed_ticket_resolutions
+###            • Function: show_closed_ticket_summaries
+###            • Function: show_open_ticket_summaries
+###            • Function: show_open_ticket_summaries_by_owner
+###            • Function: show_open_ticket_summaries_by_priority
+###    • Main body
+###        • Perform initial sanity checks
+###        • Parse and execute bashtickets command
 ###
 ################################################################################
 
-# FIXME update above in due time
+# - FIXME update above in due time
 
 
 
@@ -112,6 +147,110 @@
       error "${ANSI_BLUE}$*${ANSI_RESET}"
    }
 
+
+
+
+   function process_short_option () {
+    # --------------------------------------------------------------------------
+    # Takes two input tokens.
+    #
+    # If the first token is only two letters long, the first is '-' and the
+    # second is a letter, then set the first token as the option key and the
+    # second token as the value.
+    #
+    # Otherwise check if the value is contiguous with the key, and return the
+    # first two characters as the key and the remainder as the value.
+    #
+    # Sets OPTION_KEY and OPTION_VALUE variables for subsequent access.
+    # OPTION_SHIFT reflects how many tokens were consumed during parsing.
+    # --------------------------------------------------------------------------
+
+    # Ensure we're dealing with either one or two arguments only
+      if   test ${#@} -eq 0 || test ${#@} -gt 2
+      then error "process_short_option: invalid number of arguments"
+           exit $EXIT_STATUS__OTHER_ERROR
+      fi
+
+    # Confirm first character is '-' and second character is alphabetic
+      if   test "$( echo "${1:0:2}" | tr [:alpha:] Y )" = "-Y"
+      then :
+      else error "process_short_option: token 1 not of the form '-x[value]'"
+           exit $EXIT_STATUS__OTHER_ERROR
+      fi
+
+    # Check if option key is contiguous with value or not and assign accordingly
+      if   test ${#1} -eq 2 && test ${#@} -eq 2
+      then OPTION_KEY="$1"
+           OPTION_VALUE="$2"
+           OPTION_SHIFT=2
+      else OPTION_KEY="${1:0:2}"
+           OPTION_VALUE="${1:2}"
+           OPTION_SHIFT=1
+      fi
+   }
+
+
+
+
+   function process_long_option () {
+    # --------------------------------------------------------------------------
+    # Takes two input tokens.
+    #
+    # If the first token is of the form --optionname= then set anything before
+    # '=' to key and anything after to a value.
+    #
+    # If the first token is of the form --optionname, set the second token to
+    # the value instead.
+    #
+    # Sets OPTION_KEY and OPTION_VALUE variables for subsequent access.
+    # OPTION_SHIFT reflects how many tokens were consumed during parsing.
+    # --------------------------------------------------------------------------
+
+    # Ensure we're dealing with either one or two arguments only
+      if   test ${#@} -eq 0 || test ${#@} -gt 2
+      then error "process_long_option: invalid number of arguments"
+           exit $EXIT_STATUS__OTHER_ERROR
+      fi
+
+      if   test "$( echo "$1" | tr -s [:alpha:] Y )" = "--Y"
+         # check if first token is of form --optionname
+
+      then OPTION_KEY="$1"
+           OPTION_VALUE="$2"
+           OPTION_SHIFT=2
+
+      elif test "$( echo "$1" | tr -s [:alpha:] Y | cut -b -4 )" = "--Y="
+         # check if first token is of form --optionname=
+
+      then OPTION_KEY="$(   echo "$1" | cut -d= -f1 )"
+           OPTION_VALUE="$( echo "$1" | cut -d= -f2 )"
+           OPTION_SHIFT=1
+
+      else error "process_long_option: input argument 1 not of form --optionname[=value]"
+           exit $EXIT_STATUS__OTHER_ERROR
+      fi
+   }
+
+
+
+
+   function is_in () {
+    # --------------------------------------------------------------------------
+    # Checks if first input reoccurs in the remaining list of input arguments.
+    #
+    # The intended way to call this function is with an 'exploded' array
+    # variable as the second argument, effectively checking if the first input
+    # is a member of the array, e.g.:
+    #
+    #   Elements=( 1 3 5 7 9 )
+    #   is_in 5 "${Elements[@]}"   # succeeds
+    #   is_in 6 "${Elements[@]}"   # fails
+    # --------------------------------------------------------------------------
+
+      Element="$1" && shift
+      for Arg; do test "$Element" = "$Arg" && return 0; done
+      return 1
+   }
 
 
 
@@ -501,9 +640,9 @@
 
 
 
- # -------------------
- # Bashticket commands
- # -------------------
+ # ------------------------------------------
+ # Functions implementing bashticket commands
+ # ------------------------------------------
 
    function create_or_initialise_bashtickets_repository () {
     # --------------------------------------------------------------------------
@@ -805,10 +944,14 @@
       TODAY=$(date +"%Y-%m-%d")
       sed -i "s/Date: /Date: $TODAY/" "${TEMP_FILE}"
 
-    # Apply default status from TICKET_STATUSES
+    # Mark the ticket as Open
+      sed -i "s/Open\/Closed: /Open\/Closed: Open/" "${TEMP_FILE}"
+
+    # Set ticket status to 'New' (or, more specifically, the *first* element of
+    # the TICKET_STATUSES array in the config.
       sed -i "s/Status: /Status: ${TICKET_STATUSES[0]}/" "${TEMP_FILE}"
 
-    # Save current status of ticket before manual editing
+    # Save current state of ticket before manual editing
       UNEDITED_TICKET="$(cat $TEMP_FILE)"
 
 
@@ -835,7 +978,7 @@
       fi
 
     # Let's also update the relevant milestone
-      if   test -n $PARENT_MILESTONE
+      if   test -n "$PARENT_MILESTONE"
       then update_milestones $PARENT_MILESTONE_NUM
       fi
 
@@ -1008,9 +1151,9 @@
       TODAY=$(date +"%Y-%m-%d")
 
     # Check that ticket is actually open
-      if     grep "Status: Open" $TICKET > /dev/null
-      then   :
-      else   echo "Ticket No. $TICKET is not marked as Open! Please reopen if necessary." && return 1
+      if   grep "Open/Closed: Open" $TICKET > /dev/null
+      then :
+      else error "Ticket No. $TICKET is already marked as closed ($( egrep -o "Resolution: .*$" $TICKETS | cut -d' ' -f2 ))! Aborting." && return 1
       fi
 
     # Select an appropriate resolution
@@ -1028,11 +1171,14 @@
       done
       declare +i REPLY
 
+    # Clear 'ticket status' field (since this relates to 'Open' tickets).
+      sed -i "s/Status: .*\$/Status: /" "${TICKET}"
+
     # Check if owner is set. If not, make me the owner.
-      CURRENT_OWNER=$(grep -oP "(?<=Owner: ).*" "${TICKET}")
-      WHOAMI=$(whoami)
-      WHOAMI=${WHOAMI^}   # parameter expansion: make first character uppercase
-      if test -z ${CURRENT_OWNER}   # If it's an empty string
+      CURRENT_OWNER="$(grep -oP "(?<=Owner: ).*" "${TICKET}")"
+      WHOAMI="$(whoami)"
+      WHOAMI="${WHOAMI^}"   # parameter expansion: make first character uppercase
+      if test -z "${CURRENT_OWNER}"   # If it's an empty string
       then
           sed -i "s/Owner: /Owner: $WHOAMI/" "${TICKET}"
           CURRENT_OWNER="$WHOAMI"
@@ -1056,8 +1202,8 @@
           echo "($WHOAMI)" >> "${TICKET}"
       fi
 
-    # Change status to Closed
-      sed -i "s/Status: .*/Status: Closed/" "${TICKET}"
+    # Mark as Closed
+      sed -i "s/Open\/Closed: .*/Open\/Closed: Closed/" "${TICKET}"
 
     # Save current status of ticket before manual editing
       UNEDITED_TICKET="$(cat $TICKET)"
@@ -1312,7 +1458,7 @@
       local MILESTONE_TICKETS=( $(egrep --color=never  -l "Milestone: $MILESTONE\$" *.ticket) )
 
       for  TICKET in "${MILESTONE_TICKETS[@]}"
-      do   local TICKETNAME="$(grep -l --color=never "Status: Open" "$TICKET")"
+      do   local TICKETNAME="$(grep -l --color=never 'Open/Closed: Open' "$TICKET")"
            local TICKETSUMMARY="$(grep --color=never "Summary: " "$TICKET")"
            if test -n "$TICKETNAME"
            then echo "$TICKETNAME $TICKETSUMMARY"
@@ -1354,7 +1500,7 @@
       local MILESTONE_TICKETS=( $(egrep --color=never  -l "Milestone: $MILESTONE\$" *.ticket) )
 
       for  TICKET in "${MILESTONE_TICKETS[@]}"
-      do   local TICKETNAME="$(grep -l --color=never "Status: Closed" "$TICKET")"
+      do   local TICKETNAME="$(grep -l --color=never 'Open/Closed: Closed' "$TICKET")"
            local TICKETSUMMARY="$(grep --color=never "Summary: " "$TICKET")"
            if test -n "$TICKETNAME"
            then echo "$TICKETNAME $TICKETSUMMARY"
@@ -1526,7 +1672,8 @@
 
     # Confirm called with a single argument
       if   test "$#" -eq 1
-      then display_usage edit_ticket
+      then :
+      else display_usage edit_ticket
            exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
       fi
 
@@ -1555,7 +1702,8 @@
 
     # Confirm called without arguments
       if   test "$#" -eq 1
-      then display_usage edit_milestone
+      then :
+      else display_usage edit_milestone
            exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
       fi
 
@@ -1630,9 +1778,13 @@
       else return 1
       fi
 
-      PRINTOUT="$( head -n +12 "$TICKETS_PATH/$TICKET" | sed "s/^\(...........\)\(.*\)\$/${ANSI_BLUE}\1${ANSI_YELLOW}\2${ANSI_RESET}/" )"$'\n'
-      PRINTOUT="$PRINTOUT$( head -n +13 "$TICKETS_PATH/$TICKET" | tail -n -1 | sed "s/\(...........\)\(:\)/${ANSI_BLUE}\1${ANSI_YELLOW}\2${ANSI_RESET}/" )"$'\n'
-      PRINTOUT="$PRINTOUT$( tail -n +14 "$TICKETS_PATH/$TICKET" | sed "s/^\(== $d$d$d$d-$d$d-$d$d\)/${ANSI_BOLD_ON}${ANSI_BLUE}\1${ANSI_BOLD_OFF}${ANSI_RESET}/" )"$'\n'
+      DESCRIPTION_LINE=$(grep --color=never "Description: " "$TICKETS_PATH/$TICKET" -n | cut -d: -f1 )
+      PRE_DESCRIPTION_LINE=$(( DESCRIPTION_LINE - 1 ))
+      POST_DESCRIPTION_LINE=$(( DESCRIPTION_LINE + 1 ))
+
+      PRINTOUT="$( head -n "+$PRE_DESCRIPTION_LINE" "$TICKETS_PATH/$TICKET" | sed "s/^\(...........\)\(.*\)\$/${ANSI_BLUE}\1${ANSI_YELLOW}\2${ANSI_RESET}/" )"$'\n'
+      PRINTOUT="$PRINTOUT$( head -n "+$DESCRIPTION_LINE" "$TICKETS_PATH/$TICKET" | tail -n -1 | sed "s/\(...........\)\(:\)/${ANSI_BLUE}\1${ANSI_YELLOW}\2${ANSI_RESET}/" )"$'\n'
+      PRINTOUT="$PRINTOUT$( tail -n "+$POST_DESCRIPTION_LINE" "$TICKETS_PATH/$TICKET" | sed "s/^\(== $d$d$d$d-$d$d-$d$d\)/${ANSI_BOLD_ON}${ANSI_BLUE}\1${ANSI_BOLD_OFF}${ANSI_RESET}/" )"$'\n'
       echo "$PRINTOUT" | less -R
    }
 
@@ -1656,9 +1808,12 @@
       else return 1
       fi
 
-      PRINTOUT="$( head -n +6 "$MILESTONES_PATH/$MILESTONE" )"
+      DESCRIPTION_LINE=$(grep --color=never "  Description: " "$MILESTONE" -n | cut -d: -f1 )
+      POST_DESCRIPTION_LINE=$(( DESCRIPTION_LINE + 1 ))
+
+      PRINTOUT="$( head -n "+$DESCRIPTION_LINE" "$MILESTONES_PATH/$MILESTONE" )"
       PRINTOUT="$( echo "$PRINTOUT" | sed "s/^\(.............\)\(.*\)\$/${ANSI_BLUE}\1${ANSI_YELLOW}\2${ANSI_RESET}/" )"$'\n'
-      PRINTOUT="${PRINTOUT}$( tail -n +7 "$MILESTONES_PATH/$MILESTONE" )"
+      PRINTOUT="${PRINTOUT}$( tail -n "+$POST_DESCRIPTION_LINE" "$MILESTONES_PATH/$MILESTONE" )"
       PRINTOUT="$( echo "$PRINTOUT" | sed "s/=== Open Tickets ===/${ANSI_BOLD_ON}${ANSI_RED}=== Open Tickets ===${ANSI_BOLD_OFF}${ANSI_RESET}/" )"
       PRINTOUT="$( echo "$PRINTOUT" | sed "s/=== Closed Tickets ===/${ANSI_GREEN}=== Closed Tickets ===${ANSI_RESET}/" )"
       echo "$PRINTOUT" | less -R
@@ -1694,11 +1849,11 @@
       do
 
        # Mark open tickets with a red, 'Open' tag.
-         if   grep "Status: Open" "$i" > /dev/null
+         if   grep 'Open/Closed: Open' "$i" > /dev/null
          then echo -en "$i: ${ANSI_RED}[ Open ]${ANSI_RESET} "
 
        # Mark closed tickets with a green, 'Closed' tag.
-         elif grep "Status: Closed" "$i" > /dev/null
+         elif grep 'Open/Closed: Closed' "$i" > /dev/null
          then echo -en "$i: ${ANSI_GREEN}[Closed]${ANSI_RESET} "
 
        # Mark tickets of unknown or missing status with a purple '????' tag.
@@ -1733,7 +1888,7 @@
 
       cd $TICKETS_PATH
 
-      for TICKET in $(grep --color=never -l "Status: Closed" *.ticket)
+      for TICKET in $(grep --color=never -l 'Open/Closed: Closed' *.ticket)
       do
           echo -n "$TICKET "
           grep --color=always "Resolution:" "$TICKET"        \
@@ -1770,7 +1925,7 @@
 
       for i in *.ticket
       do
-        if   grep "Status: Closed" "$i" > /dev/null
+        if   grep 'Open/Closed: Closed' "$i" > /dev/null
         then COUNT=$((COUNT + 1))
              echo -n "$i:"
              grep Summary "$i"
@@ -1804,7 +1959,7 @@
 
       for i in *.ticket
       do
-        if   grep "Status: Open" "$i" > /dev/null
+        if   grep 'Open/Closed: Open' "$i" > /dev/null
         then COUNT=$((COUNT + 1))
              echo -n "$i:"
              grep Summary "$i"
@@ -1846,7 +2001,7 @@
 
          for i in $OWNERS_TICKETS;
          do
-           if   grep "Status: Open" "$i" > /dev/null
+           if   grep 'Open/Closed: Open' "$i" > /dev/null
            then COUNT=$((COUNT + 1))
                 PRINTOUT="$PRINTOUT$i:"
                 PRINTOUT="$PRINTOUT $(grep Summary "$i")"$'\n'
@@ -1891,7 +2046,7 @@
          do
 
 
-           if   grep "Status: Open" "$i" > /dev/null
+           if   grep 'Open/Closed: Open' "$i" > /dev/null
            then COUNT=$((COUNT + 1))
                 PRINTOUT="$PRINTOUT$i:"
                 PRINTOUT="$PRINTOUT $(grep Summary "$i")"$'\n'
@@ -1941,9 +2096,9 @@
    esac   # FIXME UPDATE MENU AS APPROPRIATE
 
 
- # ---------------------------
- # Execute bashtickets command
- # ---------------------------
+ # -------------------------------------
+ # Parse and execute bashtickets command
+ # -------------------------------------
 
 
    case "$1" in
