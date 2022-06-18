@@ -1,0 +1,56 @@
+## Syntax highlighting for Bashtickets ticket files
+
+syntax bashtickets "(\.ticket)|(\.milestone)$"
+header "^( Ticket No.: )|(Milestone No.:)"
+
+# Blue ticket field headers plus trailing yellow text
+color yellow     start="^ Ticket No.: " end="$"
+color brightblue       "^ Ticket No.: "
+color yellow     start="^    Summary: " end="$"
+color brightblue       "^    Summary: "
+color yellow     start="^   Reporter: " end="$"
+color brightblue       "^   Reporter: "
+color yellow     start="^       Type: " end="$"
+color brightblue       "^       Type: "
+color yellow     start="^   Priority: " end="$"
+color brightblue       "^   Priority: "
+color yellow     start="^  Milestone: " end="$"
+color brightblue       "^  Milestone: "
+color yellow     start="^   Keywords: " end="$"
+color brightblue       "^   Keywords: "
+color yellow     start="^         Cc: " end="$"
+color brightblue       "^         Cc: "
+color yellow     start="^      Owner: " end="$"
+color brightblue       "^      Owner: "
+color yellow     start="^       Date: " end="$"
+color brightblue       "^       Date: "
+color yellow     start="^Open/Closed: " end="$"
+color brightblue       "^Open/Closed: "
+color yellow     start="^     Status: " end="$"
+color brightblue       "^     Status: "
+color yellow     start="^ Resolution: " end="$"
+color brightblue       "^ Resolution: "
+
+# Blue Description header without yellow text
+color brightblue "^Description: "
+
+# Blue milestone headers with yellow text
+color yellow     start="^Milestone No.: " end="$"
+color brightblue       "^Milestone No.: "
+color yellow     start="^  Parent Node: " end="$"
+color brightblue       "^  Parent Node: "
+color yellow     start="^        Title: " end="$"
+color brightblue       "^        Title: "
+color yellow     start="^    Startdate: " end="$"
+color brightblue       "^    Startdate: "
+color yellow     start="^     Deadline: " end="$"
+color brightblue       "^     Deadline: "
+color yellow     start="^  Description: " end="$"
+color brightblue       "^  Description: "
+
+# Open / Closed headers in milestones
+color red   "^=== Open Tickets ===$"
+color green "^=== Closed Tickets ===$"
+
+# Comment date headers
+color bold,blue "^== [[:digit:]][[:digit:]][[:digit:]][[:digit:]]-[[:digit:]][[:digit:]]-[[:digit:]][[:digit:]]$"

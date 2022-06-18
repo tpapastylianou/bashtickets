@@ -1808,14 +1808,14 @@
       else return 1
       fi
 
-      DESCRIPTION_LINE=$(grep --color=never "  Description: " "$MILESTONE" -n | cut -d: -f1 )
+      DESCRIPTION_LINE="$(grep --color=never "  Description: " "$MILESTONES_PATH/$MILESTONE" -n | cut -d: -f1 )"
       POST_DESCRIPTION_LINE=$(( DESCRIPTION_LINE + 1 ))
 
       PRINTOUT="$( head -n "+$DESCRIPTION_LINE" "$MILESTONES_PATH/$MILESTONE" )"
       PRINTOUT="$( echo "$PRINTOUT" | sed "s/^\(.............\)\(.*\)\$/${ANSI_BLUE}\1${ANSI_YELLOW}\2${ANSI_RESET}/" )"$'\n'
       PRINTOUT="${PRINTOUT}$( tail -n "+$POST_DESCRIPTION_LINE" "$MILESTONES_PATH/$MILESTONE" )"
       PRINTOUT="$( echo "$PRINTOUT" | sed "s/=== Open Tickets ===/${ANSI_BOLD_ON}${ANSI_RED}=== Open Tickets ===${ANSI_BOLD_OFF}${ANSI_RESET}/" )"
-      PRINTOUT="$( echo "$PRINTOUT" | sed "s/=== Closed Tickets ===/${ANSI_GREEN}=== Closed Tickets ===${ANSI_RESET}/" )"
+      PRINTOUT="$( echo "$PRINTOUT" | sed "s/=== Closed Tickets ===/${ANSI_BOLD_ON}${ANSI_GREEN}=== Closed Tickets ===${ANSI_BOLD_OFF}${ANSI_RESET}/" )"
       echo "$PRINTOUT" | less -R
    }
 
