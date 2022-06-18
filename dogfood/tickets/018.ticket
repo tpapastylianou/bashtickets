@@ -8,8 +8,8 @@
          Cc: 
       Owner: Tasos
        Date: 2021-12-03
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Cancelled
 Description: In bashtickets v1-2 updates (or lack thereof) were hardcoded.
 
              In v3, the user should have the opportunity to enable or disable
@@ -23,3 +23,10 @@ Description: In bashtickets v1-2 updates (or lack thereof) were hardcoded.
              Reasons why the user might prefer not to have updates: if it takes
              too long.
              
+
+
+== 2022-06-18
+I've changed my mind on this.
+I will leave automated updates on. (refreshing. as it is now called).
+If there is evidence later on that such disabling of automated refreshing is needed I may reopen this ticket.
+Closing ticket.
