@@ -15,6 +15,8 @@ features from the essential features for the MVP.
 023.ticket     Summary: Helper utils to detect if tickets/milestones have valid syntax
 028.ticket     Summary: Ensure ticket editing actions complain if single-line fields exceed 1 line
 036.ticket     Summary: Provide nano syntax highlighting for milestones and tickets
+053.ticket     Summary: Attachments
+054.ticket     Summary: Hooks
 
 === Closed Tickets ===
 

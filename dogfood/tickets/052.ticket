@@ -1,0 +1,14 @@
+ Ticket No.: 052
+    Summary: intro / demo
+   Reporter: Tasos
+       Type: Feature
+   Priority: Normal
+  Milestone: 004
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2022-06-17
+     Status: Open
+ Resolution: 
+Description: A bt intro command would be useful, acting as a quick tour, to give
+             people a basic idea of how to use bashtickets.

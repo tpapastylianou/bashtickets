@@ -1,0 +1,19 @@
+ Ticket No.: 053
+    Summary: Attachments
+   Reporter: Tasos
+       Type: Feature
+   Priority: Lowest
+  Milestone: 002
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2022-06-17
+     Status: Open
+ Resolution: 
+Description: There should be a mechanism for attachments.
+
+             In theory this doesn't need to be specified in stone, but a nice
+             system would be the advice to have another directory in your
+             bashtickets directory called attachments, which then can take the
+             form "1.1 - Myfilename.png" for attachment 1 of ticket 1, "1.2 -
+             another file.txt" for attachment two of ticket 1, etc.

@@ -1,0 +1,94 @@
+ Ticket No.: 050
+    Summary: Change bespoke open/close behaviour to generic status commands
+   Reporter: Tasos
+       Type: Task
+   Priority: Normal
+  Milestone: 001
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2022-06-11
+     Status: Open
+ Resolution: 
+Description: It makes more sense, rather than have close/(re)open subcommands,
+             to have "change status" subcommands, which select a status from a
+             selection of choices, defined in the config.
+
+             The top choice in that array can also serve as the default status,
+             used when first creating a ticket.
+
+
+             Tasks involved:
+
+             1. Add a TICKET_STATUSES array variable in the config
+
+             2. Adapt new_ticket code to read in this variable instead of assign
+                a default of "Open".
+
+             3. Create a new subcommand (status/st? change/ch? changestatus/cs?)
+                Advantage of 'change' might be that it could be applied to other
+                fields too? hm.
+
+                alter / modify may be alternative synonyms to consider.
+                Or even 'update' ... where update milestone / um would be a
+                special case of update.
+
+                Ah wait, then again, "update milestone" might cause confusion
+                with trying to change the milestone. Which is currently the job
+                of 'assign'. Need to think this through.
+
+             4. Finally, remove old open/close subcommands.
+
+                ... having said that ... it seems a bit silly not to have a
+                proper 'close' command. Maybe I could have it such that the
+                'last' status in the TICKET_STATUSES should always be a 'closey'
+                status, and retain the 'closing ticket' command which adds a
+                comment and a 'closing ticket' string.
+        
+
+
+== 2022-06-11
+Implemented 1 and 2
+
+
+== 2022-06-12
+
+I just realised with Constantina that when closing a ticket, it checks for the
+"Open" string instead of the 'default' string. This needs to be fixed too.
+
+Oh, wait, "Open" appears hardcoded in many other cases too. E.g. ticket
+categories in milestones. If I want ticket statuses to really be a thing, all
+these need to be adjusted appropriately ...
+
+Also, constantina says that "update milestone" vs "update ticket N --milestone"
+is clear enough. Therefore I could use the 'update' command, specifying the
+field to update as an option. Or, even better, maybe I could use 'refresh' for
+the "update milestones" functionality instead?
+
+
+== 2022-06-12
+
+Currently taking care of 'show_open_tickets_by_milestone'. This needs to be
+converted to a 'show_tickets_by_milestone' function, that takes a --status
+option to define which status one might want to filter by.
+
+
+== 2022-06-17
+It is becoming obvious to me that I should ensure that statuses have at least one Open and Closed option (with Closed always coming at the end)
+Or ask for 'open states' and enforce a 'closed' at the end of that array in code, rather than at the config stage.
+
+Or, better yet: STATUSES are 'open' states, RESOLUTIONS are 'closed' states, and I could have functions to 'reopen' (i.e. assign a status) or 'close' (i.e. assign a resolution).
+It may be good, then, to also have an Open/Close state. What should this be called though? 'Open/Closed'? Should I keep this as 'status' and come up with a different name for the 'open states'?
+
+PS. I note that savannah only uses open/close, and uses the word 'STATUS' for the things below:
+    Fixed / wontfix / WorksForMe / ReadyForTest / InProgress / Postponed / Confirmed / Need Info / Duplicate / Invalid
+
+In my mind, some of these are 'open states', and others are 'resolutions'.
+
+Trac uses a different logic. Statuses are fixed, e.g. new, assigned, accepted, reopened, closed. Closed tickets have a resolution. Come to think of it this is similar to what I'm suggesting above.
+
+
+
+
+
+

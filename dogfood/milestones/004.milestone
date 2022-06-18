@@ -1,0 +1,26 @@
+MileStn No.: 004
+      Title: Milestone to track all supported subcommands
+    Created: 2022-06-11
+   Deadline: 2022-07-11
+Description: Each ticket in this milestone will reflect a subcommand.
+
+
+
+=== Open Tickets ===
+
+039.ticket     Summary: list ticket/milestone
+040.ticket     Summary: lt
+041.ticket     Summary: lm
+042.ticket     Summary: init
+043.ticket     Summary: update
+044.ticket     Summary: up
+045.ticket     Summary: assign
+046.ticket     Summary: close
+047.ticket     Summary: cl
+048.ticket     Summary: reopen
+049.ticket     Summary: re
+051.ticket     Summary: refresh
+052.ticket     Summary: intro / demo
+
+=== Closed Tickets ===
+
