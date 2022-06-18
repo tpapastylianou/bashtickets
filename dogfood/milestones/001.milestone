@@ -21,7 +21,7 @@ Description: v1 relies on single commands, which are getting rather numerous,
 033.ticket     Summary: show_completed_milestones - more appropriate completion date calculation
 037.ticket     Summary: Ensure ticket modifying functions call update_milestones when necessary
 038.ticket     Summary: Consider guidlines from clig.dev
-050.ticket     Summary: Change bespoke open/close behaviour to generic status commands
+055.ticket     Summary: Update command
 
 === Closed Tickets ===
 
@@ -41,3 +41,4 @@ Description: v1 relies on single commands, which are getting rather numerous,
 031.ticket     Summary: Convert command-script dependencies to sourceable functions
 032.ticket     Summary: Ensure empty milestones shown without error
 035.ticket     Summary: Handle Ctrl-C in interactive menus appropriately
+050.ticket     Summary: Change bespoke open/close behaviour to generic status commands
