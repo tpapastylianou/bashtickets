@@ -1,0 +1,18 @@
+To enable syntax highlighting of .ticket and .milestone files in nano, copy the
+bashtickets.nanorc file provided here in a directory of your choice, and then
+'include' that file in you .nanorc file.
+
+A reasonable choice is to dump the file right into nano's directory containing
+other existing syntax-highlighting files.
+
+E.g. if your nano is installed in "/opt/nano-6.3.0" then you can do:
+
+    cp bashtickets.nanorc /opt/nano-6.3.0/share/nano/extra/
+
+
+and then make sure to uncomment the line:
+
+    include "/opt/nano-6.3.0/share/nano/extra/*.nanorc"
+
+
+in your .nanorc file.

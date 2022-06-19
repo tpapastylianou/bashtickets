@@ -1,0 +1,28 @@
+To enable syntax highlighting in vim, copy the above two files in your vim
+runtime directory, under their respective sub-directories (i.e. 'syntax' an
+'ftdetect').
+
+If the directories don't exist yet (e.g. 'ftdetect' probably does not if you've
+never created custom syntax highlighting for custom file extensions before),
+then you'll have to create it yourself.
+
+E.g. assuming:
+
+    VIMRUNTIME="/usr/share/vim/vim81"
+    BT_ROOT_DIR="/opt/bashtickets"   # i.e. where you installed bashtickets. E.g. could instead be /usr or /usr/local.
+    SYNTAXES="$BT_ROOT_DIR/share/bashtickets/syntax-highlighting"
+
+Then you can do:
+
+    # Create the syntax definition file for .ticket and .milestone filetypes
+    sudo cp "$SYNTAXES/vim/syntax/bashtickets.vim" "$VIMRUNTIME/syntax/"
+
+    # Enable autodetection of .ticket and .milestone filetypes in vim
+    sudo mkdir "$VIMRUNTIME/ftdetect"   # only necessary if ftdetect does not already exist
+    sudo cp "$SYNTAXES/vim/ftdetect/bashtickets.vim" "$VIMRUNTIME/ftdetect/"
+
+
+If you prefer not creating an ftdetect directory, you can also simply dump the
+contents of the 'ftdetect/bashtickets.vim' file straight into your .vimrc (note,
+however, that, unfortunately you cannot do the same for the
+'syntax/bashtickets.vim' file).

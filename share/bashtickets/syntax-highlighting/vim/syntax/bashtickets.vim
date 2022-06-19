@@ -20,7 +20,11 @@ syn region Yellow matchgroup=Blue start="^   Keywords" end="$"
 syn region Yellow matchgroup=Blue start="^         Cc" end="$"
 syn region Yellow matchgroup=Blue start="^      Owner" end="$"
 syn region Yellow matchgroup=Blue start="^       Date" end="$"
+
+syn region RedBox matchgroup=Yellow start=": " end="Open$"
 syn region Yellow matchgroup=Blue start="^Open/Closed" end="$"
+syn region BoldLightGreen matchgroup=BoldBlue start=": " end="Closed$"
+
 syn region Yellow matchgroup=Blue start="^     Status" end="$"
 syn region Yellow matchgroup=Blue start="^ Resolution" end="$"
 
@@ -39,11 +43,13 @@ syn match BoldGreen "^=== Closed Tickets ===$"
 syn match BoldBlue "^== [[:digit:]][[:digit:]][[:digit:]][[:digit:]]-[[:digit:]][[:digit:]]-[[:digit:]][[:digit:]]$"
 
 
-hi def Blue      ctermfg=blue
-hi def Yellow    ctermfg=yellow
-hi def BoldRed   cterm=bold ctermfg=red
-hi def BoldGreen cterm=bold ctermfg=green
-hi def BoldBlue  cterm=bold ctermfg=blue
+hi def Blue                       ctermfg=blue
+hi def Yellow                     ctermfg=yellow
+hi def BoldRed        cterm=bold  ctermfg=red
+hi def BoldGreen      cterm=bold  ctermfg=blue
+hi def BoldBlue       cterm=bold  ctermfg=blue
+hi def RedBox         cterm=bold  ctermfg=lightyellow  ctermbg=red
+hi def BoldLightGreen cterm=bold  ctermfg=lightgreen
 
 let b:current_syntax = "bashtickets"
 " vim: ts=8

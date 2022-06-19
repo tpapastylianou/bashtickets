@@ -74,7 +74,7 @@
    BT_BIN_DIR="$(dirname "$BASH_SOURCE" | xargs realpath)"
    BT_ROOT_DIR="${BT_BIN_DIR%"/bin"}"
    BT_BIN_DIR="${BT_ROOT_DIR/bin}"
-   BT_SHARE_DIR="$BT_ROOT_DIR/share"
+   BT_SHARE_DIR="$BT_ROOT_DIR/share/bashtickets"
    BT_DOC_DIR="$BT_SHARE_DIR/doc"
 
    TICKET_TEMPLATE="$BT_DOC_DIR/ticket.template"
