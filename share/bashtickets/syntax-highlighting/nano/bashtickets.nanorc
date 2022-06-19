@@ -8,93 +8,92 @@ header "^( Ticket No.: )|(Milestone No.:)"
 # whole lines except for starting fields.
 
 # Blue ticket field headers plus trailing yellow text
-color yellow     start="^ Ticket No.: " end="$"
-color brightblue       "^ Ticket No."
+color yellow    start="^ Ticket No.: " end="$"
+color lightblue       "^ Ticket No."
 
-color yellow     start="^    Summary: " end="$"
-color brightblue       "^    Summary"
+color yellow    start="^    Summary: " end="$"
+color lightblue       "^    Summary"
 
-color yellow     start="^   Reporter: " end="$"
-color brightblue       "^   Reporter"
+color yellow    start="^   Reporter: " end="$"
+color lightblue       "^   Reporter"
 
-color yellow     start="^       Type: " end="$"
-color brightblue       "^       Type"
+color yellow    start="^       Type: " end="$"
+color lightblue       "^       Type"
 
-color yellow     start="^   Priority: " end="$"
-color brightblue       "^   Priority"
+color yellow    start="^   Priority: " end="$"
+color lightblue       "^   Priority"
 
-color yellow     start="^  Milestone: " end="$"
-color brightblue       "^  Milestone"
+color yellow    start="^  Milestone: " end="$"
+color lightblue       "^  Milestone"
 
-color yellow     start="^   Keywords: " end="$"
-color brightblue       "^   Keywords"
+color yellow    start="^   Keywords: " end="$"
+color lightblue       "^   Keywords"
 
-color yellow     start="^         Cc: " end="$"
-color brightblue       "^         Cc"
+color yellow    start="^         Cc: " end="$"
+color lightblue       "^         Cc"
 
-color yellow     start="^      Owner: " end="$"
-color brightblue       "^      Owner"
+color yellow    start="^      Owner: " end="$"
+color lightblue       "^      Owner"
 
-color yellow     start="^       Date: " end="$"
-color brightblue       "^       Date"
+color yellow    start="^       Date: " end="$"
+color lightblue       "^       Date"
 
 # Open/Close is special; Open and Close have their own colours
 color yellow           start="^Open/Closed: " end="$"
-color bold,lightyellow,red   "^Open/Closed: Open"
-color bold,lightgreen        "^Open/Closed: Closed"
+color bold,lightyellow,red   "^Open/Closed: Open$"
+color bold,lightgreen        "^Open/Closed: Closed$"
 color yellow                 "^Open/Closed: "
-color brightblue             "^Open/Closed"
+color lightblue              "^Open/Closed"
 
-color yellow     start="^     Status: " end="$"
-color brightblue       "^     Status"
+color yellow    start="^     Status: " end="$"
+color lightblue       "^     Status"
 
-color yellow     start="^ Resolution: " end="$"
-color brightblue       "^ Resolution"
+color yellow    start="^ Resolution: " end="$"
+color lightblue       "^ Resolution"
 
 # Description differs slightly; only colon is yellow; remaining text is normal
-color yellow     "^Description: "
-color brightblue "^Description"
+color yellow    "^Description: "
+color lightblue "^Description"
+
+# Colour comment date headers with bold lightcyan
+color bold,lightcyan "^== [[:digit:]][[:digit:]][[:digit:]][[:digit:]]-[[:digit:]][[:digit:]]-[[:digit:]][[:digit:]]$"
 
 # Blue milestone headers with yellow text
-color yellow     start="^Milestone No.: " end="$"
-color brightblue       "^Milestone No."
+color yellow    start="^Milestone No.: " end="$"
+color lightblue       "^Milestone No."
 
-color yellow     start="^  Parent Node: " end="$"
-color brightblue       "^  Parent Node"
+color yellow    start="^  Parent Node: " end="$"
+color lightblue       "^  Parent Node"
 
-color yellow     start="^        Title: " end="$"
-color brightblue       "^        Title"
+color yellow    start="^        Title: " end="$"
+color lightblue       "^        Title"
 
-color yellow     start="^    Startdate: " end="$"
-color brightblue       "^    Startdate"
+color yellow    start="^    Startdate: " end="$"
+color lightblue       "^    Startdate"
 
-color yellow     start="^     Deadline: " end="$"
-color brightblue       "^     Deadline"
+color yellow    start="^     Deadline: " end="$"
+color lightblue       "^     Deadline"
 
-color yellow     start="^  Description: " end="$"
-color brightblue       "^  Description"
+# Description differs slightly; only colon is yellow; remaining text is normal
+color yellow    "^  Description: "
+color lightblue "^  Description"
 
-# Open / Closed headers in milestones
+# Make 'Open Tickets' and 'Closed Tickets' headers stand out
 color bold,red   "^=== Open Tickets ===$"
 color bold,green "^=== Closed Tickets ===$"
 
-# Comment date headers
-color bold,blue "^== [[:digit:]][[:digit:]][[:digit:]][[:digit:]]-[[:digit:]][[:digit:]]-[[:digit:]][[:digit:]]$"
-
-# Colour a field line red if it's empty and doesn't have the required space
-# after the colon
-color bold,italic,black,lightred "^ Ticket No.:($|[^ ].*$)"
-color bold,italic,black,lightred "^    Summary:($|[^ ].*$)"
-color bold,italic,black,lightred "^   Reporter:($|[^ ].*$)"
-color bold,italic,black,lightred "^       Type:($|[^ ].*$)"
-color bold,italic,black,lightred "^   Priority:($|[^ ].*$)"
-color bold,italic,black,lightred "^  Milestone:($|[^ ].*$)"
-color bold,italic,black,lightred "^   Keywords:($|[^ ].*$)"
-color bold,italic,black,lightred "^         Cc:($|[^ ].*$)"
-color bold,italic,black,lightred "^      Owner:($|[^ ].*$)"
-color bold,italic,black,lightred "^       Date:($|[^ ].*$)"
-color bold,italic,black,lightred "^Open/Closed:($|[^ ].*$)"
-color bold,italic,black,lightred "^     Status:($|[^ ].*$)"
-color bold,italic,black,lightred "^ Resolution:($|[^ ].*$)"
-color bold,italic,black,lightred "^Description:($|[^ ].*$)"
-
+# Mark fields with missing space after colon as errors
+color bold,black,lightred "^ Ticket No.:($|[^ ].*$)"
+color bold,black,lightred "^    Summary:($|[^ ].*$)"
+color bold,black,lightred "^   Reporter:($|[^ ].*$)"
+color bold,black,lightred "^       Type:($|[^ ].*$)"
+color bold,black,lightred "^   Priority:($|[^ ].*$)"
+color bold,black,lightred "^  Milestone:($|[^ ].*$)"
+color bold,black,lightred "^   Keywords:($|[^ ].*$)"
+color bold,black,lightred "^         Cc:($|[^ ].*$)"
+color bold,black,lightred "^      Owner:($|[^ ].*$)"
+color bold,black,lightred "^       Date:($|[^ ].*$)"
+color bold,black,lightred "^Open/Closed:($|[^ ].*$)"
+color bold,black,lightred "^     Status:($|[^ ].*$)"
+color bold,black,lightred "^ Resolution:($|[^ ].*$)"
+color bold,black,lightred "^Description:($|[^ ].*$)"
