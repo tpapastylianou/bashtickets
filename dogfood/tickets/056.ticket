@@ -1,0 +1,30 @@
+ Ticket No.: 056
+    Summary: Add header switch to show_open_tickets_by_milestones
+   Reporter: Tasos
+       Type: Feature
+   Priority: Normal
+  Milestone: 001
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2022-06-19
+     Status: Open
+ Resolution: 
+Description: At present, show_open_tickets_by_milestones simply emits the
+             desired tickets. For the most part, this is the desired behaviour,
+             particularly since this script is used internally to refresh
+             milestones.
+
+             However, it would be nice if it could accept a switch to also
+             generate a 'header', of the form:
+
+                 === Milestone: <Title of Milestone here> ===
+                 1.ticket
+                 2.ticket
+
+             etc.
+
+             The reason for this is that it makes it much friendlier output in
+             case a user wanted to try something like:
+
+                 for i in {1..5}; do bt show_open_tickets_by_milestone $i; done 

@@ -22,6 +22,7 @@ Description: v1 relies on single commands, which are getting rather numerous,
 037.ticket     Summary: Ensure ticket modifying functions call update_milestones when necessary
 038.ticket     Summary: Consider guidlines from clig.dev
 055.ticket     Summary: Update command
+056.ticket     Summary: Add header switch to show_open_tickets_by_milestones
 
 === Closed Tickets ===
 

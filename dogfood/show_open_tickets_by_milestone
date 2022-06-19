@@ -39,7 +39,7 @@ fi
 
 cd $TICKETS_PATH
 
-MILESTONE_TICKETS=( $(egrep --color=never  -l "Milestone: $MILESTONE\$" *.ticket) )
+MILESTONE_TICKETS=( $(egrep --color=never  -l "Milestone: ${MILESTONE%.milestone}\$" *.ticket) )
 
 for  TICKET in "${MILESTONE_TICKETS[@]}"
 do   TICKETNAME="$(grep -l --color=never "Status: Open" "$TICKET")"
