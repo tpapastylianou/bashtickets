@@ -19,6 +19,7 @@ Description: There are some tasks that are effectively checks that can only be
 017.ticket     Summary: Colour support
 027.ticket     Summary: Ensure appropriate checking of correct input arguments in all operations
 034.ticket     Summary: Ensure all local variables in functions have local scope
+057.ticket     Summary: Assess with shellcheck / bash strict mode
 
 === Closed Tickets ===
 

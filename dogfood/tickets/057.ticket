@@ -1,0 +1,22 @@
+ Ticket No.: 057
+    Summary: Assess with shellcheck / bash strict mode
+   Reporter: Tasos
+       Type: Task
+   Priority: Normal
+  Milestone: 003
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2022-06-20
+     Status: Open
+ Resolution: 
+Description: After I'm done with all the code I want to implement, I would like
+             to run it through shellcheck to see if any of the suggestions would
+             be useful. 
+
+             There was a nice article on HN, with a couple of tools more
+             generally mentioned in the comments; the article itself was about
+             Type-ish (https://news.ycombinator.com/item?id=31797251), which is
+             probably less useful to me, but the comments in that HN
+             post have lots of good suggestions to go through after I'm
+             done with the initial v1 code.
