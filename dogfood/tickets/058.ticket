@@ -1,0 +1,38 @@
+ Ticket No.: 058
+    Summary: Implement 'newticket' and '"new ticket"' command forms
+   Reporter: Tasos
+       Type: Task
+   Priority: Normal
+  Milestone: 001
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2022-07-07
+     Status: Open
+ Resolution: 
+Description: Currently the following commands are available (or planned):
+
+             - <action> <target-type> : where <action> is new/view/edit/list
+                                        etc, and <target-type> is 'ticket' or
+                                        'milestone'
+
+             - <a><t> : Where <a> is the initial of the above actions, and <t>
+                        is the initial of the above target types. e.g. 'nt' for
+                        'new ticket'.
+
+             However, I should also consider two more command styles:
+
+             - "<action> <target-type>" : i.e. passed as a single string
+                                          argument containing a space, rather
+                                          than as two arguments
+
+             - "<action><target-type>" : i.e. single word, e.g. 'newticket'.
+                                         This has the advantage that
+                                         autocompletion will also work
+                                         meaningfully after typing, e.g., 'new'
+                                         without needing a space.
+
+             This creates a full-proof and consistent interface. There's a
+             slight risk it might confuse users, but at the end I think the
+             'newticket' and 'nt' methods will be the ones that end up used the
+             most.
