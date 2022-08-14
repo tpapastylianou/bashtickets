@@ -868,7 +868,7 @@
       fi
 
 
-      cd $TICKETS_PATH
+      cd "$TICKETS_PATH"
 
 
     # If a parent milestone has been specified, check that this is valid
@@ -1043,7 +1043,7 @@
       fi
 
 
-      cd $MILESTONES_PATH
+      cd "$MILESTONES_PATH"
 
 
     # If a parent milestone has been specified, check that this is valid before
@@ -1134,7 +1134,7 @@
       fi
 
 
-      cd $TICKETS_PATH
+      cd "$TICKETS_PATH"
 
 
     # Check specified ticket is valid
@@ -1239,7 +1239,7 @@
       fi
 
 
-      cd $TICKETS_PATH
+      cd "$TICKETS_PATH"
 
 
     # Check the provided ticket is valid
@@ -1382,7 +1382,7 @@
 
       if   test "${#ARGS[@]}" -eq 0                         # function was called without inputs
 
-      then ARGS=( $MILESTONES_PATH/*.milestone )            # Collect all milestone filenames
+      then ARGS=( "$MILESTONES_PATH"/*.milestone )          # Collect all milestone filenames
            for  i in $( seq 0 "$(( ${#ARGS[@]} - 1))" )     # loop from index 0 to N-1
            do   ARGS["$i"]="${ARGS[$i]#$MILESTONES_PATH/}"  # Remove path prefix
                 if   is_valid_milestone "${ARGS[$i]}"
@@ -1452,7 +1452,7 @@
       fi
 
 
-      cd $TICKETS_PATH
+      cd "$TICKETS_PATH"
 
 
       local MILESTONE_TICKETS=( $(egrep --color=never  -l "Milestone: $MILESTONE\$" *.ticket) )
@@ -1494,7 +1494,7 @@
       fi
 
 
-      cd $TICKETS_PATH
+      cd "$TICKETS_PATH"
 
 
       local MILESTONE_TICKETS=( $(egrep --color=never  -l "Milestone: $MILESTONE\$" *.ticket) )
@@ -1538,7 +1538,7 @@
       local d="[[:digit:]]"
 
 
-      cd $MILESTONES_PATH
+      cd "$MILESTONES_PATH"
 
 
       for i in *.milestone
@@ -1614,7 +1614,7 @@
       local d="[[:digit:]]"   # for convenience in later regular expressions
 
 
-      cd $MILESTONES_PATH
+      cd "$MILESTONES_PATH"
 
 
       for i in *.milestone
@@ -1842,7 +1842,7 @@
       fi
 
 
-      cd $TICKETS_PATH
+      cd "$TICKETS_PATH"
 
 
       for i in *.ticket
@@ -1886,7 +1886,7 @@
 
       local TICKET
 
-      cd $TICKETS_PATH
+      cd "$TICKETS_PATH"
 
       for TICKET in $(grep --color=never -l 'Open/Closed: Closed' *.ticket)
       do
@@ -1920,7 +1920,7 @@
       fi
 
 
-      cd $TICKETS_PATH
+      cd "$TICKETS_PATH"
       local COUNT=0
 
       for i in *.ticket
@@ -1954,7 +1954,7 @@
            exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
       fi
 
-      cd $TICKETS_PATH
+      cd "$TICKETS_PATH"
       local COUNT=0
 
       for i in *.ticket
@@ -1988,7 +1988,7 @@
            exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
       fi
 
-      cd $TICKETS_PATH
+      cd "$TICKETS_PATH"
 
       local OWNERS="$( grep --color=never 'Owner:' *.ticket | cut -d: -f3 | cut -b 2- | sort -u )"
 
@@ -2033,7 +2033,7 @@
       fi
 
 
-      cd $TICKETS_PATH
+      cd "$TICKETS_PATH"
 
       for PRIORITY in Lowest Normal Important Urgent Highest
       do
