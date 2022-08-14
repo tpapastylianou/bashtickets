@@ -13,7 +13,7 @@ function _bashtickets () {
 
 
   if   test "$CURRENT_WORD_INDEX" -eq 1   # dealing with a subcommand
-  then COMPREPLY=( $( compgen -W "help init edit view usage add close new nt nm" $CURRENT_WORD ) )
+  then COMPREPLY=( $( compgen -W "help init edit view usage add close new nt newticket nm newmilestone" $CURRENT_WORD ) )
   fi
 }
 
