@@ -835,7 +835,7 @@
 
       local PARENT_MILESTONE
       local PARENT_MILESTONE_NUM
-      local PARENT_FILESTONE_FILE
+      local PARENT_MILESTONE_FILE
       local LAST_TICKET_NUM
       local NEW_TICKET_NUM
       local NEW_TICKET_FILE
@@ -894,7 +894,7 @@
       else   NEW_TICKET_NUM=1
       fi
 
-      TEMP_FILE="$(tempfile)"
+      TEMP_FILE="$(tempfile).ticket"
       NEW_TICKET_FILE="${NEW_TICKET_NUM}.ticket"
 
 
@@ -952,7 +952,7 @@
       sed -i "s/Status: /Status: ${TICKET_STATUSES[0]}/" "${TEMP_FILE}"
 
     # Save current state of ticket before manual editing
-      UNEDITED_TICKET="$(cat $TEMP_FILE)"
+      UNEDITED_TICKET="$(cat "$TEMP_FILE")"
 
 
     # Open the resulting file for editing (see 'editor' function), placing the
@@ -960,7 +960,7 @@
 
       editor "${TEMP_FILE}" 2 14
 
-      EDITED_TICKET="$(cat $TEMP_FILE)"
+      EDITED_TICKET="$(cat "$TEMP_FILE")"
 
       if   test "$UNEDITED_TICKET" = "$EDITED_TICKET"
       then error "Error: No edits detected."
@@ -1008,7 +1008,7 @@
 
       local PARENT_MILESTONE
       local PARENT_MILESTONE_NUM
-      local PARENT_FILESTONE_FILE
+      local PARENT_MILESTONE_FILE
       local LAST_MILESTONE_NUM
       local NEW_MILESTONE_NUM
       local NEW_MILESTONE_FILE
@@ -1069,7 +1069,7 @@
       else   NEW_MILESTONE_NUM=1
       fi
 
-      TEMP_FILE="$(tempfile)"
+      TEMP_FILE="$(tempfile).milestone"
       NEW_MILESTONE_FILE="${NEW_MILESTONE_NUM}.milestone"
 
     # Create a new milestone from template
@@ -1090,7 +1090,7 @@
       sed -i "s/Deadline: /Deadline: $DEFAULT_DEADLINE/" "${TEMP_FILE}"
 
     # Save current status of ticket before manual editing
-      UNEDITED_MILESTONE="$(cat $TEMP_FILE)"
+      UNEDITED_MILESTONE="$(cat "$TEMP_FILE")"
 
 
     # Open the resulting file for editing (see 'editor' function), placing the cursor
@@ -1098,7 +1098,7 @@
 
       editor "${TEMP_FILE}" 3 16
 
-      EDITED_MILESTONE="$(cat $TEMP_FILE)"
+      EDITED_MILESTONE="$(cat "$TEMP_FILE")"
 
       if   test "$UNEDITED_MILESTONE" = "$EDITED_MILESTONE"
       then error "Error: No edits detected."
@@ -2082,6 +2082,7 @@
        ( "update"  | "up" | "show"   | "sh"     | "list"   | "ls" | "add"  | \
          "comment" | "a"  | "m"      | "assign" | "close"  | "cl" | "open" | \
          "reopen"  | "re" | "op"     | "new"    | "create" | "nt" | "ct"   | \
+         "newticket" | "newmilestone" | \
          "nm"      | "cm" | "status" | "st"     | "remove" | "rm" | "edit" | \
          "et"      | "em" | "view"   | "vt"     | "vm"  )
 
@@ -2109,8 +2110,8 @@
        ("close" | "cl")                     shift && trycatch close_ticket_with_comment   "$@" $EXIT_STATUS__FAILED_TO_CLOSE_TICKET                ;;
        ("open" | "reopen" | "re" | "op" )   shift && trycatch reopen_ticket               "$@" $EXIT_STATUS__FAILED_TO_REOPEN_TICKET               ;;
        ("new" | "create" )                  shift && trycatch new_ticket_or_milestone     "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET_OR_MILESTONE  ;;
-       ("nt" | "ct" )                       shift && trycatch new_ticket                  "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET               ;;
-       ("nm" | "cm" )                       shift && trycatch new_milestone               "$@" $EXIT_STATUS__FAILED_TO_CREATE_MILESTONE            ;;
+       ("nt" | "ct" | "newticket" )         shift && trycatch new_ticket                  "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET               ;;
+       ("nm" | "cm" | "newmilestone" )      shift && trycatch new_milestone               "$@" $EXIT_STATUS__FAILED_TO_CREATE_MILESTONE            ;;
        ("init")                             shift && trycatch create_or_initialise_bashtickets_repository "$@" $EXIT_STATUS__FAILED_TO_CREATE_OR_INITIALIZE_REPOSITORY ;;
        ("help" | "h")                       display_help ;;
        ("status" | "st")                    echo "Displaying milestone status (all/open/closed)...TODO" ;;
