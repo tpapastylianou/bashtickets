@@ -1,5 +1,5 @@
 To enable syntax highlighting in vim, copy the above two files in your vim
-runtime directory, under their respective sub-directories (i.e. 'syntax' an
+runtime directory, under their respective sub-directories (i.e. 'syntax' and
 'ftdetect').
 
 If the directories don't exist yet (e.g. 'ftdetect' probably does not if you've
