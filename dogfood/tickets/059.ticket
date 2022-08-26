@@ -1,0 +1,20 @@
+ Ticket No.: 059
+    Summary: Add options bypassing menus in all relevant functions
+   Reporter: Tasos
+       Type: Task
+   Priority: Normal
+  Milestone: 001
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2022-08-26
+     Status: Open
+ Resolution: 
+Description: At the moment most functions are interactive, relying on 'select'
+             menus.
+
+             For full scriptability, it should be possible for all interactive
+             menus to be overridden by equivalent keyval options.
+
+             Not that process_optargs has been implemented, this should be a
+             relatively simple change to implement in existing functions.
