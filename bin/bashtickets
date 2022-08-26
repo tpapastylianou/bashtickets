@@ -172,112 +172,139 @@
 
 
    function process_optargs () {
-     # -------------------------------------------------------------------------
-     # Used inside a (parent) function to parse its input arguments into
-     # arguments and options.
-     #
-     # The intended way to call it is with "$@" as the argument, which
-     # effectively passes the parent function's input arguments down to this
-     # function for processing.
-     #
-     # This function expects the OPTIONS and ARGS variables to be defined in the
-     # parent function as a local associative array and local indexed array
-     # respectively. These will be populated with options and arguments
-     # respectively.
-     #
-     # For the function to work properly, the parent function must also define
-     # the following local variables:
-     #
-     #  • VALID_SHORT_FLAG_OPTIONS
-     #  • VALID_LONG_FLAG_OPTIONS
-     #  • VALID_SHORT_KEYVAL_OPTIONS
-     #  • VALID_LONG_KEYVAL_OPTIONS
-     #  • COMMAND_NAME
-     #
-     # These are only inspected for validation purposes, and will not be
-     # modified in the parent function.
-     # -------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    # Used inside a (caller) function to parse its input arguments into
+    # arguments and options.
+    #
+    # The intended way to call it is with "$@" as the argument, which
+    # effectively passes the caller function's input arguments down to this
+    # function for processing.
+    #
+    # This function expects the OPTIONS and ARGS variables to be defined in the
+    # caller function as a local associative array and local indexed array
+    # respectively. These will be populated with options and arguments
+    # respectively.
+    #
+    # For the function to work properly, the caller function must also define
+    # the following local variables:
+    #  • The variable COMMAND_NAME, specifying the name of the caller function
+    #  • The following string arrays:
+    #    • VALID_SHORT_FLAG_OPTIONS
+    #    • VALID_LONG_FLAG_OPTIONS
+    #    • VALID_SHORT_KEYVAL_OPTIONS
+    #    • VALID_LONG_KEYVAL_OPTIONS
+    #
+    # These are only inspected for validation purposes, and will not be
+    # modified in the caller function.
+    #
+    # The individual string elements in the 'keyval' arrays must correspond to
+    # the same option for the same index, as this is used to check that
+    # equivalent short and long keyval options have not been used
+    # simultaneously.
+    #
+    # The 'flag' arrays do not undergo such a check since there is no
+    # possibility of conflict from simultaneous use, so strictly speaking there
+    # is no need to arrange the two arrays in the same order; however, it is
+    # still advised to do so for the sake of symmetry.
+    # -------------------------------------------------------------------------
 
-     # Helper local functions
-       local OPTION_KEY    # Holds a 'key' string when populating the OPTIONS associative array with an option token
-       local OPTION_VALUE  # Holds a 'value' when populating the OPTIONS associative array with an option token
-       local OPTION_SHIFT  # Used to remove the appropriate number of tokens from the list of input arguments, after an option has been processed.
-       local STILL_PROCESSING_OPTIONS=true   # Turned 'off' when '--' is passed as an argument
+    # Helper local functions
+      local OPTION_KEY    # Holds a 'key' string when populating the OPTIONS associative array with an option token
+      local OPTION_VALUE  # Holds a 'value' when populating the OPTIONS associative array with an option token
+      local OPTION_SHIFT  # Used to remove the appropriate number of tokens from the list of input arguments, after an option has been processed.
+      local STILL_PROCESSING_OPTIONS=true   # Turned 'off' when '--' is passed as an argument
 
-       while test ${#@} -gt 0
-       do
-           # Stop processing options if given '--' by itself
-             if   test "$1" = "--"
-             then STILL_PROCESSING_OPTIONS=false
-                  shift && continue
+      while test ${#@} -gt 0
+      do
+          # Stop processing options if given '--' by itself
+            if   test "$1" = "--"
+            then STILL_PROCESSING_OPTIONS=false
+                 shift && continue
 
-           # Process flag option in long form if valid
-             elif $STILL_PROCESSING_OPTIONS &&
-                  test "${1:0:2}" = "--"   &&
-                  is_in "$1" "${VALID_LONG_FLAG_OPTIONS[@]}"
-             then OPTION_KEY="$1"; OPTION_VALUE="On"; OPTION_SHIFT=1
+          # Process flag option in long form if valid
+            elif $STILL_PROCESSING_OPTIONS &&
+                 test "${1:0:2}" = "--"   &&
+                 is_in "$1" "${VALID_LONG_FLAG_OPTIONS[@]}"
+            then OPTION_KEY="$1"; OPTION_VALUE="On"; OPTION_SHIFT=1
 
-           # Process key-value option in long form if valid
-             elif $STILL_PROCESSING_OPTIONS &&
-                  test "${1:0:2}" = "--"   &&
-                  is_in "${1%=*}" "${VALID_LONG_KEYVAL_OPTIONS[@]}"
-             then if   test "$( echo "$1" | tr -s [:alpha:] Y )" = "--Y"                # check if first token is of form '--optionname'
-                  then OPTION_KEY="$1"; OPTION_VALUE="$2"; OPTION_SHIFT=2
-                  elif test "$( echo "$1" | tr -s [:alpha:] Y | cut -b -4 )" = "--Y="   # check if first token is of form '--optionname='
-                  then OPTION_KEY="$(   echo "$1" | cut -d= -f1 )"
-                       OPTION_VALUE="$( echo "$1" | cut -d= -f2 )"
-                       OPTION_SHIFT=1
-                  else error "Error: '$1' seems not to be a valid first token for a long form key value option?"
-                  fi
+          # Process key-value option in long form if valid
+            elif $STILL_PROCESSING_OPTIONS &&
+                 test "${1:0:2}" = "--"   &&
+                 is_in "${1%=*}" "${VALID_LONG_KEYVAL_OPTIONS[@]}"
+            then if   test "$( echo "$1" | tr -s [:alpha:] Y )" = "--Y"                # check if first token is of form '--optionname'
+                 then OPTION_KEY="$1"; OPTION_VALUE="$2"; OPTION_SHIFT=2
+                 elif test "$( echo "$1" | tr -s [:alpha:] Y | cut -b -4 )" = "--Y="   # check if first token is of form '--optionname='
+                 then OPTION_KEY="$(   echo "$1" | cut -d= -f1 )"
+                      OPTION_VALUE="$( echo "$1" | cut -d= -f2 )"
+                      OPTION_SHIFT=1
+                 else error "Error: '$1' seems not to be a valid first token for a long form key value option?"
+                 fi
 
-           # If a long-form option is detected but is not valid, raise an error
-             elif $STILL_PROCESSING_OPTIONS &&
-                  test "${1:0:2}" = "--"
-             then error "Error: Unknown option '${1%=*}' passed to $COMMAND_NAME" && return 1
+          # If a long-form option is detected but is not valid, raise an error
+            elif $STILL_PROCESSING_OPTIONS &&
+                 test "${1:0:2}" = "--"
+            then error "Error: Unknown option '${1%=*}' passed to $COMMAND_NAME" && return 1
 
-           # Process key-value option in short form if valid
-             elif $STILL_PROCESSING_OPTIONS &&
-                  test "${1:0:1}" = "-"    &&
-                  is_in "${1:0:2}" "${VALID_SHORT_KEYVAL_OPTIONS[@]}"
-             then if   test ${#1} -eq 2   # Check if option key is contiguous with value or not and assign accordingly
-                  then OPTION_KEY="$1"      ; OPTION_VALUE="$2"    ; OPTION_SHIFT=2
-                  else OPTION_KEY="${1:0:2}"; OPTION_VALUE="${1:2}"; OPTION_SHIFT=1
-                  fi
+          # Process key-value option in short form if valid
+            elif $STILL_PROCESSING_OPTIONS &&
+                 test "${1:0:1}" = "-"    &&
+                 is_in "${1:0:2}" "${VALID_SHORT_KEYVAL_OPTIONS[@]}"
+            then if   test ${#1} -eq 2   # Check if option key is contiguous with value or not and assign accordingly
+                 then OPTION_KEY="$1"      ; OPTION_VALUE="$2"    ; OPTION_SHIFT=2
+                 else OPTION_KEY="${1:0:2}"; OPTION_VALUE="${1:2}"; OPTION_SHIFT=1
+                 fi
 
-           # Process flag option in short form if valid
-             elif $STILL_PROCESSING_OPTIONS &&
-                  test "${1:0:1}" = "-"    &&
-                  test ${#1} -eq 2         &&
-                  is_in "$1" "${VALID_SHORT_FLAG_OPTIONS[@]}"
-             then OPTION_KEY="$1"; OPTION_VALUE="On"; OPTION_SHIFT=1
+          # Process flag option in short form if valid
+            elif $STILL_PROCESSING_OPTIONS &&
+                 test "${1:0:1}" = "-"    &&
+                 test ${#1} -eq 2         &&
+                 is_in "$1" "${VALID_SHORT_FLAG_OPTIONS[@]}"
+            then OPTION_KEY="$1"; OPTION_VALUE="On"; OPTION_SHIFT=1
 
-           # If concatenated short-form flags are detected, split and reprocess
-             elif $STILL_PROCESSING_OPTIONS &&
-                  test "${1:0:1}" = "-"    &&
-                  is_in "-${1:1:1}" "${VALID_SHORT_FLAG_OPTIONS[@]}"
-             then set -- "${1:0:2}" "-${1:2}" "${@:2}"   # split joined flags
-                  continue
+          # If concatenated short-form flags are detected, split and reprocess
+            elif $STILL_PROCESSING_OPTIONS &&
+                 test "${1:0:1}" = "-"    &&
+                 is_in "-${1:1:1}" "${VALID_SHORT_FLAG_OPTIONS[@]}"
+            then set -- "${1:0:2}" "-${1:2}" "${@:2}"   # split joined flags
+                 continue
 
-           # If a short-form option is detected but is not valid, raise an error
-             elif $STILL_PROCESSING_OPTIONS &&
-                  test "${1:0:1}" = "-"    &&
-                  test ${#1} -gt 1
-             then error "Error: Unknown option '${1:0:2}' passed to $COMMAND_NAME" && return 1
+          # If a short-form option is detected but is not valid, raise an error
+            elif $STILL_PROCESSING_OPTIONS &&
+                 test "${1:0:1}" = "-"    &&
+                 test ${#1} -gt 1
+            then error "Error: Unknown option '${1:0:2}' passed to $COMMAND_NAME" && return 1
 
-           # All option scenarios covered; process next token as a normal argument.
-             else ARGS[${#ARGS[@]}]="$1"   # i.e. append at end of ARGS array
-                  shift && continue
-             fi
-
-
-           # If we're here it means an option has been processed
-             OPTIONS["$OPTION_KEY"]="$OPTION_VALUE"
-             shift $OPTION_SHIFT
-       done
+          # All option scenarios covered; process next token as a normal argument.
+            else ARGS[${#ARGS[@]}]="$1"   # i.e. append at end of ARGS array
+                 shift && continue
+            fi
 
 
-     # By this points the OPTIONS and ARGS arrays have been populated
-     # and will be accessed by the parent function after this one returns.
+          # If we're here it means an option has been processed
+            OPTIONS["$OPTION_KEY"]="$OPTION_VALUE"
+            shift $OPTION_SHIFT
+      done
+
+
+    # Confirm that there are is no simultaneous use of equivalent short/long
+    # keyval options
+      local -i i
+      local SHORT_OPT
+      local LONG_OPT
+      local -a KEYS=( "${!OPTIONS[@]}" )
+      for (( i=0 ; i<${#KEYS[@]} ; i++ ))
+      do
+           SHORT_OPT="${VALID_SHORT_KEYVAL_OPTIONS[$i]}"
+           LONG_OPT="${VALID_LONG_KEYVAL_OPTIONS[$i]}"
+           if   is_in "$SHORT_OPT" "${KEYS[@]}" && is_in "$LONG_OPT" "${KEYS[@]}"
+           then error "Error: Cannot provide both '$SHORT_OPT' and '$LONG_OPT' options at the same time!" && return 1
+           fi
+      done
+
+
+    # By this points the OPTIONS and ARGS arrays have been populated
+    # and will be accessed by the parent function after this one returns.
+
    }
 
 
@@ -1073,14 +1100,8 @@
 
 
     # Validate input arguments
-      if   is_in '-p' "${!OPTIONS[@]}" && is_in '--parent' "${!OPTIONS[@]}"
-      then error "Error: Cannot provide both '-p' and '--parent' at the same time!"
-           echo && display_usage
-           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
-      elif is_in '-p' "${!OPTIONS[@]}"
-      then PARENT_MILESTONE="${OPTIONS[-p]}"
-      elif is_in '--parent' "${!OPTIONS[@]}"
-      then PARENT_MILESTONE="${OPTIONS[--parent]}"
+      if   is_in '-p'       "${!OPTIONS[@]}" ;  then PARENT_MILESTONE="${OPTIONS[-p]}"
+      elif is_in '--parent' "${!OPTIONS[@]}" ;  then PARENT_MILESTONE="${OPTIONS[--parent]}"
       fi
 
       if   test ${#ARGS[@]} -eq 0   # no arguments provided
