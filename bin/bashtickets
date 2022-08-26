@@ -873,24 +873,34 @@
       local EDITED_TICKET
 
 
-    # Check if a parent milestone has been specified (and generally if the command
-    # was called with correct syntax)
+    # Process input arguments
+      local -A OPTIONS
+      local -a ARGS
+      local VALID_SHORT_FLAG_OPTIONS=( )
+      local VALID_LONG_FLAG_OPTIONS=( )
+      local VALID_SHORT_KEYVAL_OPTIONS=( -m      )
+      local VALID_LONG_KEYVAL_OPTIONS=( --milestone )
+      local COMMAND_NAME="new_ticket"
 
-      if   test ${#@} -eq 0                               # no arguments provided
+      if   process_optargs "$@"
       then :
+      else exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      fi
 
-      elif test ${#@} -eq 1 && test "${1:0:2}" = "-m"    # e.q. -m1
-      then PARENT_MILESTONE="${1:2}"
 
-      elif test ${#@} -eq 2 && test "$1" = "-m"          # e.g. -m 1
-      then PARENT_MILESTONE="$2"
+    # Validate input arguments
+      if   is_in '-m' "${!OPTIONS[@]}" && is_in '--milestone' "${!OPTIONS[@]}"
+      then error "Error: Cannot provide both '-m' and '--milestone' at the same time!"
+           echo && display_usage
+           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      elif is_in '-m' "${!OPTIONS[@]}"
+      then PARENT_MILESTONE="${OPTIONS[-m]}"
+      elif is_in '--milestone' "${!OPTIONS[@]}"
+      then PARENT_MILESTONE="${OPTIONS[--milestone]}"
+      fi
 
-      elif test ${#@} -eq 1 && test "${1:0:12}" = "--milestone="   # e.g. --milestone=1
-      then PARENT_MILESTONE="${1:12}"
-
-      elif test ${#@} -eq 2 && test "$1" = "--milestone"           # e.g. --milestone 1
-      then PARENT_MILESTONE="$2"
-
+      if   test ${#ARGS[@]} -eq 0   # no arguments provided
+      then :
       else error "Error: Incorrect arguments provided to new_ticket function"
            echo && display_usage
            exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
