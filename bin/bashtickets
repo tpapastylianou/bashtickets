@@ -227,13 +227,13 @@
                   then OPTION_KEY="$(   echo "$1" | cut -d= -f1 )"
                        OPTION_VALUE="$( echo "$1" | cut -d= -f2 )"
                        OPTION_SHIFT=1
-                  else error "'$1' seems not to be a valid first token for a long form key value option?"
+                  else error "Error: '$1' seems not to be a valid first token for a long form key value option?"
                   fi
 
            # If a long-form option is detected but is not valid, raise an error
              elif $STILL_PROCESSING_OPTIONS &&
                   test "${1:0:2}" = "--"
-             then error "Unknown option '${1%=*}' passed to $COMMAND_NAME" && return 1
+             then error "Error: Unknown option '${1%=*}' passed to $COMMAND_NAME" && return 1
 
            # Process key-value option in short form if valid
              elif $STILL_PROCESSING_OPTIONS &&
@@ -262,7 +262,7 @@
              elif $STILL_PROCESSING_OPTIONS &&
                   test "${1:0:1}" = "-"    &&
                   test ${#1} -gt 1
-             then error "Unknown option '${1:0:2}' passed to $COMMAND_NAME" && return 1
+             then error "Error: Unknown option '${1:0:2}' passed to $COMMAND_NAME" && return 1
 
            # All option scenarios covered; process next token as a normal argument.
              else ARGS[${#ARGS[@]}]="$1"   # i.e. append at end of ARGS array
@@ -320,8 +320,8 @@
 
        then   :   # i.e. do nothing
 
-       else   error "Error: did not detect a valid installation of bashtickets."
-              error "Please re-install and try again."
+       else   error "Error: Did not detect a valid installation of bashtickets."
+              error "       Please re-install and try again."
               return 1
        fi
    }
@@ -838,8 +838,8 @@
       case "$1" in
           ("ticket")     shift && new_ticket    "$@" ;;
           ("milestone")  shift && new_milestone "$@" ;;
-          (*)            error "Error: invalid argument given to 'new'."
-                         error "Valid arguments are 'ticket' or 'milestone'."
+          (*)            error "Error: Invalid argument given to 'new'."
+                         error "       Valid arguments are 'ticket' or 'milestone'."
                          return 1 ;;
       esac
    }
@@ -907,7 +907,7 @@
       then PARENT_MILESTONE_FILE="${PARENT_MILESTONE%.milestone}.milestone"
            if   is_valid_milestone "$PARENT_MILESTONE"
            then PARENT_MILESTONE_NUM="${PARENT_MILESTONE_FILE%.milestone}"
-           else error "The specified parent milestone ('$PARENT_MILESTONE_FILE') does not exist in $MILESTONES_PATH. Aborting."
+           else error "Error: The specified parent milestone ('$PARENT_MILESTONE_FILE') does not exist in $MILESTONES_PATH. Aborting."
                 return 1
            fi
       fi
@@ -947,7 +947,7 @@
           if   test $REPLY -gt 0 && test $REPLY -le ${#TICKET_TYPES[@]}
           then sed -i "s/Type: /Type: $TICKET_TYPE/" "${TEMP_FILE}"
                break
-          else error "Invalid selection, please chose a number between 1 and ${#TICKET_TYPES[@]}" && return 1
+          else error "Error: Invalid selection, please chose a number between 1 and ${#TICKET_TYPES[@]}" && return 1
           fi
       done
       declare +i REPLY
@@ -961,7 +961,7 @@
           if   test $REPLY -gt 0 && test $REPLY -le ${#TICKET_PRIORITY_LEVELS[@]}
           then sed -i "s/Priority: /Priority: ${TICKET_PRIORITY%% *}/" "${TEMP_FILE}"   # Remove everything in the priority string after the first space (i.e. the explanation of the priority level)
                break
-          else error "Invalid selection, please chose a number between 1 and ${#TICKET_PRIORITY_LEVELS[@]}" && return 1
+          else error "Error: Invalid selection, please chose a number between 1 and ${#TICKET_PRIORITY_LEVELS[@]}" && return 1
           fi
       done
       declare +i REPLY
@@ -993,7 +993,7 @@
 
       if   test "$UNEDITED_TICKET" = "$EDITED_TICKET"
       then error "Error: No edits detected."
-           error "Aborting new ticket creation."
+           error "       Aborting new ticket creation."
            rm "$TEMP_FILE"
            return 1
       else if   cp "$TEMP_FILE" "$NEW_TICKET_FILE"
@@ -1047,25 +1047,34 @@
       local UNEDITED_MILESTONE
       local EDITED_MILESTONE
 
+    # Process input arguments
+      local -A OPTIONS
+      local -a ARGS
+      local VALID_SHORT_FLAG_OPTIONS=( )
+      local VALID_LONG_FLAG_OPTIONS=( )
+      local VALID_SHORT_KEYVAL_OPTIONS=( -p      )
+      local VALID_LONG_KEYVAL_OPTIONS=( --parent )
+      local COMMAND_NAME="new_milestone"
 
-    # Check if a parent milestone has been specified (and generally if the command
-    # was called with correct syntax)
-
-      if   test ${#@} -eq 0   # no arguments provided
+      if   process_optargs "$@"
       then :
+      else exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      fi
 
-      elif test ${#@} -eq 1 && test "${1:0:2}" = "-p"   # e.q. -p1
-      then PARENT_MILESTONE="${1:2}"
 
-      elif test ${#@} -eq 2 && test "$1" = "-p"         # e.g. -p 1
-      then PARENT_MILESTONE="$2"
+    # Validate input arguments
+      if   is_in '-p' "${!OPTIONS[@]}" && is_in '--parent' "${!OPTIONS[@]}"
+      then error "Error: Cannot provide both '-p' and '--parent' at the same time!"
+           echo && display_usage
+           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      elif is_in '-p' "${!OPTIONS[@]}"
+      then PARENT_MILESTONE="${OPTIONS[-p]}"
+      elif is_in '--parent' "${!OPTIONS[@]}"
+      then PARENT_MILESTONE="${OPTIONS[--parent]}"
+      fi
 
-      elif test ${#@} -eq 1 && test "${1:0:9}" = "--parent="   # e.g. --parent=1
-      then PARENT_MILESTONE="${1:9}"
-
-      elif test ${#@} -eq 2 && test "$1" = "--parent"          # e.g. --parent 1
-      then PARENT_MILESTONE="$2"
-
+      if   test ${#ARGS[@]} -eq 0   # no arguments provided
+      then :
       else error "Error: Incorrect arguments provided to new_milestone function"
            echo && display_usage
            exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
@@ -1082,7 +1091,7 @@
       then PARENT_MILESTONE_FILE="${PARENT_MILESTONE%.milestone}.milestone"
            if   is_valid_milestone "$PARENT_MILESTONE"
            then PARENT_MILESTONE_NUM="${PARENT_MILESTONE_FILE%.milestone}"
-           else error "The specified parent milestone ('$PARENT_MILESTONE_FILE') does not exist in $MILESTONES_PATH. Aborting."
+           else error "Error: The specified parent milestone ('$PARENT_MILESTONE_FILE') does not exist in $MILESTONES_PATH. Aborting."
                 return 1
            fi
       fi
@@ -1131,7 +1140,7 @@
 
       if   test "$UNEDITED_MILESTONE" = "$EDITED_MILESTONE"
       then error "Error: No edits detected."
-           error "Aborting new milestone creation."
+           error "       Aborting new milestone creation."
            rm "$TEMP_FILE"
            return 1
       else if   cp "$TEMP_FILE" "$NEW_MILESTONE_FILE"
@@ -1182,7 +1191,7 @@
     # Check that ticket is actually open
       if   grep "Open/Closed: Open" $TICKET > /dev/null
       then :
-      else error "Ticket No. $TICKET is already marked as closed ($( egrep -o "Resolution: .*$" $TICKETS | cut -d' ' -f2 ))! Aborting." && return 1
+      else error "Error: Ticket No. $TICKET is already marked as closed ($( egrep -o "Resolution: .*$" $TICKETS | cut -d' ' -f2 ))! Aborting." && return 1
       fi
 
     # Select an appropriate resolution
@@ -1195,7 +1204,7 @@
           if   test $REPLY -gt 0 && test $REPLY -le ${#TICKET_RESOLUTIONS[@]}
           then sed -i "s/Resolution: .*\$/Resolution: $RESOLUTION/" "${TICKET}"
                break
-          else error "Invalid selection, please chose a number between 1 and ${#TICKET_RESOLUTIONS[@]}" && return 1
+          else error "Error: Invalid selection, please chose a number between 1 and ${#TICKET_RESOLUTIONS[@]}" && return 1
           fi
       done
       declare +i REPLY
@@ -1244,7 +1253,7 @@
 
       if   test "$UNEDITED_TICKET" = "$EDITED_TICKET"
       then error "Error: No edits detected."
-           error "'Close' operation aborted and ticket reverted to original state."
+           error "       'Close' operation aborted and ticket reverted to original state."
            echo "$ORIGINAL_TICKET" > "$TICKET"
            return 1
       fi
@@ -1309,7 +1318,7 @@
 
       if   test "$UNEDITED_TICKET" = "$EDITED_TICKET"
       then error "Error: No edits detected."
-           error "'Add comment' operation aborted and ticket reverted to original state."
+           error "       'Add comment' operation aborted and ticket reverted to original state."
            echo "$ORIGINAL_TICKET" > "$TICKET"
            return 1
       fi
@@ -1356,7 +1365,7 @@
       fi
 
       if test "$ERRORS" -gt 0
-      then error "Encountered $ERRORS input errors. Aborting."
+      then error "Error: Encountered $ERRORS input errors. Aborting."
            return 1
       fi
 
@@ -1431,7 +1440,7 @@
       fi
 
       if test "$ERRORS" -gt 0
-      then echo "Encountered $ERRORS input errors. Aborting."
+      then error "Error: Encountered $ERRORS input errors. Aborting."
            return 1
       fi
 
@@ -1476,7 +1485,7 @@
       then MILESTONE=""
       elif is_valid_milestone "$MILESTONE"
       then :
-      else echo "Encountered input errors. Aborting."
+      else error "Error: Encountered input errors. Aborting."
            return 1
       fi
 
@@ -1518,7 +1527,7 @@
       then MILESTONE=""
       elif is_valid_milestone "$MILESTONE"
       then :
-      else echo "Encountered input errors. Aborting."
+      else error "Error: Encountered input errors. Aborting."
            return 1
       fi
 
@@ -1761,8 +1770,8 @@
       case "$1" in
           ("ticket")     shift && edit_ticket    "$@" ;;
           ("milestone")  shift && edit_milestone "$@" ;;
-          (*)            error "Error: invalid argument given to 'edit'."
-                         error "Valid arguments are 'ticket' or 'milestone'."
+          (*)            error "Error: Invalid argument given to 'edit'."
+                         error "       Valid arguments are 'ticket' or 'milestone'."
                          return 1 ;;
       esac
    }
@@ -1781,8 +1790,8 @@
       case "$1" in
           ("ticket")     shift && view_ticket    "$@" ;;
           ("milestone")  shift && view_milestone "$@" ;;
-          (*)            error "Error: invalid argument given to 'view'."
-                         error "Valid arguments are 'ticket' or 'milestone'."
+          (*)            error "Error: Invalid argument given to 'view'."
+                         error "       Valid arguments are 'ticket' or 'milestone'."
                          return 1 ;;
       esac
    }
@@ -1860,25 +1869,18 @@
     # appropriate, passing all remaining arguments given during invocation.
     # --------------------------------------------------------------------------
 
-#      case "$1" in
-#          ("tickets")     shift && list_tickets    "$@" ;;
-#          ("milestones")  shift && list_milestones "$@" ;;
-#          (*)             error "Error: invalid argument given to 'list'."
-#                          error "Valid arguments are 'tickets' or 'milestones'."
-#                          return 1 ;;
-#      esac
+      case "$1" in
+          ("tickets")     shift && list_tickets    "$@" ;;
+          ("milestones")  shift && list_milestones "$@" ;;
+          (*)             error "Error: Invalid argument given to 'list'."
+                          error "       Valid arguments are 'tickets' or 'milestones'."
+                          return 1 ;;
+      esac
 
-       local -A OPTIONS
-       local -a ARGS
-       local   VALID_SHORT_FLAG_OPTIONS=( -a      -b     -g        )
-       local    VALID_LONG_FLAG_OPTIONS=( --alpha --beta --gamma   )
-       local VALID_SHORT_KEYVAL_OPTIONS=( -d      -e        -z     )
-       local  VALID_LONG_KEYVAL_OPTIONS=( --delta --epsilon --zeta )
-       local COMMAND_NAME="liststuff"
-       process_optargs "$@"
-       echo -n "Options were: " && declare -p OPTIONS
-       echo -n "Args were: " && declare -p ARGS
    }
+
+
+
 
 
 
