@@ -23,38 +23,41 @@ TICKET_PRIORITY_LEVELS=(
 # This list will be used to create an interactive menu when creating a new
 # ticket. The selected option will be used to populate the 'Type:' field.
 TICKET_TYPES=(
-  "Investigation"
-  "Bugfix"
-  "Feature"
-  "Task"
+  "Investigation (Choose if the ticket will ask and answer a question)"
+  "Bugfix        (Choose if something is malfunctioning and needs fixing)"
+  "Feature       (Choose if new functionality will be added to the project)"
+  "Task          (Choose if some other actionable task needs to be done)"
 )
 
 # Ticket resolutions: This menu is used when closing tickets.
 TICKET_RESOLUTIONS=(
-  "Completed"
-  "Delegated"
-  "Postponed"
-  "Cancelled"
-  "Duplicate"
-  "Invalid"
+  "Completed (The task was performed successfully)"
+  "Delegated (The task will be completed externally)"
+  "Postponed (The task will be attempted at a later time)"
+  "Cancelled (The task was not deemed necessary after all)"
+  "Duplicate (The task has been done before)"
+  "Invalid   (The task was reported in error)"
 #  "Fixed"
 #  "WontFix"
 #  "WorksForMe"
 )
 
-# Ticket statuses: This menu is used when changing ticket status.
-# NOTE: When creating new tickets, bashtickets uses the TOP item in this array
-# as the default status. Similarly the 'close' subcommand will always use the
-# BOTTOM item in this array as the closing status.
+# Ticket statuses: This menu is used when changing ticket status. Statuses
+# should only relate to 'open' tickets; when a ticket is closed, the status
+# field is cleared automatically.
+#
+# NOTE: When creating new tickets, bashtickets will not ask the user to specify
+# a status, but will instead use the TOP item from this array automatically as
+# the default status (typically the default status should be 'new').
 TICKET_STATUSES=(
-  "New"             # The first option will always be used for new tickets 
-  "Assigned"
-  "Accepted"
-  "Confirmed"
+  "New          (New ticket. An owner will be nominated later.)"
+  "Assigned     (An owner has been nominated, but they have not yet accepted ownership)"
+  "Accepted     (Assigned owner has accepted responsibility for the ticket)"
+  "Confirmed    (The described bug has been confirmed as reproducible.)"
   "InProgress"
-  "NeedInfo"
+  "NeedInfo     (Unable to reproduce bug as described. Need more info from submitter.)"
   "ReadyForTest"
-  "Reopened"
+  "Reopened     (Awaiting fresh assignment)"
 )
 
 ####################
