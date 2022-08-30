@@ -9,52 +9,13 @@
 ###    • Function definitions
 ###        • Helper functions
 ###            • Function: error
-###            • Function: warning
-###            • Function: is_in
-###            • Function: process_optargs
-###            • Function: trycatch
-###            • Function: check_bashtickets_installation
-###            • Function: is_valid_bashtickets_repository
-###            • Function: check_repo
-###            • Function: load_config
-###            • Function: check_for_nocolor
-###            • Function: display_usage
-###            • Function: get_default_milestone_startdate
-###            • Function: get_default_milestone_deadline
-###            • Function: is_valid_ticket
-###            • Function: is_valid_milestone
-###            • Function: beg_for_money_lol
-###            • Function: editor
+###            • ... FIXME
 ###        • Functions implementing bashticket commands
 ###            • Function: create_or_initialise_bashtickets_repository
-###            • Function: initialise_bashtickets_repository
-###            • Function: create_bashtickets_repository
-###            • Function: display_help
-###            • Function: new_ticket_or_milestone
-###            • Function: new_ticket
-###            • Function: new_milestone
-###            • Function: close_ticket_with_comment
-###            • Function: add_comment_to_ticket
-###            • Function: assign_tickets_to_milestone
-###            • Function: update_milestones
-###            • Function: show_tickets_by_milestone
-###            • Function: show_open_tickets_by_milestone
-###            • Function: show_closed_tickets_by_milestone
-###            • Function: show_active_milestones
-###            • Function: show_completed_milestones
-###            • Function: edit_ticket
-###            • Function: edit_milestone
-###            • Function: edit_ticket_or_milestone
-###            • Function: view_ticket_or_milestone
-###            • Function: view_ticket
-###            • Function: view_milestone
+###            • Function: ,,, FIXME
 ###        • Legacy functions
 ###            • Function: show_all_ticket_summaries
-###            • Function: show_closed_ticket_resolutions
-###            • Function: show_closed_ticket_summaries
-###            • Function: show_open_ticket_summaries
-###            • Function: show_open_ticket_summaries_by_owner
-###            • Function: show_open_ticket_summaries_by_priority
+###            • Function: ... FIXME
 ###    • Main body
 ###        • Perform initial sanity checks
 ###        • Parse and execute bashtickets command
@@ -696,6 +657,43 @@
 
 
 
+
+   function update_field_from_menu () {
+    # --------------------------------------------------------------------------
+    # This function takes a field name, a file name, and a list of menu items,
+    # and updates the field in question, in the specified file, with the
+    # selected menu item.
+    #
+    # Note: The field must be supplied *exactly* as it will appear in the
+    # ticket/milestone file, i.e. with the correct number of trailing spaces!
+    # (but excluding the trailing colon and space)
+    #
+    # The menu items can be single words, or properly quoted strings. In the
+    # latter case, the full quoted string is visible in the menu during the
+    # selection, but only the first word in that string is used to populate the
+    # field. This allows one to create menu items that also contain
+    # explanations, e.g.: "Normal (but not urgent or highly important)" will
+    # result in the field populated with the word 'Normal' only.
+    # --------------------------------------------------------------------------
+
+      local -i REPLY   # The user's input is assigned to this variable; we want
+                       # to ensure it only takes numeric values
+
+      local FIELD="$1" && shift   # The field that needs to be updated
+      local FILE="$1"  && shift   # The file in which to update the field
+      local SELECTION             # To store the desired menu choice
+
+      select SELECTION in "$@"   # The list of menu items
+      do
+          if   test $REPLY -gt 0 && test $REPLY -le ${#@}
+          then sed -i "s/^${FIELD}: .*\$/${FIELD}: ${SELECTION%% *}/" "${FILE}"   # Remove everything in the selection string after the first space (i.e. the explanation)
+               break
+          else error "Error: Invalid selection, please chose a number between 1 and ${#@}" && return 1
+          fi
+      done
+   }
+
+
  # ------------------------------------------
  # Functions implementing bashticket commands
  # ------------------------------------------
@@ -978,30 +976,12 @@
 
     # Select a valid type:
       echo "Select a valid ticket type:"
-      declare -i REPLY   # The user's input is assigned to this variable; we want to ensure it only takes numeric values
-      select TICKET_TYPE in "${TICKET_TYPES[@]}"   # TICKET_TYPES obtained from config
-      do
-          if   test $REPLY -gt 0 && test $REPLY -le ${#TICKET_TYPES[@]}
-          then sed -i "s/Type: /Type: $TICKET_TYPE/" "${TEMP_FILE}"
-               break
-          else error "Error: Invalid selection, please chose a number between 1 and ${#TICKET_TYPES[@]}" && return 1
-          fi
-      done
-      declare +i REPLY
+      update_field_from_menu "       Type" "${TEMP_FILE}" "${TICKET_TYPES[@]}" || return 1
 
     # Select a valid priority:
       echo
       echo "Select a valid ticket priority"
-      declare -i REPLY   # The user's input is assigned to this variable; we want to ensure it only takes numeric values
-      select TICKET_PRIORITY in "${TICKET_PRIORITY_LEVELS[@]}"   # TICKET_PRIORITY_LEVELS obtained from config
-      do
-          if   test $REPLY -gt 0 && test $REPLY -le ${#TICKET_PRIORITY_LEVELS[@]}
-          then sed -i "s/Priority: /Priority: ${TICKET_PRIORITY%% *}/" "${TEMP_FILE}"   # Remove everything in the priority string after the first space (i.e. the explanation of the priority level)
-               break
-          else error "Error: Invalid selection, please chose a number between 1 and ${#TICKET_PRIORITY_LEVELS[@]}" && return 1
-          fi
-      done
-      declare +i REPLY
+      update_field_from_menu "   Priority" "${TEMP_FILE}" "${TICKET_PRIORITY_LEVELS[@]}" || return 1
 
     # Set the provided parent milestone, if one was provided
       sed -i "s/Milestone: /Milestone: $PARENT_MILESTONE_NUM/" "${TEMP_FILE}"
@@ -1229,16 +1209,7 @@
       echo "Closing ticket ${1} ($(grep -o "Summary: .*" "${TICKET}"))"
       echo
       echo "Select a resolution for this ticket:"
-      declare -i REPLY   # The user's input is assigned to this variable; we want to ensure it only takes numeric values
-      select RESOLUTION in "${TICKET_RESOLUTIONS[@]}"
-      do
-          if   test $REPLY -gt 0 && test $REPLY -le ${#TICKET_RESOLUTIONS[@]}
-          then sed -i "s/Resolution: .*\$/Resolution: $RESOLUTION/" "${TICKET}"
-               break
-          else error "Error: Invalid selection, please chose a number between 1 and ${#TICKET_RESOLUTIONS[@]}" && return 1
-          fi
-      done
-      declare +i REPLY
+      update_field_from_menu " Resolution" "${TICKET}" "${TICKET_RESOLUTIONS[@]}" || return 1
 
     # Clear 'ticket status' field (since this relates to 'Open' tickets).
       sed -i "s/Status: .*\$/Status: /" "${TICKET}"
