@@ -20,3 +20,17 @@ Description: this involves:
 
 Part 1 complete. Note: No need for milestones to track their children. This
 makes updating milestones straightforward.
+
+
+== 2022-08-29
+Due to the fact that milestones now can also have 'children', when listing
+milestones via the 'list_milestones' command, one needs to differentiate what to
+display as the percentage completion: tickets, or milestones.
+
+Options:
+  • If in 'tickets' mode, all tickets, un-child-milestoned and
+    child-milestoned should be collected and a percentage calculated.
+  • If in 'milestones' mode, the percentage should be in terms of completed vs
+    incomplete child milestones (considering the 'unmilestoned' tickets as an
+    extra milestone -- in other words, all milestones have at least one child
+    for the purposes of this calculation).
