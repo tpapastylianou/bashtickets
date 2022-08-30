@@ -694,6 +694,39 @@
    }
 
 
+
+
+   function update_field_from_option () {
+    # --------------------------------------------------------------------------
+    # This function takes a field name, a file name, a value, and a list of
+    # valid values, and updates the field in question in the specified file with
+    # the specified value, as long as it is valid.
+    #
+    # Note: The field must be supplied *exactly* as it will appear in the
+    # ticket/milestone file, i.e. with the correct number of trailing spaces!
+    # (but excluding the trailing colon and space)
+    #
+    # Since the list of valid values will generally be identical to the lists
+    # provided in the configuration file for the purpose of creating interactive
+    # menus, items in this list can be single words, or properly quoted strings;
+    # in the latter case, only the first word in that string is used to perform
+    # the validity checks. E.g., if one of the items in the 'valid values' list
+    # is "Normal (but not urgent or highly important)", then a value of "Normal"
+    # will pass the validity check (but a value of "Normal (but" will not!!)
+    # --------------------------------------------------------------------------
+
+      local FIELD="$1" && shift   # The field that needs to be updated
+      local FILE="$1"  && shift   # The file in which to update the field
+      local VALUE="$1" && shift   # The value we want to update the field with
+
+      if   is_in "$VALUE" "${@%% *}"   # For each input argument, remove everything after the first space.
+      then sed -i "s/^${FIELD}: .*\$/${FIELD}: ${VALUE}/" "${FILE}"
+      else error "Error: '$VALUE' is not a valid value for the '${FIELD##* }' field"
+           error "       Please consult your configuration file for valid options" && return 1
+      fi
+   }
+
+
  # ------------------------------------------
  # Functions implementing bashticket commands
  # ------------------------------------------
@@ -877,6 +910,8 @@
     # Invoked via the 'nt' or 'new ticket' subcommands.
     # An '-m / --milestone' option can be used to assign a parent milestone.
     #
+    # TODO mention other options
+    #
     # This function uses menus to select appropriate choices to fill in the
     # ticket, creates the ticket from a template and copies those choices in,
     # and then opens an editor to allow the user to finish editing the ticket.
@@ -890,6 +925,8 @@
       local PARENT_MILESTONE
       local PARENT_MILESTONE_NUM
       local PARENT_MILESTONE_FILE
+      local TICKET_TYPE
+      local TICKET_PRIORITY
       local LAST_TICKET_NUM
       local NEW_TICKET_NUM
       local NEW_TICKET_FILE
@@ -903,8 +940,8 @@
       local -a ARGS
       local VALID_SHORT_FLAG_OPTIONS=( )
       local VALID_LONG_FLAG_OPTIONS=( )
-      local VALID_SHORT_KEYVAL_OPTIONS=( -m      )
-      local VALID_LONG_KEYVAL_OPTIONS=( --milestone )
+      local VALID_SHORT_KEYVAL_OPTIONS=( -m         -t     -p         )
+      local VALID_LONG_KEYVAL_OPTIONS=( --milestone --type --priority )
       local COMMAND_NAME="new_ticket"
 
       if   process_optargs "$@"
@@ -914,14 +951,16 @@
 
 
     # Validate input arguments
-      if   is_in '-m' "${!OPTIONS[@]}" && is_in '--milestone' "${!OPTIONS[@]}"
-      then error "Error: Cannot provide both '-m' and '--milestone' at the same time!"
-           echo && display_usage
-           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
-      elif is_in '-m' "${!OPTIONS[@]}"
-      then PARENT_MILESTONE="${OPTIONS[-m]}"
-      elif is_in '--milestone' "${!OPTIONS[@]}"
-      then PARENT_MILESTONE="${OPTIONS[--milestone]}"
+      if   is_in '-m'          "${!OPTIONS[@]}"; then PARENT_MILESTONE="${OPTIONS[-m]}"
+      elif is_in '--milestone' "${!OPTIONS[@]}"; then PARENT_MILESTONE="${OPTIONS[--milestone]}"
+      fi
+
+      if   is_in '-t'     "${!OPTIONS[@]}"; then TICKET_TYPE="${OPTIONS[-t]}"
+      elif is_in '--type' "${!OPTIONS[@]}"; then TICKET_TYPE="${OPTIONS[--type]}"
+      fi
+
+      if   is_in '-p'         "${!OPTIONS[@]}"; then TICKET_PRIORITY="${OPTIONS[-p]}"
+      elif is_in '--priority' "${!OPTIONS[@]}"; then TICKET_PRIORITY="${OPTIONS[--priority]}"
       fi
 
       if   test ${#ARGS[@]} -eq 0   # no arguments provided
@@ -975,13 +1014,19 @@
       sed -i "s/Owner: /Owner: $WHOAMI/" "${TEMP_FILE}"
 
     # Select a valid type:
-      echo "Select a valid ticket type:"
-      update_field_from_menu "       Type" "${TEMP_FILE}" "${TICKET_TYPES[@]}" || return 1
+      if   test -n "$TICKET_TYPE"   # i.e. if option was provided as input argument
+      then update_field_from_option "       Type" "${TEMP_FILE}" "$TICKET_TYPE" "${TICKET_TYPES[@]}" || return 1
+      else echo "Select a valid ticket type:"
+           update_field_from_menu   "       Type" "${TEMP_FILE}" "${TICKET_TYPES[@]}" || return 1
+      fi
 
     # Select a valid priority:
-      echo
-      echo "Select a valid ticket priority"
-      update_field_from_menu "   Priority" "${TEMP_FILE}" "${TICKET_PRIORITY_LEVELS[@]}" || return 1
+      if   test -n "$TICKET_PRIORITY"   # i.e. if options was provided as input argument
+      then update_field_from_option "   Priority" "${TEMP_FILE}" "$TICKET_PRIORITY" "${TICKET_PRIORITY_LEVELS[@]}" || return 1
+      else echo
+           echo "Select a valid ticket priority"
+           update_field_from_menu "   Priority" "${TEMP_FILE}" "${TICKET_PRIORITY_LEVELS[@]}" || return 1
+      fi
 
     # Set the provided parent milestone, if one was provided
       sed -i "s/Milestone: /Milestone: $PARENT_MILESTONE_NUM/" "${TEMP_FILE}"
