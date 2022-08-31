@@ -14,3 +14,9 @@
 Description: The formula for the completion date currently used doesn't actually
              estimate completion dates (for tickets), but 'most recent
              activity'. This is low priority, but should be fixed eventually.
+
+
+== 2022-08-31
+
+Presumably the best way to approach this is to grep for the last 'Closing ticket.' line,
+then seek the nearest date-line above this.

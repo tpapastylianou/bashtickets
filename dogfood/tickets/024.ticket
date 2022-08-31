@@ -8,10 +8,19 @@
          Cc: 
       Owner: Tasos
        Date: 2021-12-19
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Completed
 Description: Add ability to add fields as optional arguments, bypassing the
              interactive menu. Depending on whether a ticket has enough
              information to be created (e.g. a summary string), it could then
              also be created without entering an editor at all. This would be
              good as it would enable fully programmatic creation of tickets.
+
+
+== 2022-08-31
+This functionality has now been implemented via the update_field_from_options
+function (see also update_field_from_menu).
+
+See also ticket 059: ensure all menu based options have option counterparts.
+
+Closing ticket.
