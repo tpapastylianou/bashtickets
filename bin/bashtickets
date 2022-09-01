@@ -1219,12 +1219,41 @@
     # Expects a ticket number (or filename) as an argument.
     # --------------------------------------------------------------------------
 
-    # Ensure the function was called with a ticket number / filename
-      if   test ${#@} -ne 1
-      then error "Error: Incorrect arguments provided to close_ticket_with_comment function"
-           echo
-           display_usage
-           return 1
+      local TICKET
+      local TICKET_RESOLUTION
+      local TODAY
+      local ORIGINAL_TICKET
+      local CURRENT_OWNER
+      local WHOAMI
+      local LINENUM
+      local UNEDITED_TICKET
+      local EDITED_TICKET
+
+    # Process input arguments
+      local -A OPTIONS
+      local -a ARGS
+      local VALID_SHORT_FLAG_OPTIONS=( )
+      local VALID_LONG_FLAG_OPTIONS=( )
+      local VALID_SHORT_KEYVAL_OPTIONS=( -r          )
+      local VALID_LONG_KEYVAL_OPTIONS=( --resolution )
+      local COMMAND_NAME="close_ticket_with_comment"
+
+      if   process_optargs "$@"
+      then :
+      else exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      fi
+
+
+    # Validate input arguments
+      if   is_in '-r'           "${!OPTIONS[@]}"; then TICKET_RESOLUTION="${OPTIONS[-r]}"
+      elif is_in '--resolution' "${!OPTIONS[@]}"; then TICKET_RESOLUTION="${OPTIONS[--resolution]}"
+      fi
+
+      if   test ${#ARGS[@]} -eq 1   # Ensure command was called with a single ticket argument
+      then :
+      else error "Error: Incorrect arguments provided to close_ticket_with_comment function"
+           echo && display_usage
+           exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
       fi
 
 
@@ -1232,7 +1261,7 @@
 
 
     # Check specified ticket is valid
-      TICKET="${1%.ticket}.ticket"
+      TICKET="${ARGS[0]%.ticket}.ticket"
       if   is_valid_ticket "$TICKET"
       then :
       else echo "Error: Invalid ticket specified!" && return 1
@@ -1245,16 +1274,17 @@
       TODAY=$(date +"%Y-%m-%d")
 
     # Check that ticket is actually open
-      if   grep "Open/Closed: Open" $TICKET > /dev/null
+      if   grep "Open/Closed: Open" "$TICKET" > /dev/null
       then :
-      else error "Error: Ticket No. $TICKET is already marked as closed ($( egrep -o "Resolution: .*$" $TICKETS | cut -d' ' -f2 ))! Aborting." && return 1
+      else error "Error: Ticket No. $TICKET is already marked as closed ($( egrep -o "Resolution: .*$" "$TICKET" | cut -d' ' -f2 ))! Aborting." && return 1
       fi
 
     # Select an appropriate resolution
-      echo "Closing ticket ${1} ($(grep -o "Summary: .*" "${TICKET}"))"
-      echo
-      echo "Select a resolution for this ticket:"
-      update_field_from_menu " Resolution" "${TICKET}" "${TICKET_RESOLUTIONS[@]}" || return 1
+      if   test -n "$TICKET_RESOLUTION"   # i.e. if option was provided as input argument
+      then update_field_from_option " Resolution" "${TICKET}" "$TICKET_RESOLUTION" "${TICKET_RESOLUTIONS[@]}" || return 1
+      else echo "Select a resolution for this ticket:"
+           update_field_from_menu " Resolution" "${TICKET}" "${TICKET_RESOLUTIONS[@]}" || return 1
+      fi
 
     # Clear 'ticket status' field (since this relates to 'Open' tickets).
       sed -i "s/Status: .*\$/Status: /" "${TICKET}"
@@ -1304,6 +1334,8 @@
            echo "$ORIGINAL_TICKET" > "$TICKET"
            return 1
       fi
+
+      echo "Closed ticket ${1} ($(grep -o "Summary: .*" "${TICKET}"))"
    }
 
 
