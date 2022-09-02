@@ -1,0 +1,23 @@
+ Ticket No.: 062
+    Summary: Assignments and similar modifications should create dated entries
+   Reporter: Tasos
+       Type: Task
+   Priority: Normal
+  Milestone: 001
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2022-09-02
+     Status: Open
+ Resolution: 
+Description: When you use the bt assign command, this should not simply change
+             the milestone number, but it should also create a dated log entry
+             in the ticket to say that this has been done (e.g. in the same way
+             that when closing a ticket it creates a log of the closing
+             operation).
+
+             However, make sure that any internal 'assign' commands, if they
+             exist, do not cause such a message!
+
+             The same principle should apply not only to the 'assign' operation
+             but any modify operation etc.
