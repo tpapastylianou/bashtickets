@@ -8,8 +8,8 @@
          Cc: 
       Owner: Tasos
        Date: 2021-12-03
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Cancelled
 Description: This is a 'tracking' ticket to help dev keep track of commands that
              are complete. To properly implement the 'show' subcommand will need
              significant thought (and likely, many tickets).
@@ -17,3 +17,9 @@ Description: This is a 'tracking' ticket to help dev keep track of commands that
              This ticket can be used to track progress and thoughts relating to
              this subcommand's functionality
              
+
+
+== 2022-09-02
+Ticket has been superceded by #063 which discusses the 'list' family of
+commands.
+Closing ticket.

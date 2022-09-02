@@ -8,6 +8,11 @@
          Cc: 
       Owner: Tasos
        Date: 2021-12-03
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Cancelled
 Description: 
+
+
+== 2022-09-02
+Superceded by #63 - 'list' command family. There will be no 'status' command.
+Closing ticket.

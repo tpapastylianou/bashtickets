@@ -1,0 +1,72 @@
+ Ticket No.: 063
+    Summary: Implement 'list' family of commands
+   Reporter: Tasos
+       Type: Task
+   Priority: Important
+  Milestone: 001
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2022-09-02
+     Status: Open
+ Resolution: 
+Description: This ticket supercedes earlier tickets mentioning 'show', 'status'
+             and the like. Its intent is to document all thoughts and process
+             relating to the implementation of the 'list' family of commands.
+
+             As of writing this, the intent is to implement a 'list tickets' and
+             'list milestones' family, to replace (or possibly rely on or
+             repurpose) the legacy 'show_*' suite of commands.
+
+             Currently suggested interface for list tickets:
+
+                 bashtickets list tickets 2 3 4 [OPTIONS]
+
+             Would list tickets 2 3 and 4.
+                 
+                 bashtickets list tickets @3 @6 [OPTIONS]
+
+             would list tickets for milestone 3.
+             Milestone 0 lists unmilestoned tickets.
+
+             Omitting arguments lists all tickets (over all milestones).
+
+             Options would deal with things such as sorting, filtering/omitting,
+             color, column mode and headers on/off (similar to sqlite3), choice
+             of separator, which fields/columns to show/omit, whether to display
+             in 'line' mode instead of column mode (for scriptability), etc.
+
+                Output mode (similarly to sqlite3) may be one of:
+                    raw      The full tickets, comments and everything (overriding fields
+                             option)
+                    csv      Comma-separated values
+                    pretty   Left-aligned columns.  (See .width)
+                    html     HTML <table> code
+                    line     One value per line
+                    list/dlm Values delimited by .separator string
+                    tsv      Tab-separated values
+                    json     TCL list elements
+
+             Some options may be shorthand options for specific filter/omit
+             operations (e.g. --open/--closed, or --status, etc.)
+
+             Alternatively, no filtering, and have appropriate options per
+             relevant field (e.g. --status, --status-not). 
+
+             ----
+
+             Currently suggested interface for list milestones:
+
+                 bashtickets list milestones 3 6   [OPTIONS]
+                 bashtickets list milestones @3 @6 [OPTIONS]
+
+             Should both do the same thing, and display the status of the given
+             milestones. 0 refers to unmilestoned. Passing no input triggers all
+             milestones.
+
+             Options would select between --active, --completed, and --all (the
+             default). Other options should be as in list tickets (note that the
+             above options are effectively special filter/omit cases).
+
+             Alternatively (as with list tickets), no filtering, and have
+             appropriate field options instead.

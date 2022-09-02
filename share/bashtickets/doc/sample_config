@@ -31,12 +31,13 @@ TICKET_TYPES=(
 
 # Ticket resolutions: This menu is used when closing tickets.
 TICKET_RESOLUTIONS=(
-  "Completed (The task was performed successfully)"
-  "Delegated (The task will be completed externally)"
-  "Postponed (The task will be attempted at a later time)"
-  "Cancelled (The task was not deemed necessary after all)"
-  "Duplicate (The task has been done before)"
-  "Invalid   (The task was reported in error)"
+  "Completed   (The task was performed successfully)"
+  "Delegated   (The task will be completed externally)"
+  "Postponed   (The task will be attempted at a later time)"
+  "Cancelled   (The task was not deemed necessary after all)"
+  "Duplicate   (The issue has been addressed previously)"
+  "Superceded" (Ticket out-of-date, superceded by newer ticket)
+  "Invalid     (The task was reported in error)"
 #  "Fixed"
 #  "WontFix"
 #  "WorksForMe"

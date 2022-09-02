@@ -3,7 +3,7 @@
    Reporter: Tasos
        Type: Feature
    Priority: Normal
-  Milestone: 001
+  Milestone: 003
    Keywords: 
          Cc: 
       Owner: Tasos
@@ -13,3 +13,7 @@
 Description: There was a nice article on hacker news promoting a website called
              clig.dev: Command-Line Interface Guidelines. I think I'm doing most
              of these, but it's a very nice list to go through.
+
+
+== 2022-09-02
+Reassigned milestone to 003
