@@ -8,11 +8,16 @@
          Cc: 
       Owner: Tasos
        Date: 2022-08-29
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Completed
 Description: The priority default menu in the sample config expects strings of
              the form "<SingleWord> (<Longer Description after single word>)"
 
              The rest seem to only expect single words. However, the 'longer
              description' part would be useful for the other menus of a similar
              nature too (if nothing else for consistency).
+
+
+== 2022-09-02
+Done.
+Closing ticket.
