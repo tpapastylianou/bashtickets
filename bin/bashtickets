@@ -1046,7 +1046,7 @@
 
     # Set ticket status to 'New' (or, more specifically, the *first* element of
     # the TICKET_STATUSES array in the config.
-      sed -i "s/Status: /Status: ${TICKET_STATUSES[0]}/" "${TEMP_FILE}"
+      sed -i "s/Status: /Status: ${TICKET_STATUSES[0]%% *}/" "${TEMP_FILE}"
 
     # Save current state of ticket before manual editing
       UNEDITED_TICKET="$(cat "$TEMP_FILE")"
@@ -1189,7 +1189,7 @@
       DEFAULT_DEADLINE="$( get_default_milestone_deadline $DEFAULT_STARTDATE )"
       sed -i "s/Deadline: /Deadline: $DEFAULT_DEADLINE/" "${TEMP_FILE}"
 
-    # Save current status of ticket before manual editing
+    # Save current state of ticket before manual editing
       UNEDITED_MILESTONE="$(cat "$TEMP_FILE")"
 
 
@@ -1326,7 +1326,7 @@
     # Mark as Closed
       sed -i "s/Open\/Closed: .*/Open\/Closed: Closed/" "${TICKET}"
 
-    # Save current status of ticket before manual editing
+    # Save current state of ticket before manual editing
       UNEDITED_TICKET="$(cat $TICKET)"
 
     # Open default editor and put cursor in the right place for editing
@@ -1393,7 +1393,7 @@
           echo "($WHOAMI)" >> "${TICKET}"
       fi
 
-    # Save current status of ticket before manual editing
+    # Save current state of ticket before manual editing
       UNEDITED_TICKET="$(cat $TICKET)"
 
     # Open default editor and put cursor in the right place for editing
@@ -2014,7 +2014,7 @@
          elif grep 'Open/Closed: Closed' "$i" > /dev/null
          then echo -en "$i: ${ANSI_GREEN}[Closed]${ANSI_RESET} "
 
-       # Mark tickets of unknown or missing status with a purple '????' tag.
+       # Mark tickets where the 'Open/Closed' field is unknown or missing with a purple '????'.
          else echo -en "$i: ${ANSI_PURPLE}[ ???? ]${ANSI_RESET} "
          fi
 
