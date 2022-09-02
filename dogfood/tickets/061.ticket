@@ -8,11 +8,16 @@
          Cc: 
       Owner: Tasos
        Date: 2022-09-01
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Completed
 Description: There is currently a bug where, e.g. this call
 
                  close ticket 1 --resolution
 
              will not produce an error because of the missing resolution string,
              but simply freeze. Fix it. Fix it!
+
+
+== 2022-09-02
+Fixed it. Fixed it!
+Closing ticket.

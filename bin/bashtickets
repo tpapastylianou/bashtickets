@@ -194,11 +194,17 @@
                  is_in "${1%=*}" "${VALID_LONG_KEYVAL_OPTIONS[@]}"
             then if   test "$( echo "$1" | tr -s [:alpha:] Y )" = "--Y"                # check if first token is of form '--optionname'
                  then OPTION_KEY="$1"; OPTION_VALUE="$2"; OPTION_SHIFT=2
+                      if   test -z "$OPTION_VALUE"
+                      then error "Error: Option ${OPTION_KEY} requires an argument but none was provided." && return 1
+                      fi
                  elif test "$( echo "$1" | tr -s [:alpha:] Y | cut -b -4 )" = "--Y="   # check if first token is of form '--optionname='
                  then OPTION_KEY="$(   echo "$1" | cut -d= -f1 )"
                       OPTION_VALUE="$( echo "$1" | cut -d= -f2 )"
                       OPTION_SHIFT=1
-                 else error "Error: '$1' seems not to be a valid first token for a long form key value option?"
+                      if   test -z "$OPTION_VALUE"
+                      then error "Error: Option ${OPTION_KEY} requires an argument but none was provided." && return 1
+                      fi
+                 else error "Error: '$1' seems not to be a valid first token for a long form key value option?" && return 1
                  fi
 
           # If a long-form option is detected but is not valid, raise an error
