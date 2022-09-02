@@ -3,7 +3,7 @@
    Reporter: Tasos
        Type: Task
    Priority: Normal
-  Milestone: 001
+  Milestone: 003
    Keywords: 
          Cc: 
       Owner: Tasos
@@ -36,3 +36,15 @@ Description: Currently the following commands are available (or planned):
              slight risk it might confuse users, but at the end I think the
              'newticket' and 'nt' methods will be the ones that end up used the
              most.
+
+
+== 2022-09-02
+Implemented for new ticket and new milestone. Will do the rest as required / as
+a post-MVP-check.
+
+== 2022-09-02
+Re-assigned ticket to milestone 003 (post-MVP-checks)
+
+
+
+
