@@ -45,7 +45,7 @@
    TICKETS_PATH="$REPO_PATH/tickets"
    MILESTONES_PATH="$REPO_PATH/milestones"
 
- # Other constants
+ # Other constants (can be overridden by check_for_nocolor)
    ANSI_RED="\x1b[91m"
    ANSI_GREEN="\x1b[92m"
    ANSI_PURPLE="\x1b[95m"
@@ -1558,13 +1558,42 @@
     # If the number is "0", this will reflect 'unmilestoned' tickets.
     # --------------------------------------------------------------------------
 
-    # If called without arguments or with more than one arguments, display usage
-      if   test "$#" -ne 1
-      then display_usage "show_open_tickets_by_milestone"
+      local HEADER
+      local HEADERLINE
+      local TICKET
+      local TICKETNAME
+      local TICKETSUMMARY
+      local MILESTONE
+      local -a MILESTONE_TICKETS
+
+    # Process input arguments
+      local -A OPTIONS
+      local -a ARGS
+      local VALID_SHORT_FLAG_OPTIONS=( )
+      local VALID_LONG_FLAG_OPTIONS=( )
+      local VALID_SHORT_FLAG_OPTIONS=( -H )
+      local VALID_LONG_FLAG_OPTIONS=( --header )
+      local COMMAND_NAME="show_open_tickets_by_milestone"
+
+      if   process_optargs "$@"
+      then :
+      else exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      fi
+
+    # Validate input arguments
+      if   is_in '-H'       "${!OPTIONS[@]}"; then HEADER="On"
+      elif is_in '--header' "${!OPTIONS[@]}"; then HEADER="On"
+      fi
+
+      if   test ${#ARGS[@]} -eq 1   # If called without arguments or with more than one arguments, display usage
+      then :
+      else error "Error: Incorrect arguments provided to show_open_tickets_by_milestone"
+           echo && display_usage "show_open_tickets_by_milestone"
            exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
       fi
 
-      local MILESTONE="${1%.milestone}"
+
+      MILESTONE="${ARGS[0]%.milestone}"
 
       if   test "$MILESTONE" = "0"
       then MILESTONE=""
@@ -1577,12 +1606,17 @@
 
       cd "$TICKETS_PATH"
 
+      if   test "$HEADER" = "On"
+      then HEADERLINE="Open tickets for milestone $MILESTONE"
+           echo -e "${ANSI_BLUE}${ANSI_BOLD_ON}${HEADERLINE}${ANSI_BOLD_OFF}${ANSI_RESET}"
+           printf "${ANSI_BLUE}${ANSI_BOLD_ON}%${#HEADERLINE}s${ANSI_BOLD_OFF}${ANSI_RESET}\n" "" | tr ' ' '='   # place an appropriate number of '=' chars to underline the HEADERLINE
+      fi
 
-      local MILESTONE_TICKETS=( $(egrep --color=never  -l "Milestone: $MILESTONE\$" *.ticket) )
+      MILESTONE_TICKETS=( $(egrep --color=never  -l "Milestone: $MILESTONE\$" *.ticket) )
 
       for  TICKET in "${MILESTONE_TICKETS[@]}"
-      do   local TICKETNAME="$(grep -l --color=never 'Open/Closed: Open' "$TICKET")"
-           local TICKETSUMMARY="$(grep --color=never "Summary: " "$TICKET")"
+      do   TICKETNAME="$(grep -l --color=never 'Open/Closed: Open' "$TICKET")"
+            TICKETSUMMARY="$(grep --color=never "Summary: " "$TICKET")"
            if test -n "$TICKETNAME"
            then echo "$TICKETNAME $TICKETSUMMARY"
            fi
@@ -2244,7 +2278,8 @@
          "nt"            | "op"            | "open"          | "re"  | \
          "remove"        | "reopen"        | "rm"            | "sh"  | \
          "show"          | "st"            | "status"        | "up"  | \
-         "update"        | "view"          | "vm"            | "vt"    \
+         "update"        | "view"          | "vm"            | "vt"  | \
+         "show_open_tickets_by_milestone" \
        )
 
            trycatch "check_repo" \
@@ -2271,8 +2306,8 @@
        ("close" | "cl")                     shift && trycatch close_ticket_with_comment   "$@" $EXIT_STATUS__FAILED_TO_CLOSE_TICKET                ;;
        ("open" | "reopen" | "re" | "op" )   shift && trycatch reopen_ticket               "$@" $EXIT_STATUS__FAILED_TO_REOPEN_TICKET               ;;
        ("new" | "create" )                  shift && trycatch new_ticket_or_milestone     "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET_OR_MILESTONE  ;;
-       ("nt" | "newticket" )         shift && trycatch new_ticket                  "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET               ;;
-       ("nm" | "newmilestone" )      shift && trycatch new_milestone               "$@" $EXIT_STATUS__FAILED_TO_CREATE_MILESTONE            ;;
+       ("nt" | "newticket" )                shift && trycatch new_ticket                  "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET               ;;
+       ("nm" | "newmilestone" )             shift && trycatch new_milestone               "$@" $EXIT_STATUS__FAILED_TO_CREATE_MILESTONE            ;;
        ("init")                             shift && trycatch create_or_initialise_bashtickets_repository "$@" $EXIT_STATUS__FAILED_TO_CREATE_OR_INITIALIZE_REPOSITORY ;;
        ("help" | "h")                       display_help ;;
        ("status" | "st")                    echo "Displaying milestone status (all/open/closed)...TODO" ;;

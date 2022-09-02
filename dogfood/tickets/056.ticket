@@ -8,8 +8,8 @@
          Cc: 
       Owner: Tasos
        Date: 2022-06-19
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Completed
 Description: At present, show_open_tickets_by_milestones simply emits the
              desired tickets. For the most part, this is the desired behaviour,
              particularly since this script is used internally to refresh
@@ -28,3 +28,8 @@ Description: At present, show_open_tickets_by_milestones simply emits the
              case a user wanted to try something like:
 
                  for i in {1..5}; do bt show_open_tickets_by_milestone $i; done 
+
+
+== 2022-09-02
+Done.
+Closing ticket.
