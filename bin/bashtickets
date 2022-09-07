@@ -66,7 +66,7 @@
    declare -i EXIT_STATUS__FAILED_TO_CLOSE_TICKET=8
    declare -i EXIT_STATUS__FAILED_TO_REOPEN_TICKET=9
    declare -i EXIT_STATUS__FAILED_TO_ADD_COMMENT_TO_TICKET=10
-   declare -i EXIT_STATUS__FAILED_TO_ASSIGN_TICKETS_TO_MILESTONE=11
+   declare -i EXIT_STATUS__FAILED_TO_ASSIGN_TO_MILESTONE=11
    declare -i EXIT_STATUS__FAILED_TO_EDIT_TICKET_OR_MILESTONE=12
    declare -i EXIT_STATUS__FAILED_TO_EDIT_TICKET=13
    declare -i EXIT_STATUS__FAILED_TO_EDIT_MILESTONE=14
@@ -451,7 +451,7 @@
               echo "Usage: initialise_bashtickets_repository ... TODO"
               ;;
 
-          ('assign_tickets_to_milestone')
+          ('assign_to_milestone')
               echo "Usage:"
               echo "    $(basename $0) assign <ticket> [<ticket2> <ticket3> ... <ticketN>] <milestone>"
               echo
@@ -464,12 +464,12 @@
               echo "Using '0' as the milestone removes any existing milestones from the specified tickets instead"
               ;;
 
-          ('update_milestones')
+          ('refresh_milestones')
               echo "Usage:"
               echo
               echo "    $(basename $0) [milestone1 milestone2 ... milestoneN]"
               echo
-              echo "Updates all or specific milestones from tickets"
+              echo "Refresh/update tracked tickets for the specified milestones"
               echo
               echo "e.g.:"
               echo "    $(basename $0) 001.milestone   # update milestone 001 only"
@@ -1076,7 +1076,7 @@
 
     # Let's also update the relevant milestone
       if   test -n "$PARENT_MILESTONE"
-      then update_milestones $PARENT_MILESTONE_NUM
+      then refresh_milestones $PARENT_MILESTONE_NUM
       fi
 
     # If this was the 100th ticket, ask for some dev appreciation :)))
@@ -1412,74 +1412,130 @@
 
 
 
-   function assign_tickets_to_milestone () {
+   function assign_to_milestone () {
     # --------------------------------------------------------------------------
     # Invoked via 'assign' subcommand.
     #
-    # Expects two or more arguments. The last argument needs to be a milestone
-    # to assign tickets to; the remaining should be valid tickets.
+    # Expects two or more arguments. All but the last argument can be either
+    # valid tickets (denoted directly via a ticket number) or valid milestones
+    # (denoted via a '@' prefix and a milestone number). The last argument
+    # corresponds to the milestone that the preceding tickets or milestones will
+    # be assigned to. The '@' prefix is optional for the last argument.
+    #
+    # In the case of tickets, assigning a ticket to a milestone means setting
+    # the Milestone field to that milestone number.
+    #
+    # In the case of milestones, assigning a milestone to another milestone
+    # means setting the number of the latter milestone as the 'Parent Node' of
+    # the former.
+    #
+    # Using '0' as the milestone number to assign to results in a ticket to be
+    # 'unmilestoned' (i.e. it does not belong to any milestone). Similarly,
+    # using '0' as the milestone number to assign milestones to as the parent
+    # node, results in the affected milestones not having a parent node (i.e.
+    # they become top-level milestones).
+    #
+    # Valid options for this function are:
+    #
+    # -h, --help
+    #
     # --------------------------------------------------------------------------
 
-    # If called with the wrong number of arguments, display usage
-      if   test "$#" -le 1
-      then display_usage 'assign_tickets_to_milestone'
+      local TARGET_MILESTONE
+      local -a ASSIGNABLES
+      local -a MILESTONE_ARGS
+      local -a TICKET_ARGS
+
+    # Process input arguments
+      local -A OPTIONS
+      local -a ARGS
+      local VALID_SHORT_FLAG_OPTIONS=( )
+      local VALID_LONG_FLAG_OPTIONS=( )
+      local VALID_SHORT_FLAG_OPTIONS=( -h )
+      local VALID_LONG_FLAG_OPTIONS=( --help )
+      local COMMAND_NAME="assign_to_milestone"
+
+      if   process_optargs "$@"
+      then :
+      else exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
+      fi
+
+    # Validate option arguments
+      if   is_in '-h'     "${!OPTIONS[@]}"; then display_help "assign_to_milestone" && return 0
+      elif is_in '--help' "${!OPTIONS[@]}"; then display_help "assign_to_milestone" && return 0
+      fi
+
+    # If called with less than the minimum two arguments, display usage
+      if   test ${#ARGS[@]} -lt 2
+      then error "Error: Incorrect arguments provided to assign_to_milestone"
+           echo && display_usage "assign_to_milestone"
            exit $EXIT_STATUS__INVALID_SUBCOMMAND_SYNTAX
       fi
 
-    # Process input arguments into tickets and a milestone
-      local ARGS=( "$@" )                               # Get all positional arguments as a bash array
-      local MILESTONE_ARG="${ARGS[-1]}"                 # Get the last element of the array
-      local TICKET_ARGS=( "${ARGS[@]: 0 : $# - 1 }" )   # Create a sub-array, from index 0 to N-1
-      local MILESTONE_NO
-      local TICKET_NO
-      local TICKET_FILE
 
-    # Confirm validity of inputs
-      local ERRORS=0
-
-      for  TICKET_ARG in "${TICKET_ARGS[@]}"
-      do   if   is_valid_ticket "$TICKET_ARG"
-           then :
-           else ERRORS=$((ERRORS + 1))
-           fi
-      done
-
-      if   is_valid_milestone "$MILESTONE_ARG"
+    # Validate target milestone argument
+      TARGET_MILESTONE="${ARGS[-1]#@}"   # get last argument; remove '@' prefix if present
+      if   test "${TARGET_MILESTONE}" = "0"
+      then TARGET_MILESTONE=""
+      elif is_valid_milestone "$TARGET_MILESTONE"
       then :
-      else ERRORS=$((ERRORS + 1))
-      fi
-
-      if test "$ERRORS" -gt 0
-      then error "Error: Encountered $ERRORS input errors. Aborting."
+      else error "Error: Encountered input errors. Aborting."
            return 1
       fi
 
+    # Validate remaining arguments
+      ASSIGNABLES=( "${ARGS[@]: 0 : ${#ARGS[@]} - 1 }" )   # Create a sub-array, from index 0 to N-1
+
+      local ASSIGNABLE
+
+      for  ASSIGNABLE in "${ASSIGNABLES[@]}"
+      do   if   test "${ASSIGNABLE:0:1}" = "@"
+
+           then if   is_valid_milestone "${ASSIGNABLE:1}"
+                then MILESTONE_ARGS[${#MILESTONE_ARGS}]="${ASSIGNABLE:1}"
+                else error "Error: Encountered input errors. Aborting." && return 1
+                fi
+
+           else if   is_valid_ticket "${ASSIGNABLE}"
+                then TICKET_ARGS[${#TICKET_ARGS}]="${ASSIGNABLE}"
+                else error "Error: Encountered input errors. Aborting." && return 1
+                fi
+
+           fi
+      done
+
     # Process all tickets
-      MILESTONE_NO="${MILESTONE_ARG%.milestone}"   # Remove .milestone suffix
-      MILESTONE_NO="${MILESTONE_NO%0}"             # If milestone was '0', use empty string instead.
+      local TICKET_ARG TICKET_FILE
 
       for  TICKET_ARG in "${TICKET_ARGS[@]}"
-      do   TICKET_NO="${TICKET_ARG%.ticket}"
-           TICKET_FILE="$TICKETS_PATH/${TICKET_NO}.ticket"
-           sed -i "s/  Milestone: .*\$/  Milestone: ${MILESTONE_NO}/" "$TICKET_FILE"
+      do   TICKET_FILE="$TICKETS_PATH/${TICKET_ARG}.ticket"
+           sed -i "s/  Milestone: .*\$/  Milestone: ${TARGET_MILESTONE}/" "$TICKET_FILE"
+      done
+
+    # Process all milestones
+      local MILESTONE_ARG MILESTONE_FILE
+
+      for  MILESTONE_ARG in "${MILESTONE_ARGS[@]}"
+      do   MILESTONE_FILE="$MILESTONES_PATH/${MILESTONE_ARG}.milestone"
+           sed -i "s/  Parent Node: .*\$/  Parent Node: ${TARGET_MILESTONE}/" "$MILESTONE_FILE"
       done
 
     # update milestones accordingly - note, we need to update ALL milestones, because more than one may have changed
-      update_milestones
+      refresh_milestones
    }
 
 
 
 
-   function update_milestones () {
+   function refresh_milestones () {
     # --------------------------------------------------------------------------
-    # Invoked via 'update' subcommand
+    # Invoked via 'refresh' subcommand
     #
     # If called without arguments, performs a general update of all milestones.
-    # Otherwise, expects a number of valid milestone numbers to update
+    # Otherwise, expects a number of valid milestone numbers to refresh/update
     # selectively.
     #
-    # To 'update' means to refresh the list of open and closed tickets for the
+    # To 'refresh' means to obtain the list of open and closed tickets for the
     # milestone. This is not implemented in a particularly super-efficient
     # manner at the moment (goes through all tickets for each milestone); but in
     # practice this is pretty fast anyway.
@@ -1488,7 +1544,7 @@
     # Confirm there are milestones present to begin with before proceeding
       if   test -f "$MILESTONES_PATH/1.milestone"
       then :
-      else warning "Warning: No milestones found in '$MILESTONES_PATH'. Aborting update."
+      else warning "Warning: No milestones found in '$MILESTONES_PATH'. Aborting 'refresh' operation."
            return 1
       fi
 
@@ -1529,7 +1585,7 @@
            return 1
       fi
 
-    # Perform update on selected milestones
+    # Refresh selected milestones
       for ARG in "${ARGS[@]}"
       do  MILESTONE_NO="${ARG%.milestone}"   # Remove .milestone suffix
           MILESTONE_FILE="$MILESTONES_PATH/${ARG%.milestone}.milestone"
@@ -2312,7 +2368,7 @@
          "nt"            | "op"            | "open"          | "re"  | \
          "remove"        | "reopen"        | "rm"            | "sh"  | \
          "show"          | "st"            | "status"        | "up"  | \
-         "update"        | "view"          | "vm"            | "vt"  | \
+         "refresh"        | "view"          | "vm"            | "vt"  | \
          "show_open_tickets_by_milestone" |\
          "show_closed_tickets_by_milestone" \
        )
@@ -2334,25 +2390,25 @@
 
 
    case "$1" in
-       ("update" | "up")                    trycatch update_milestones $EXIT_STATUS__OTHER_ERROR ;;
-       ("show" | "sh" | "list" | "ls" )     shift && trycatch list_tickets_or_milestones  "$@" $EXIT_STATUS__FAILED_TO_LIST_TICKETS_OR_MILESTONES  ;;
-       ( "add" | "comment" | "a" | "m")     shift && trycatch add_comment_to_ticket       "$@" $EXIT_STATUS__FAILED_TO_ADD_COMMENT_TO_TICKET       ;;
-       ("assign")                           shift && trycatch assign_tickets_to_milestone "$@" $EXIT_STATUS__FAILED_TO_ASSIGN_TICKETS_TO_MILESTONE ;;
-       ("close" | "cl")                     shift && trycatch close_ticket_with_comment   "$@" $EXIT_STATUS__FAILED_TO_CLOSE_TICKET                ;;
-       ("open" | "reopen" | "re" | "op" )   shift && trycatch reopen_ticket               "$@" $EXIT_STATUS__FAILED_TO_REOPEN_TICKET               ;;
-       ("new" | "create" )                  shift && trycatch new_ticket_or_milestone     "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET_OR_MILESTONE  ;;
-       ("nt" | "newticket" )                shift && trycatch new_ticket                  "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET               ;;
-       ("nm" | "newmilestone" )             shift && trycatch new_milestone               "$@" $EXIT_STATUS__FAILED_TO_CREATE_MILESTONE            ;;
-       ("init")                             shift && trycatch create_or_initialise_bashtickets_repository "$@" $EXIT_STATUS__FAILED_TO_CREATE_OR_INITIALIZE_REPOSITORY ;;
-       ("help" | "h")                       display_help ;;
-       ("status" | "st")                    echo "Displaying milestone status (all/open/closed)...TODO" ;;
-       ("remove" | "rm")                    echo "Removing last ticket / milestone or by number...TODO" ;;
-       ("edit" | "ed")                      shift && trycatch edit_ticket_or_milestone "$@" $EXIT_STATUS__FAILED_TO_EDIT_TICKET_OR_MILESTONE ;;
-       ("et")                               shift && trycatch edit_ticket              "$@" $EXIT_STATUS__FAILED_TO_EDIT_TICKET              ;;
-       ("em")                               shift && trycatch edit_milestone           "$@" $EXIT_STATUS__FAILED_TO_EDIT_MILESTONE           ;;
-       ("view")                             shift && trycatch view_ticket_or_milestone "$@" $EXIT_STATUS__OTHER_ERROR ;;
-       ("vt")                               shift && trycatch view_ticket              "$@" $EXIT_STATUS__OTHER_ERROR ;;
-       ("vm")                               shift && trycatch view_milestone           "$@" $EXIT_STATUS__OTHER_ERROR ;;
+       ( "refresh" )                         trycatch refresh_milestones $EXIT_STATUS__OTHER_ERROR ;;
+       ( "show" | "sh" | "list" | "ls" )     shift && trycatch list_tickets_or_milestones "$@" $EXIT_STATUS__FAILED_TO_LIST_TICKETS_OR_MILESTONES  ;;
+       ( "add" | "comment" | "a" | "m")      shift && trycatch add_comment_to_ticket      "$@" $EXIT_STATUS__FAILED_TO_ADD_COMMENT_TO_TICKET       ;;
+       ( "assign")                           shift && trycatch assign_to_milestone        "$@" $EXIT_STATUS__FAILED_TO_ASSIGN_TO_MILESTONE ;;
+       ( "close" | "cl")                     shift && trycatch close_ticket_with_comment  "$@" $EXIT_STATUS__FAILED_TO_CLOSE_TICKET                ;;
+       ( "open" | "reopen" | "re" | "op" )   shift && trycatch reopen_ticket              "$@" $EXIT_STATUS__FAILED_TO_REOPEN_TICKET               ;;
+       ( "new" | "create" )                  shift && trycatch new_ticket_or_milestone    "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET_OR_MILESTONE  ;;
+       ( "nt" | "newticket" )                shift && trycatch new_ticket                 "$@" $EXIT_STATUS__FAILED_TO_CREATE_TICKET               ;;
+       ( "nm" | "newmilestone" )             shift && trycatch new_milestone              "$@" $EXIT_STATUS__FAILED_TO_CREATE_MILESTONE            ;;
+       ( "init")                             shift && trycatch create_or_initialise_bashtickets_repository "$@" $EXIT_STATUS__FAILED_TO_CREATE_OR_INITIALIZE_REPOSITORY ;;
+       ( "help" | "h")                       display_help ;;
+       ( "status" | "st")                    echo "Displaying milestone status (all/open/closed)...TODO" ;;
+       ( "remove" | "rm")                    echo "Removing last ticket / milestone or by number...TODO" ;;
+       ( "edit" | "ed")                      shift && trycatch edit_ticket_or_milestone "$@" $EXIT_STATUS__FAILED_TO_EDIT_TICKET_OR_MILESTONE ;;
+       ( "et")                               shift && trycatch edit_ticket              "$@" $EXIT_STATUS__FAILED_TO_EDIT_TICKET              ;;
+       ( "em")                               shift && trycatch edit_milestone           "$@" $EXIT_STATUS__FAILED_TO_EDIT_MILESTONE           ;;
+       ( "view")                             shift && trycatch view_ticket_or_milestone "$@" $EXIT_STATUS__OTHER_ERROR ;;
+       ( "vt")                               shift && trycatch view_ticket              "$@" $EXIT_STATUS__OTHER_ERROR ;;
+       ( "vm")                               shift && trycatch view_milestone           "$@" $EXIT_STATUS__OTHER_ERROR ;;
 
 
      # -------------------------------------------------------------------------
