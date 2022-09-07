@@ -1438,9 +1438,16 @@
     # Valid options for this function are:
     #
     # -h, --help
+    #         Display help for this function
+    #
+    # -s, --stealth
+    #         Do not add a dated entry to the respective tickets (note: this
+    #         only has an effect on ticket arguments; milestones generally do
+    #         not have comments in the first place)
     #
     # --------------------------------------------------------------------------
 
+      local STEALTH_MODE
       local TARGET_MILESTONE
       local -a ASSIGNABLES
       local -a MILESTONE_ARGS
@@ -1451,8 +1458,8 @@
       local -a ARGS
       local VALID_SHORT_FLAG_OPTIONS=( )
       local VALID_LONG_FLAG_OPTIONS=( )
-      local VALID_SHORT_FLAG_OPTIONS=( -h )
-      local VALID_LONG_FLAG_OPTIONS=( --help )
+      local VALID_SHORT_FLAG_OPTIONS=( -h    -s        )
+      local VALID_LONG_FLAG_OPTIONS=( --help --stealth )
       local COMMAND_NAME="assign_to_milestone"
 
       if   process_optargs "$@"
@@ -1463,6 +1470,10 @@
     # Validate option arguments
       if   is_in '-h'     "${!OPTIONS[@]}"; then display_help "assign_to_milestone" && return 0
       elif is_in '--help' "${!OPTIONS[@]}"; then display_help "assign_to_milestone" && return 0
+      fi
+
+      if   is_in '-s'        "${!OPTIONS[@]}"; then STEALTH_MODE="On"
+      elif is_in '--stealth' "${!OPTIONS[@]}"; then STEALTH_MODE="On"
       fi
 
     # If called with less than the minimum two arguments, display usage
@@ -1505,11 +1516,26 @@
       done
 
     # Process all tickets
-      local TICKET_ARG TICKET_FILE
+      local TICKET_ARG TICKET_FILE CURRENT_MILESTONE
 
       for  TICKET_ARG in "${TICKET_ARGS[@]}"
       do   TICKET_FILE="$TICKETS_PATH/${TICKET_ARG}.ticket"
+           CURRENT_MILESTONE="$( grep "  Milestone: " "$TICKET_FILE" | tr -d ' ' | cut -d':' -f2 )"
            sed -i "s/  Milestone: .*\$/  Milestone: ${TARGET_MILESTONE}/" "$TICKET_FILE"
+
+         # Add a dated comment if not in stealth mode (and reassignment is not to the same milestone)
+           if   test -z "$STEALTH_MODE" && test "$CURRENT_MILESTONE" != "$TARGET_MILESTONE"
+           then TODAY="$(date +"%Y-%m-%d")"
+                echo             >> "${TICKET_FILE}"
+                echo             >> "${TICKET_FILE}"
+                echo "== $TODAY" >> "${TICKET_FILE}"
+                if   test -z "${TARGET_MILESTONE}"
+                then echo "Removed milestone from ticket." >> "${TICKET_FILE}"
+                elif test -z "$CURRENT_MILESTONE"
+                then echo "Assigned ticket to milestone ${TARGET_MILESTONE}." >> "${TICKET_FILE}"
+                else echo "Reassigned ticket from milestone ${CURRENT_MILESTONE} to milestone ${TARGET_MILESTONE}" >> "${TICKET_FILE}"
+                fi
+           fi
       done
 
     # Process all milestones
