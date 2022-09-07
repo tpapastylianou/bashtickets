@@ -1,0 +1,30 @@
+ Ticket No.: 067
+    Summary: Ability to act on default repository if current folder not a valid repo
+   Reporter: Tasos
+       Type: Task
+   Priority: Highest
+  Milestone: 001
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2022-09-07
+     Status: Open
+ Resolution: 
+Description: Currently you need to cd into a valid btrepo, and that's the only
+             way to use bashtickets.
+
+             It might be useful to be able to define/export a BTREPO variable,
+             specifying a valid bashtickets repository, which could act as the
+             default repository.
+
+             This would only be triggerred if 
+
+             1. It exists / is set (otherwise we only check if the current repo
+                is valid of not)
+             2. If you're not already in a valid btrepo; if you are, then the
+                BTREPO should not be respected
+             3. Perhaps an override could be created, to force BTREPO even if .
+                is valid (or perhaps specify an option (PRIOR to the command?)
+                to pick a directory?
+
+             Not sure. I'd like to think this a bit more

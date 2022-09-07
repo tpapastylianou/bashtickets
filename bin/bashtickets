@@ -40,11 +40,6 @@
    TICKET_TEMPLATE="$BT_DOC_DIR/ticket.template"
    MILESTONE_TEMPLATE="$BT_DOC_DIR/milestone.template"
 
- # Assuming a valid repo, the following paths should exist
-   REPO_PATH="$( realpath . )"
-   TICKETS_PATH="$REPO_PATH/tickets"
-   MILESTONES_PATH="$REPO_PATH/milestones"
-
  # Other constants (can be overridden by check_for_nocolor)
    ANSI_RED="\x1b[91m"
    ANSI_GREEN="\x1b[92m"
@@ -2379,6 +2374,14 @@
 
  # Ensure we have a valid bashtickets installation
    trycatch "check_bashtickets_installation" $EXIT_STATUS__INVALID_BASHTICKETS_INSTALLATION
+
+ # Assuming a valid repo, the following paths should exist
+   REPO_PATH="$( realpath . )"
+
+   TICKETS_PATH="$REPO_PATH/tickets"
+   MILESTONES_PATH="$REPO_PATH/milestones"
+
+
 
  # Ensure valid bashtickets repository for commands that require it
    case "$1" in
