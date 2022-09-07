@@ -54,6 +54,7 @@ TICKET_STATUSES=(
   "New          (New ticket. An owner will be nominated later.)"
   "Assigned     (An owner has been nominated, but they have not yet accepted ownership)"
   "Accepted     (Assigned owner has accepted responsibility for the ticket)"
+  "Blocked      (Another ticket exists, which, unless resolved, prevents further work on this ticket)"
   "Confirmed    (The described bug has been confirmed as reproducible.)"
   "InProgress"
   "NeedInfo     (Unable to reproduce bug as described. Need more info from submitter.)"

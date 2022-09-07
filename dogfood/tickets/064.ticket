@@ -8,8 +8,8 @@
          Cc: 
       Owner: Tasos
        Date: 2022-09-04
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Completed
 Description: Assign currently assigns tickets to existing milestones.
 
              Additionally, it needs to:
@@ -18,3 +18,8 @@ Description: Assign currently assigns tickets to existing milestones.
              
              - Assign milestones to (parent) milestones (including 0 to
                de-milestone).
+
+
+== 2022-09-07
+Done.
+Closing ticket.

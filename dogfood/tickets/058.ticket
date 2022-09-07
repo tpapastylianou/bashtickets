@@ -1,9 +1,9 @@
  Ticket No.: 058
-    Summary: Implement 'newticket' and '"new ticket"' command forms
+    Summary: Implement 'newticket' vs '"new ticket"' vs @-based command forms
    Reporter: Tasos
        Type: Task
    Priority: Normal
-  Milestone: 003
+  Milestone: 001
    Keywords: 
          Cc: 
       Owner: Tasos
@@ -45,6 +45,11 @@ a post-MVP-check.
 == 2022-09-02
 Re-assigned ticket to milestone 003 (post-MVP-checks)
 
+== 2022-09-07
+Assigning back to milestone 001.
 
+Any commands where the 'ticket/milestone' verbosity can be replaced with the
+number versus @number idiom, should prefer this (or at least offer it as an
+additional ui)
 
 

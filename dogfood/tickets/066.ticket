@@ -1,0 +1,28 @@
+ Ticket No.: 066
+    Summary: Replace manual field modifications with programmatic interface
+   Reporter: Tasos
+       Type: Task
+   Priority: Lowest
+  Milestone: 001
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2022-09-07
+     Status: Open
+ Resolution: 
+Description: It is already the intent to add a 'get/set' command/function, that
+             modifies fields.
+
+             It is expected that this command will be able to perform such
+             modifications both interactively and programmatically.
+
+             At present, there are a lot of commands which essentially perform
+             this functionality by means of grep and sed commands.
+
+             This ticket dictates that, after the get/set functions have been
+             completed, any manual field editing done by other commands via sed
+             should be replaced via the 'modify' programmatic interface for
+             brevity and consistency.
+
+
+

@@ -8,6 +8,13 @@
          Cc: 
       Owner: Tasos
        Date: 2022-06-03
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Cancelled
 Description: (as per summary)
+
+
+== 2022-09-07
+Superceded by ticket 055 which specifies conditions for get/set functions.
+A full refresh is also performed in the assign function.
+I cannot think of any other commands that require a refresh.
+Closing ticket.

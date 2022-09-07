@@ -1,0 +1,21 @@
+ Ticket No.: 065
+    Summary: Replace manual automated comments with a comment command
+   Reporter: Tasos
+       Type: Task
+   Priority: Lowest
+  Milestone: 001
+   Keywords: 
+         Cc: 
+      Owner: Tasos
+       Date: 2022-09-07
+     Status: Open
+ Resolution: 
+Description: Currently the add_comment_to_ticket command only works in
+             interactive mode.
+
+             It is already the intent to add an option that creates a comment
+             programmatically.
+
+             This ticket dictates that, after the above has been completed, any
+             manual commenting done by other commands should be replaced via the
+             add_command programmatic interface for brevity and consistency.

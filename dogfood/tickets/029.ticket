@@ -8,8 +8,8 @@
          Cc: 
       Owner: Tasos
        Date: 2022-04-25
-     Status: Open
- Resolution: 
+     Status: Closed
+ Resolution: Completed
 Description: this involves:
              1. a field in milestones, denoting the "parent" milestone
              2. a new command that shows milestone 'trees' (active/completed) with associated deadlines
@@ -34,3 +34,10 @@ Options:
     incomplete child milestones (considering the 'unmilestoned' tickets as an
     extra milestone -- in other words, all milestones have at least one child
     for the purposes of this calculation).
+
+
+== 2022-09-07
+Part 1 addressed.
+Part 2 delegated to / superceded by ticket 063
+Part 3 delegated to / superceded by ticket 033
+Closing ticket.

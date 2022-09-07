@@ -1,5 +1,5 @@
  Ticket No.: 050
-    Summary: Update command
+    Summary: get/set commands
    Reporter: Tasos
        Type: Task
    Priority: Normal
@@ -21,3 +21,23 @@ Description: Update command should update any menu based items.
              - update
 
              e.g. "update ticket N --status --priority"
+
+
+== 2022-09-07
+Perhaps I could consider a set of 'get/set' commands?
+
+These could take a number of tickets (or milestones), and allow getting or setting fields simultaneously for all tickets/milestones.
+An appropriate error should be generated if ticket and milestone arguments are mixed (since their fields are incompatible)
+
+(Note: The 'description' item will need to be handled specially!)
+
+Fields can be specified via appropriate options (flags for get, keyval for set)
+
+This might also end up being useful for the 'list' family ...
+
+Note that when setting, any fields that correspond to interactive menus or have valid checks (e.g. milestones) will need to perform these checks.
+I debated whether to allow 'set' to set milestones (thus duplicating the 'assign' functionality).
+I will allow it; assign has the extra benefit of allowing mixed inputs (tickets and milestones), and writes more informative log messages.
+However, if such a modification takes place, I should make sure to perform a full 'refresh'.
+
+Also note, any modifications should result in dated entries, unless a stealth mode is specified (like the assign_to_milestone function).

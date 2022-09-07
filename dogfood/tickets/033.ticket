@@ -20,3 +20,9 @@ Description: The formula for the completion date currently used doesn't actually
 
 Presumably the best way to approach this is to grep for the last 'Closing ticket.' line,
 then seek the nearest date-line above this.
+
+
+== 2022-09-07
+Adding a note here, given the introduction of milestone trees, a 'root'
+completion date may also need to be calculated when listing milestones in
+'grouped' mode.
