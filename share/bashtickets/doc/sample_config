@@ -36,7 +36,7 @@ TICKET_RESOLUTIONS=(
   "Postponed   (The task will be attempted at a later time)"
   "Cancelled   (The task was not deemed necessary after all)"
   "Duplicate   (The issue has been addressed previously)"
-  "Superceded" (Ticket out-of-date, superceded by newer ticket)
+  "Superceded  (Ticket out-of-date, superceded by newer ticket)"
   "Invalid     (The task was reported in error)"
 #  "Fixed"
 #  "WontFix"
