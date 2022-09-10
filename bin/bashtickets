@@ -1905,7 +1905,7 @@
         # Determine final date of ticket with most recent activity
           COMPLETION_DATE=$( for  t in "${CLOSED_TICKETS[@]}"
                              do   egrep "== $d{4}-$d{2}-$d{2}" "../tickets/$t" | cut -b 4-
-                             done | sort | head -n +1 )
+                             done | sort | tail -n -1 )
 
         # Calculate difference from deadline (assumes correct date format!)
           DEADLINE=$(grep --color=never "   Deadline: " "$i" | cut -d$':' -f2 )
